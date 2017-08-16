@@ -40,7 +40,7 @@ import play.api.test.{FakeApplication, FakeRequest}
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.audit.{EventKeys, EventTypes}
+import uk.gov.hmrc.play.audit.EventKeys
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,6 +61,8 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
   def exceptionThrowingAction(implicit ec: ExecutionContext) = Action.async { request =>
     throw new RuntimeException("Something went wrong")
   }
+
+  val requestReceived = "RequestReceived"
 
   implicit val filter = new FrontendAuditFilter {
 
@@ -135,7 +137,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
       }(PatienceConfig(Span(5, Seconds), Span(200, Millis)))
     }
@@ -164,7 +166,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("deviceFingerprint" -> (
           """{"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.48 Safari/537.36",""" +
             """"language":"en-US","colorDepth":24,"resolution":"800x1280","timezone":0,"sessionStorage":true,"localStorage":true,"indexedDB":true,"platform":"MacIntel",""" +
@@ -190,7 +192,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("deviceFingerprint" -> "-")
       }
     }
@@ -210,7 +212,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("deviceFingerprint" -> "-")
       }
     }
@@ -237,7 +239,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("Authorization" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=")
         event.detail should contain("token" -> "aToken")
         event.tags should contain("X-Session-ID" -> "mySessionId")
@@ -279,7 +281,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("deviceID" -> deviceID)
       }
     }
@@ -301,7 +303,7 @@ class FrontendAuditFilterSpec extends WordSpecLike with Matchers with Eventually
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.detail should contain("deviceID" -> deviceID)
       }
     }

@@ -29,7 +29,6 @@ object LoadAuditingConfig {
       if(enabled) {
         AuditingConfig(
           enabled = enabled,
-          traceRequests = c.getBoolean("traceRequests").getOrElse(true),
           consumer = Some(c.getConfig("consumer").map { con =>
             Consumer(
               baseUri = con.getConfig("baseUri").map { uri =>
@@ -43,7 +42,7 @@ object LoadAuditingConfig {
           }.getOrElse(throw new Exception("Missing consumer configuration for auditing")))
         )
       } else {
-        AuditingConfig(consumer = None, enabled = false, traceRequests = false)
+        AuditingConfig(consumer = None, enabled = false)
       }
 
     }

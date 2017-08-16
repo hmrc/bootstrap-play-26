@@ -18,6 +18,7 @@ object HmrcBuild extends Build {
       parallelExecution in Test := false,
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
+        Resolver.bintrayRepo("hmrc", "snapshots"),
         Resolver.bintrayRepo("hmrc", "release-candidates"),
         Resolver.typesafeRepo("releases"),
         Resolver.jcenterRepo

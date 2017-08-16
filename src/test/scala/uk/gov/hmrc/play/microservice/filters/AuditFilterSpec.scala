@@ -28,7 +28,6 @@ import org.scalatest.{Matchers, WordSpecLike}
 import play.api.test.Helpers._
 import play.api.test.{FakeApplication, FakeRequest}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.EventTypes
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -41,6 +40,7 @@ class AuditFilterSpec extends WordSpecLike with Matchers with Eventually with Sc
   "AuditFilter" should {
     val applicationName = "app-name"
 
+    val requestReceived = "RequestReceived"
     val xRequestId = "A_REQUEST_ID"
     val xSessionId = "A_SESSION_ID"
     val deviceID = "A_DEVICE_ID"
@@ -81,7 +81,7 @@ class AuditFilterSpec extends WordSpecLike with Matchers with Eventually with Sc
         val event = captor.getValue
 
         event.auditSource shouldBe applicationName
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.tags("X-Request-ID") shouldBe xRequestId
         event.tags("X-Session-ID") shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
@@ -105,7 +105,7 @@ class AuditFilterSpec extends WordSpecLike with Matchers with Eventually with Sc
         val event = captor.getValue
 
         event.auditSource shouldBe applicationName
-        event.auditType shouldBe EventTypes.RequestReceived
+        event.auditType shouldBe requestReceived
         event.tags("X-Request-ID") shouldBe xRequestId
         event.tags("X-Session-ID") shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation

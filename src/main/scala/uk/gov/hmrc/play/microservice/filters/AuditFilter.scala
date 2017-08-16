@@ -27,10 +27,9 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc.{Result, _}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.EventKeys._
-import uk.gov.hmrc.play.audit.EventTypes
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
@@ -47,6 +46,8 @@ trait AuditFilter extends EssentialFilter with HttpAuditEvent {
 
   val maxBodySize = 32665
 
+  val requestReceived = "RequestReceived"
+
   def apply(nextFilter: EssentialAction) = new EssentialAction {
     def apply(requestHeader: RequestHeader) = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
@@ -58,11 +59,11 @@ trait AuditFilter extends EssentialFilter with HttpAuditEvent {
         maybeResult match {
           case Success(result) =>
             auditConnector.sendEvent(
-              dataEvent(EventTypes.RequestReceived, requestHeader.uri, requestHeader,
+              dataEvent(requestReceived, requestHeader.uri, requestHeader,
                 Map(ResponseMessage -> responseBody, StatusCode -> result.header.status.toString)))
           case Failure(f) =>
             auditConnector.sendEvent(
-              dataEvent(EventTypes.RequestReceived, requestHeader.uri, requestHeader,
+              dataEvent(requestReceived, requestHeader.uri, requestHeader,
                 Map(FailedRequestMessage -> f.getMessage)))
         }
       }
