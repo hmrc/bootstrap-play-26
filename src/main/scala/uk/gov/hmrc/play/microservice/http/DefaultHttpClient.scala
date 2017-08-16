@@ -18,22 +18,26 @@ package uk.gov.hmrc.play.microservice.http
 
 import javax.inject.{Inject, Singleton}
 
+import play.api.Configuration
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.config.{AppName, RunMode}
 import uk.gov.hmrc.play.http.ws._
 
 @Singleton
-class DefaultHttpClient @Inject()(override val auditConnector: AuditConnector)
+class DefaultHttpClient @Inject() (
+                                    config: Configuration,
+                                    override val auditConnector: AuditConnector
+                                  )
   extends WSGet with HttpGet
     with WSPut with HttpPut
     with WSPost with HttpPost
     with WSDelete with HttpDelete
     with WSPatch with HttpPatch
-    with HttpAuditing
-    with AppName
-    with RunMode {
+    with HttpAuditing {
+
+  // TODO extract into its own class
+  override val appName: String = config.getString("app.name").getOrElse("NO APP NAME SET")
 
   override val hooks = Seq(AuditingHook)
 }

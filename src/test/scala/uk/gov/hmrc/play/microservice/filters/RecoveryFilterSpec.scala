@@ -16,64 +16,46 @@
 
 package uk.gov.hmrc.play.microservice.filters
 
-import java.security.cert.X509Certificate
-
+import akka.stream.Materializer
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpecLike}
-import play.api.mvc.{Action, EssentialAction, Headers, RequestHeader}
-import play.api.test.{FakeHeaders, WithApplication}
+import org.scalatestplus.play.OneAppPerSuite
+import play.api.Play
+import play.api.mvc.{Action, EssentialAction}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{HttpException, NotFoundException}
 
 import scala.concurrent.Future
 
-class RecoveryFilterSpec extends WordSpecLike with Matchers with ScalaFutures {
+class RecoveryFilterSpec extends WordSpecLike with Matchers with ScalaFutures with OneAppPerSuite {
 
   "The RecoveryFilter" should {
 
-    "recover failed actions with 404 status codes" in new WithApplication {
+
+    "recover failed actions with 404 status codes" in {
+
+      implicit val mat: Materializer = Play.current.materializer
+
       val action: EssentialAction = EssentialAction {
         request =>
           Action.async(Future.failed(new NotFoundException("Not found exception")))(request)
       }
-      val fResult = new RecoveryFilter().apply(action)(new DummyRequestHeader).run.futureValue
+      val fResult = new RecoveryFilter().apply(action)(FakeRequest()).run.futureValue
       fResult.header.status shouldBe 404
     }
 
-    "do nothing for actions failed with other status codes" in new WithApplication {
+    "do nothing for actions failed with other status codes" in {
+
+      implicit val mat: Materializer = Play.current.materializer
+
       val action: EssentialAction = EssentialAction {
         request =>
           Action.async(Future.failed(new HttpException("Internal server error", 500)))(request)
       }
-      val fResult = new RecoveryFilter().apply(action)(new DummyRequestHeader).run
+      val fResult = new RecoveryFilter().apply(action)(FakeRequest()).run
       whenReady(fResult.failed) { ex =>
         ex shouldBe a [HttpException]
       }
     }
   }
-}
-
-
-class DummyRequestHeader extends RequestHeader {
-
-  override def remoteAddress: String = ???
-
-  override def headers: Headers = FakeHeaders(Seq.empty)
-
-  override def queryString: Map[String, Seq[String]] = ???
-
-  override def version: String = ???
-
-  override def method: String = "GET"
-
-  override def path: String = "/"
-
-  override def uri: String = "/"
-
-  override def tags: Map[String, String] = ???
-
-  override def id: Long = ???
-
-  override def secure: Boolean = false
-
-  override def clientCertificateChain: Option[Seq[X509Certificate]] = None
 }

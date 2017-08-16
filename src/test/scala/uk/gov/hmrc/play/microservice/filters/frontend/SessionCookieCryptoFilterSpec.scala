@@ -23,8 +23,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Cookie, RequestHeader, Result, Session, _}
-import play.api.test.{FakeApplication, FakeRequest, WithApplication}
+import play.api.test.{FakeApplication, FakeRequest, Helpers}
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
 
 import scala.concurrent.Future
@@ -50,19 +51,21 @@ class SessionCookieCryptoFilterSpec extends WordSpecLike with Matchers with Mock
 
     def createEncryptedCookie(cookieVal: String) = Cookie(Session.COOKIE_NAME, ApplicationCrypto.SessionCookieCrypto.encrypt(PlainText(cookieVal)).value)
 
-    "decrypt the session cookie on the way in and encrypt it again on the way back" in new WithApplication(FakeApplication(additionalConfiguration = appConfig)) {
-      val encryptedIncomingCookie = createEncryptedCookie("our-cookie")
-      val unencryptedIncomingCookie = Cookie(Session.COOKIE_NAME, "our-cookie")
+    "decrypt the session cookie on the way in and encrypt it again on the way back" in {
 
-      val incomingRequest = FakeRequest().withCookies(encryptedIncomingCookie)
-      val response = SessionCookieCryptoFilter(action)(incomingRequest).futureValue
+      Helpers.running(new GuiceApplicationBuilder().configure(appConfig).build()) {
 
-      requestPassedToAction.cookies(Session.COOKIE_NAME) shouldBe unencryptedIncomingCookie
+        val encryptedIncomingCookie = createEncryptedCookie("our-cookie")
+        val unencryptedIncomingCookie = Cookie(Session.COOKIE_NAME, "our-cookie")
 
-      val encryptedOutgoingCookieValue = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE))(0).value
-      ApplicationCrypto.SessionCookieCrypto.decrypt(Crypted(encryptedOutgoingCookieValue)).value shouldBe "our-new-cookie"
+        val incomingRequest = FakeRequest().withCookies(encryptedIncomingCookie)
+        val response = SessionCookieCryptoFilter(action)(incomingRequest).futureValue
+
+        requestPassedToAction.cookies(Session.COOKIE_NAME) shouldBe unencryptedIncomingCookie
+
+        val encryptedOutgoingCookieValue = Cookies.decodeSetCookieHeader(response.header.headers(HeaderNames.SET_COOKIE))(0).value
+        ApplicationCrypto.SessionCookieCrypto.decrypt(Crypted(encryptedOutgoingCookieValue)).value shouldBe "our-new-cookie"
+      }
     }
-
   }
-
 }
