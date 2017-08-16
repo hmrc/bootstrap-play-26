@@ -9,7 +9,7 @@ import play.filters.headers.SecurityHeadersFilter
 import play.api.http.HttpFilters
 import uk.gov.hmrc.play.http.logging.filters._
 import uk.gov.hmrc.play.microservice.filters.frontend._
-import uk.gov.hmrc.play.microservice.filters.{CacheControlFilter, RecoveryFilter}
+import uk.gov.hmrc.play.microservice.filters.CacheControlFilter
 
 @Singleton
 class FrontendFilters @Inject()
@@ -24,7 +24,6 @@ class FrontendFilters @Inject()
   csrfFilter: CSRFFilter,
   sessionTimeoutFilter: SessionTimeoutFilter,
   csrfExceptionsFilter: CSRFExceptionsFilter,
-  recoveryFilter: RecoveryFilter,
   cacheControlFilter: CacheControlFilter
 ) extends HttpFilters {
 
@@ -38,8 +37,7 @@ class FrontendFilters @Inject()
     sessionTimeoutFilter,
     csrfExceptionsFilter,
     csrfFilter,
-    cacheControlFilter,
-    recoveryFilter)
+    cacheControlFilter)
 
   lazy val enableSecurityHeaderFilter: Boolean = configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
 

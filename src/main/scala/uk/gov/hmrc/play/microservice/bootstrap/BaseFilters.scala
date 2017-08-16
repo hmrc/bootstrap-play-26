@@ -7,7 +7,7 @@ import play.api.Configuration
 import play.api.http.HttpFilters
 import play.api.mvc.EssentialFilter
 import uk.gov.hmrc.play.http.logging.filters._
-import uk.gov.hmrc.play.microservice.filters.{AuditFilter, NoCacheFilter, RecoveryFilter}
+import uk.gov.hmrc.play.microservice.filters.{AuditFilter, NoCacheFilter}
 
 @Singleton
 class BaseFilters @Inject()
@@ -16,15 +16,12 @@ class BaseFilters @Inject()
   metricsFilter: MetricsFilter,
   auditFilter: AuditFilter,
   loggingFilter: LoggingFilter,
-  cacheFilter: NoCacheFilter,
-  recoveryFilter: RecoveryFilter
+  cacheFilter: NoCacheFilter
 ) extends HttpFilters {
 
   override val filters: Seq[EssentialFilter] = Seq(
     metricsFilter,
     auditFilter,
     loggingFilter,
-    cacheFilter,
-    recoveryFilter)
-
+    cacheFilter)
 }
