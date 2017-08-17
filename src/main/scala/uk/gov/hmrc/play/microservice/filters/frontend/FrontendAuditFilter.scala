@@ -18,7 +18,6 @@ package uk.gov.hmrc.play.microservice.filters.frontend
 
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
 import akka.util.ByteString
 import play.api.Logger
 import play.api.http.HttpEntity.Streamed
@@ -28,7 +27,6 @@ import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
-import uk.gov.hmrc.play.audit.EventTypes
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.microservice.config.HttpAuditEvent
@@ -46,6 +44,8 @@ trait FrontendAuditFilter extends EssentialFilter with HttpAuditEvent {
   private val textHtml = ".*(text/html).*".r
 
   val maxBodySize = 32665
+
+  val requestReceived = "RequestReceived"
 
   def maskedFormFields: Seq[String]
 
@@ -72,10 +72,10 @@ trait FrontendAuditFilter extends EssentialFilter with HttpAuditEvent {
               StatusCode -> responseHeader.status.toString
             ) ++ buildRequestDetails(requestHeader, requestBody) ++ buildResponseDetails(responseHeader)
             auditConnector.sendEvent(
-              dataEvent(EventTypes.RequestReceived, requestHeader.uri, requestHeader, detail))
+              dataEvent(requestReceived, requestHeader.uri, requestHeader, detail))
           case Failure(f) =>
             auditConnector.sendEvent(
-              dataEvent(EventTypes.RequestReceived, requestHeader.uri, requestHeader,
+              dataEvent(requestReceived, requestHeader.uri, requestHeader,
                 Map(FailedRequestMessage -> f.getMessage) ++ buildRequestDetails(requestHeader, requestBody)))
         }
       }

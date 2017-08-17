@@ -17,11 +17,12 @@
 package uk.gov.hmrc.play.microservice.config
 
 import org.scalatest.{LoneElement, Matchers, WordSpecLike}
-import play.api.test.{FakeRequest, WithApplication}
+import org.scalatestplus.play.OneAppPerSuite
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor
 
-class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement {
+class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement with OneAppPerSuite {
 
   "The optional audit fields code" should {
 
@@ -54,12 +55,12 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement {
       override def appName: String = "my-test-app"
     }
 
-    "create a valid audit event with optional headers" in new WithApplication {
+    "create a valid audit event with optional headers" in {
       val r = FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"), ("Surrogate" -> "Cool"), ("Surrogate" -> "Cool"))
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
       event.detail.get("surrogate") shouldBe Some("Cool,Cool") //FRIC - play 2.5 now comman delimits multiple headers with the same name into a single header
     }
-    "create a valid audit event with no optional headers" in new WithApplication {
+    "create a valid audit event with no optional headers" in {
       val r = FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"))
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
       event.detail.get("surrogate") shouldBe None

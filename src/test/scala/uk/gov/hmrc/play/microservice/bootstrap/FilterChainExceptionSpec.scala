@@ -30,13 +30,12 @@ import play.api.routing.sird._
 import play.api.test.WsTestClient
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.http.NotFoundException
-import uk.gov.hmrc.play.microservice.filters.RecoveryFilter
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class FiltersForTestWithSecurityFilterFirst @Inject() (securityHeaderFilter: SecurityHeadersFilter, recoveryFilter: RecoveryFilter) extends HttpFilters {
-  def filters = Seq(securityHeaderFilter, recoveryFilter)
+class FiltersForTestWithSecurityFilterFirst @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+  def filters = Seq(securityHeaderFilter)
 }
 
 class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerTest {
@@ -57,18 +56,8 @@ class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers w
     response.body shouldBe ("OK")
   }
 
-  "Action throws NotFoundException and returns 404" in {
-    val response = Await.result(wsUrl("/error-async-404")(port).get(), Duration.Inf)
-    response.status shouldBe (404)
-  }
-
   "No endpoint in router and returns 404" in {
     val response = Await.result(wsUrl("/no-end-point")(port).get(), Duration.Inf)
-    response.status shouldBe (404)
-  }
-
-  "Action throws NotFoundException, but filters throw a 404" in {
-    val response = Await.result(wsUrl("/error-async-404")(port).get(), Duration.Inf)
     response.status shouldBe (404)
   }
 }
