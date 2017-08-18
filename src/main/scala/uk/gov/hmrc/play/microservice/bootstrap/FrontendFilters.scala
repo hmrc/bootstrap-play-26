@@ -8,8 +8,8 @@ import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import play.api.http.HttpFilters
 import uk.gov.hmrc.play.http.logging.filters._
-import uk.gov.hmrc.play.microservice.filters.frontend._
 import uk.gov.hmrc.play.microservice.filters.CacheControlFilter
+import uk.gov.hmrc.play.microservice.filters.frontend._
 
 @Singleton
 class FrontendFilters @Inject()
