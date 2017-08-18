@@ -1,11 +1,11 @@
 package uk.gov.hmrc.play.microservice.bootstrap
 
-import com.google.inject.AbstractModule
+import play.api.inject.Module
+import play.api.{Configuration, Environment}
 
-class BootstrapModule extends AbstractModule {
-  def configure() = {
+class BootstrapModule extends Module {
 
-    bind(classOf[GraphiteConfiguration]).to(classOf[GraphiteConfiguration]).asEagerSingleton()
-
-  }
+  override def bindings(environment: Environment, configuration: Configuration) = Seq(
+    bind[GraphiteConfiguration].toSelf.eagerly
+  )
 }
