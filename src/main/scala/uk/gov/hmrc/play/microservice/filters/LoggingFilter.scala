@@ -1,0 +1,53 @@
+package uk.gov.hmrc.play.microservice.filters
+
+import java.util.Date
+
+import org.apache.commons.lang3.time.FastDateFormat
+import org.joda.time.DateTimeUtils
+import play.api.{Logger, LoggerLike}
+import play.api.mvc.{Filter, RequestHeader, Result}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.logging.LoggingDetails
+import uk.gov.hmrc.play.HeaderCarrierConverter
+
+import scala.concurrent.{ExecutionContext, Future}
+
+trait LoggingFilter extends Filter {
+  private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
+
+  def controllerNeedsLogging(controllerName: String): Boolean
+  implicit def ec: ExecutionContext
+
+  protected def logger:LoggerLike = Logger
+
+  def buildLoggedHeaders(request: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+
+  def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+    implicit val hc = buildLoggedHeaders(rh)
+    val startTime = DateTimeUtils.currentTimeMillis()
+
+    val result = next(rh)
+
+    if (needsLogging(rh)) logString(rh, result, startTime).map(logger.info(_))
+
+    result
+  }
+
+  private def needsLogging(request: RequestHeader): Boolean = {
+    (for {
+      name <- request.tags.get(play.routing.Router.Tags.ROUTE_CONTROLLER)
+    } yield controllerNeedsLogging(name)).getOrElse(true)
+  }
+
+  private def logString(rh: RequestHeader, result: Future[Result], startTime: Long)(implicit ld: LoggingDetails): Future[String] = {
+    val start = dateFormat.format(new Date(startTime))
+    def elapsedTime = DateTimeUtils.currentTimeMillis() - startTime
+
+    result.map {
+      result => s"${ld.requestChain.value} $start ${rh.method} ${rh.uri} ${result.header.status} ${elapsedTime}ms"
+    }.recover {
+      case t => s"${ld.requestChain.value} $start ${rh.method} ${rh.uri} ${t} ${elapsedTime}ms"
+    }
+  }
+}
+
