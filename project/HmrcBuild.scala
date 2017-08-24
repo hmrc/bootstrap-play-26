@@ -2,6 +2,9 @@ import play.sbt.PlayImport.filters
 import sbt.Keys.{version, _}
 import sbt._
 
+import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.versioning.SbtGitVersioning
+
 object HmrcBuild extends Build {
 
 
@@ -11,10 +14,11 @@ object HmrcBuild extends Build {
 
 
   lazy val library = Project(appName, file("."))
+    .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
     .settings(
-      scalaVersion := "2.11.7",
+      scalaVersion := "2.11.11",
       libraryDependencies ++= appDependencies,
-      crossScalaVersions := Seq("2.11.7"),
+      crossScalaVersions := Seq("2.11.11"),
       parallelExecution in Test := false,
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
@@ -35,9 +39,9 @@ object Dependencies {
     "uk.gov.hmrc" %% "crypto" % "4.4.0",
     filters,
     "uk.gov.hmrc" %% "http-verbs" % "7.1.0",
-    "uk.gov.hmrc" %% "http-verbs-play-25" % "0.6.0",
-    "uk.gov.hmrc" %% "play-auditing" % "100.0-SNAPSHOT",
-    "uk.gov.hmrc" %% "auth-client" % "d24a7ccf6175d419590062e17ccd237d833b664f",
+    "uk.gov.hmrc" %% "http-verbs-play-25" % "0.9.0",
+    "uk.gov.hmrc" %% "play-auditing" % "3.2.0",
+    "uk.gov.hmrc" %% "auth-client" % "0.2.0",
     "uk.gov.hmrc" %% "play-health" % "2.1.0",
     "uk.gov.hmrc" %% "play-graphite" % "3.2.0",
     "uk.gov.hmrc" %% "logback-json-logger" % "3.1.0",
@@ -50,6 +54,7 @@ object Dependencies {
     "com.typesafe.play" %% "play-test" % PlayVersion.current % "test",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test",
     "org.mockito" % "mockito-all" % "1.9.5" % "test",
+    "org.pegdown" % "pegdown" % "1.5.0" % "test",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test"
   )
 
