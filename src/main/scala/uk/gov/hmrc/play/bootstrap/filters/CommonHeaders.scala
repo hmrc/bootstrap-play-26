@@ -16,16 +16,8 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import akka.stream.Materializer
-import play.api.Play
-import play.api.Play.current
-import play.api.mvc.Filter
 import play.mvc.Http.HeaderNames
 
 object CommonHeaders {
-  val NoCacheHeader = HeaderNames.CACHE_CONTROL -> "no-cache,no-store,max-age=0"
-}
-
-trait MicroserviceFilterSupport {
-  implicit def mat: Materializer = Play.materializer
+  val NoCacheHeader: (String, String) = HeaderNames.CACHE_CONTROL -> "no-cache,no-store,max-age=0"
 }

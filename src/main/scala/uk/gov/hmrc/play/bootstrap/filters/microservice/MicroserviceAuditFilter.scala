@@ -174,7 +174,7 @@ trait HttpAuditEvent {
 }
 
 
-protected class RequestBodyCaptor(val loggingContext: String, val maxBodyLength: Int, callback: (ByteString) => Unit) extends GraphStage[FlowShape[ByteString, ByteString]] {
+protected[filters] class RequestBodyCaptor(val loggingContext: String, val maxBodyLength: Int, callback: (ByteString) => Unit) extends GraphStage[FlowShape[ByteString, ByteString]] {
   val in = Inlet[ByteString]("ReqBodyCaptor.in")
   val out = Outlet[ByteString]("ReqBodyCaptor.out")
   override val shape = FlowShape.of(in, out)
@@ -210,7 +210,7 @@ protected class RequestBodyCaptor(val loggingContext: String, val maxBodyLength:
 }
 
 
-protected class ResponseBodyCaptor(val loggingContext: String, val maxBodyLength: Int, performAudit: (String) => Unit)
+protected[filters] class ResponseBodyCaptor(val loggingContext: String, val maxBodyLength: Int, performAudit: (String) => Unit)
   extends GraphStage[SinkShape[ByteString]] {
   val in = Inlet[ByteString]("RespBodyCaptor.in")
   override val shape = SinkShape.of(in)

@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
+import akka.stream.Materializer
 import org.apache.commons.codec.binary.Base64
-import play.api.Play.current
 import play.api.{Logger, Play}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilterSupport
 
-class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnector) extends DeviceIdFilter
-  with MicroserviceFilterSupport {
+class DeviceIdCookieFilter(
+                            val appName: String,
+                            val auditConnector: AuditConnector,
+                            override val mat: Materializer
+                          ) extends DeviceIdFilter {
 
   final val currentSecret = "cookie.deviceId.secret"
   final val previousSecret = "cookie.deviceId.previous.secret"
   final val message = "Missing required configuration entry for deviceIdFilter :"
 
-  override lazy val secret: String = Play.configuration.getString(currentSecret).getOrElse {
+  override lazy val secret: String = Play.current.configuration.getString(currentSecret).getOrElse {
     Logger.error(s"$message $currentSecret")
     throw new SecurityException(s"$message $currentSecret")
   }
@@ -44,5 +46,6 @@ class DeviceIdCookieFilter(val appName: String, val auditConnector: AuditConnect
 }
 
 object DeviceIdCookieFilter {
-  def apply(appName: String, auditConnector: AuditConnector) = new DeviceIdCookieFilter(appName, auditConnector)
+  @deprecated("use DI", "-")
+  def apply(appName: String, auditConnector: AuditConnector) = new DeviceIdCookieFilter(appName, auditConnector, Play.current.materializer)
 }

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
+import akka.stream.Materializer
 import org.joda.time.{DateTime, DateTimeZone, Duration}
-import play.api.Configuration
+import play.api.{Configuration, Play}
 import play.api.http.HeaderNames.COOKIE
 import play.api.mvc._
 import uk.gov.hmrc.http.SessionKeys._
-import uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilterSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -43,7 +43,8 @@ import scala.concurrent.Future
 class SessionTimeoutFilter(clock: () => DateTime = () => DateTime.now(DateTimeZone.UTC),
                            timeoutDuration: Duration,
                            additionalSessionKeysToKeep: Set[String] = Set.empty,
-                           onlyWipeAuthToken: Boolean = false) extends Filter with MicroserviceFilterSupport {
+                           onlyWipeAuthToken: Boolean = false,
+                           override val mat: Materializer) extends Filter {
 
   val authRelatedKeys = Seq(authToken, token, userId)
 
@@ -141,6 +142,8 @@ object SessionTimeoutFilter {
     new SessionTimeoutFilter(
       timeoutDuration = timeoutDuration,
       additionalSessionKeysToKeep = additionalSessionKeysToKeep,
-      onlyWipeAuthToken = !wipeIdleSession)
+      onlyWipeAuthToken = !wipeIdleSession,
+      mat = Play.current.materializer
+    )
   }
 }

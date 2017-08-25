@@ -18,15 +18,18 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend
 
 import javax.inject.Inject
 
+import akka.stream.Materializer
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Configuration
 import play.api.http.HttpVerbs.POST
 import play.api.mvc.{Result, _}
-import uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilterSupport
 
 import scala.concurrent.Future
 
-class CSRFExceptionsFilter @Inject() (configuration: Configuration) extends Filter with MicroserviceFilterSupport {
+class CSRFExceptionsFilter @Inject() (
+                                     configuration: Configuration,
+                                     override val mat: Materializer
+                                     ) extends Filter {
 
   lazy val whitelist: Set[String] = configuration
     .getStringSeq("csrfexceptions.whitelist")

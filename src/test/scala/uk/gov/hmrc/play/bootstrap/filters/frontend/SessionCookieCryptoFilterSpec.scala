@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
+import akka.stream.Materializer
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -23,10 +24,10 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.play.OneAppPerSuite
+import play.api.Play
 import play.api.http.HeaderNames
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Cookie, RequestHeader, Result, Session, _}
-import play.api.test.{FakeApplication, FakeRequest, Helpers}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Crypted, PlainText}
 
 import scala.concurrent.Future
@@ -58,7 +59,10 @@ class SessionCookieCryptoFilterSpec extends WordSpecLike with Matchers with Mock
         val unencryptedIncomingCookie = Cookie(Session.COOKIE_NAME, "our-cookie")
 
         val incomingRequest = FakeRequest().withCookies(encryptedIncomingCookie)
-        val response = SessionCookieCryptoFilter(action)(incomingRequest).futureValue
+        val filter = new SessionCookieCryptoFilter {
+          override implicit def mat: Materializer = Play.current.materializer
+        }
+        val response = filter(action)(incomingRequest).futureValue
 
         requestPassedToAction.cookies(Session.COOKIE_NAME) shouldBe unencryptedIncomingCookie
 

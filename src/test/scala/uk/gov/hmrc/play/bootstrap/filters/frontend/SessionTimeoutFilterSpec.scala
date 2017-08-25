@@ -21,6 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.play.OneAppPerTest
+import play.api.Play
 import play.api.mvc.{RequestHeader, _}
 import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.http.SessionKeys._
@@ -35,9 +36,10 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     val now = new DateTime(2017, 1, 12, 14, 56)
     val timeoutDuration = Duration.standardMinutes(1)
     val clock = () => now
-    val filter = new SessionTimeoutFilter(clock, timeoutDuration,
+    def filter = new SessionTimeoutFilter(clock, timeoutDuration,
       additionalSessionKeysToKeep = Set("whitelisted"),
-      onlyWipeAuthToken = false
+      onlyWipeAuthToken = false,
+      mat = Play.current.materializer
     )
 
     "strip non-whitelist session variables from request if timestamp is old" in {
@@ -100,7 +102,15 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
       val oldTimestamp = now.minusMinutes(5).getMillis.toString
-      val filter = new SessionTimeoutFilter(clock, timeoutDuration, Set("whitelisted"), onlyWipeAuthToken = true)
+
+      val filter = new SessionTimeoutFilter(
+        clock,
+        timeoutDuration,
+        Set("whitelisted"),
+        onlyWipeAuthToken = true,
+        mat = Play.current.materializer
+      )
+
       implicit val rh = exampleRequest.withSession(
         lastRequestTimestamp -> oldTimestamp,
         authToken -> "a-token",

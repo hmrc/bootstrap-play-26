@@ -16,22 +16,25 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
+import akka.stream.{ActorMaterializer, Materializer}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
-import play.api.Configuration
+import org.scalatestplus.play.OneAppPerSuite
+import play.api.{Configuration, Play}
 import play.api.http.HttpVerbs._
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.{FakeHeaders, FakeRequest}
 
-class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutures with MockitoSugar {
+class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutures with MockitoSugar with OneAppPerSuite {
 
   private val now = () => DateTime.now().withZone(DateTimeZone.UTC)
   private val csrfTokenKey = "Csrf-Token"
 
   private def csrfToken(rh: RequestHeader): Option[String] = rh.headers.get(csrfTokenKey)
+  def mat: Materializer = Play.current.materializer
 
   "CSRF exceptions filter" should {
 
@@ -40,7 +43,7 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       val config = mock[Configuration]
       when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(None)
 
-      val filter = new CSRFExceptionsFilter(config)
+      val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("token")
     }
@@ -49,7 +52,7 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       val rh = FakeRequest(GET, "/ida/login", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
       when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
-      val filter = new CSRFExceptionsFilter(config)
+      val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("token")
     }
@@ -58,7 +61,7 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       val rh = FakeRequest(POST, "/ida/login", FakeHeaders(), AnyContentAsEmpty)
       val config = mock[Configuration]
       when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
-      val filter = new CSRFExceptionsFilter(config)
+      val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("nocheck")
     }
