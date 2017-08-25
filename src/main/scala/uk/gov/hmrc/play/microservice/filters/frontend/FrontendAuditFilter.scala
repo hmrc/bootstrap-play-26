@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.play.microservice.filters.frontend
 
+import javax.inject.Inject
+
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.util.ByteString
-import play.api.Logger
+import com.google.inject.ImplementedBy
+import play.api.{Configuration, Logger}
 import play.api.http.HttpEntity.Streamed
 import play.api.http.{HeaderNames, HttpEntity}
 import play.api.libs.streams.Accumulator
@@ -29,13 +32,13 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.play.microservice.config.HttpAuditEvent
-import uk.gov.hmrc.play.microservice.filters.{RequestBodyCaptor, ResponseBodyCaptor}
+import uk.gov.hmrc.play.microservice.config.{ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.microservice.filters.{AuditFilter, RequestBodyCaptor, ResponseBodyCaptor}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-trait FrontendAuditFilter extends EssentialFilter with HttpAuditEvent {
+trait FrontendAuditFilter extends AuditFilter with HttpAuditEvent {
 
   def auditConnector: AuditConnector
 
@@ -216,5 +219,21 @@ trait FrontendAuditFilter extends EssentialFilter with HttpAuditEvent {
       case _ => queryString.trim
     }
   }
+}
 
+class DefaultFrontendAuditFilter @Inject() (
+                                        configuration: Configuration,
+                                        controllerConfigs: ControllerConfigs,
+                                        override val auditConnector: AuditConnector,
+                                        override val mat: Materializer
+                                        ) extends FrontendAuditFilter {
+
+  override def controllerNeedsAuditing(controllerName: String): Boolean =
+    controllerConfigs.get(controllerName).auditing
+
+  override val maskedFormFields: Seq[String] = Seq.empty
+
+  override val applicationPort: Option[Int] = None
+
+  override val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
 }

@@ -35,7 +35,7 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditFilterSpec extends WordSpecLike with Matchers with Eventually with ScalaFutures with FilterFlowMock with MockitoSugar {
+class MicroserviceAuditFilterSpec extends WordSpecLike with Matchers with Eventually with ScalaFutures with FilterFlowMock with MockitoSugar {
 
   "AuditFilter" should {
     val applicationName = "app-name"
@@ -54,7 +54,7 @@ class AuditFilterSpec extends WordSpecLike with Matchers with Eventually with Sc
     val request = FakeRequest().withHeaders("X-Request-ID" -> xRequestId, "X-Session-ID" -> xSessionId, "deviceID" -> deviceID, "Akamai-Reputation" -> akamaiReputation)
 
     def createAuditFilter(connector: AuditConnector) =
-      new AuditFilter {
+      new MicroserviceAuditFilter {
         override val auditConnector: AuditConnector = connector
         override val appName: String = applicationName
 

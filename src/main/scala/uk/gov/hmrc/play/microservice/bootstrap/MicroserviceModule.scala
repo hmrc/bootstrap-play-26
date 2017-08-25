@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.microservice.filters
+package uk.gov.hmrc.play.microservice.bootstrap
 
-import play.api.mvc.EssentialFilter
+import play.api.{Configuration, Environment}
+import play.api.inject.Module
+import uk.gov.hmrc.play.microservice.filters.{AuditFilter, DefaultMicroserviceAuditFilter, MicroserviceAuditFilter}
 
-trait AuditFilter extends EssentialFilter
+class MicroserviceModule extends Module {
+  override def bindings(environment: Environment, configuration: Configuration) = Seq(
+    bind[AuditFilter].to[MicroserviceAuditFilter],
+    bind[MicroserviceAuditFilter].to[DefaultMicroserviceAuditFilter]
+  )
+}
