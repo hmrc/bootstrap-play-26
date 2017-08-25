@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters
+package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import javax.inject.Inject
 
@@ -22,17 +22,18 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.stage._
 import akka.util.ByteString
-import play.api.{Configuration, Logger}
 import play.api.http.HttpEntity
 import play.api.http.HttpEntity.Streamed
 import play.api.libs.streams.Accumulator
 import play.api.mvc.{Result, _}
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
+import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
+import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}

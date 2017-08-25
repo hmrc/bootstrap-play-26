@@ -33,7 +33,8 @@ import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, RequestBodyCaptor, ResponseBodyCaptor}
+import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, ResponseBodyCaptor}
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, ResponseBodyCaptor}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}

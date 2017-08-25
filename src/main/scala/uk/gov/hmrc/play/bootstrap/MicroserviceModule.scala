@@ -18,7 +18,8 @@ package uk.gov.hmrc.play.bootstrap
 
 import play.api.inject.Module
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, DefaultMicroserviceAuditFilter, MicroserviceAuditFilter}
+import uk.gov.hmrc.play.bootstrap.filters.microservice.{DefaultMicroserviceAuditFilter, MicroserviceAuditFilter}
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, DefaultMicroserviceAuditFilter}
 
 class MicroserviceModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration) = Seq(

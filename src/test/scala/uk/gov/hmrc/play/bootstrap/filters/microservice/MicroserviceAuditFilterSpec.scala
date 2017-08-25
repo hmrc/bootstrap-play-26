@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters
+package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
@@ -31,6 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.bootstrap.filters.FilterFlowMock
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
