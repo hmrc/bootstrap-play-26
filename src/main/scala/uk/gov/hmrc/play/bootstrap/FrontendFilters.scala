@@ -51,9 +51,9 @@ class FrontendFilters @Inject()
     loggingFilter,
     frontendAuditFilter,
     sessionTimeoutFilter,
-    csrfExceptionsFilter,
     csrfFilter,
-    cacheControlFilter)
+    cacheControlFilter
+  )
 
   lazy val enableSecurityHeaderFilter: Boolean = configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
 

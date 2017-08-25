@@ -66,5 +66,4 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("nocheck")
     }
   }
-
 }

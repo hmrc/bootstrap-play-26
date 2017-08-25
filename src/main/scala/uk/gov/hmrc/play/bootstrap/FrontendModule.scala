@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.play.bootstrap
 
-import play.api.inject.Module
+import play.api.http.HttpFilters
+import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.{DefaultFrontendAuditFilter, FrontendAuditFilter}
 
-class FrontendModule extends Module {
+class FrontendModule extends BootstrapModule {
 
-  override def bindings(environment: Environment, configuration: Configuration) = Seq(
-    bind[AuditFilter].to[FrontendAuditFilter],
-    bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter]
-  )
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    super.bindings(environment, configuration) ++ Seq(
+      bind[HttpFilters].to[FrontendFilters],
+      bind[AuditFilter].to[FrontendAuditFilter],
+      bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter]
+    )
 }

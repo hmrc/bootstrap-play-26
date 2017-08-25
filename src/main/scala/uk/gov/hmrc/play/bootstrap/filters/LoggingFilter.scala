@@ -17,7 +17,9 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import java.util.Date
+import javax.inject.Inject
 
+import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
 import org.joda.time.DateTimeUtils
 import play.api.{Logger, LoggerLike}
@@ -25,6 +27,7 @@ import play.api.mvc.{Filter, RequestHeader, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.LoggingDetails
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,3 +70,12 @@ trait LoggingFilter extends Filter {
   }
 }
 
+class DefaultLoggingFilter @Inject() (config: ControllerConfigs)
+                                     (implicit
+                                     override val mat: Materializer,
+                                     override val ec: ExecutionContext
+                                     ) extends LoggingFilter {
+
+  override def controllerNeedsLogging(controllerName: String): Boolean =
+    config.get(controllerName).logging
+}

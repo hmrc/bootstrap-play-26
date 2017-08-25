@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.play.bootstrap
 
-import play.api.inject.Module
+import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.filters.CacheControlConfig
+import uk.gov.hmrc.play.bootstrap.filters.{CacheControlConfig, DefaultLoggingFilter, LoggingFilter}
 
-class BootstrapModule extends Module {
+abstract class BootstrapModule extends Module {
 
-  override def bindings(environment: Environment, configuration: Configuration) = Seq(
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
     bind[GraphiteConfiguration].toSelf.eagerly,
-    bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration))
+    bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)),
+    bind[LoggingFilter].to[DefaultLoggingFilter]
   )
 }
