@@ -16,24 +16,42 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
+import javax.inject.Inject
+
 import akka.stream.Materializer
 import play.api.Logger
 import play.api.http.HeaderNames
+import play.api.mvc.Session.COOKIE_NAME
 import play.api.mvc._
+import uk.gov.hmrc.crypto._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-trait CookieCryptoFilter extends Filter {
+trait CryptoImplicits {
 
-  implicit def mat: Materializer
+  protected implicit def strToPlain(s: String): PlainContent =
+    PlainText(s)
 
-  protected lazy val cookieName: String = Session.COOKIE_NAME
-  protected val encrypter: (String) => String
-  protected val decrypter: (String) => String
+  protected implicit def strToCrypt(s: String): Crypted =
+    Crypted(s)
 
-  override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader) =
+  protected implicit def plainToString(p: PlainText): String =
+    p.value
+
+  protected implicit def cryptToString(c: Crypted): String =
+    c.value
+}
+
+trait CookieCryptoFilter extends Filter with CryptoImplicits {
+
+  protected implicit def ec: ExecutionContext
+
+  protected def encrypter: Encrypter
+  protected def decrypter: Decrypter
+
+  override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
     encryptCookie(next(decryptCookie(rh)))
 
   private def decryptCookie(rh: RequestHeader) = {
@@ -44,20 +62,21 @@ trait CookieCryptoFilter extends Filter {
         decrypted = decrypt(decoded)
       } yield decrypted).flatten
 
-    if (updatedCookies.isEmpty)
+    if (updatedCookies.isEmpty) {
       rh.copy(headers = rh.headers.remove(HeaderNames.COOKIE))
-    else
+    } else {
       rh.copy(headers = rh.headers.replace(HeaderNames.COOKIE -> Cookies.encodeCookieHeader(updatedCookies)))
+    }
   }
 
-  def tryDecrypting(value: String): Option[String] = Try(decrypter(value)) match {
+  private def tryDecrypting(value: String): Option[String] = Try(decrypter.decrypt(value)) match {
     case Success(v) => Some(v)
     case Failure(ex) =>
-      Logger.warn(s"Could not decrypt cookie $cookieName got exception:${ex.getMessage}")
+      Logger.warn(s"Could not decrypt cookie $COOKIE_NAME got exception:${ex.getMessage}")
       None
   }
 
-  def decrypt(cookie: Cookie): Option[Cookie] = {
+  private def decrypt(cookie: Cookie): Option[Cookie] = {
     if (shouldBeEncrypted(cookie))
       tryDecrypting(cookie.value).map { decryptedValue =>
         cookie.copy(value = decryptedValue)
@@ -72,7 +91,7 @@ trait CookieCryptoFilter extends Filter {
         cookieHeader =>
           Cookies.encodeSetCookieHeader(Cookies.decodeSetCookieHeader(cookieHeader).map { cookie: Cookie =>
             if (shouldBeEncrypted(cookie))
-              cookie.copy(value = encrypter(cookie.value))
+              cookie.copy(value = encrypter.encrypt(cookie.value))
             else
               cookie
           })
@@ -81,5 +100,14 @@ trait CookieCryptoFilter extends Filter {
       updatedHeader.map(header => result.withHeaders(HeaderNames.SET_COOKIE -> header)).getOrElse(result)
   }
 
-  private def shouldBeEncrypted(cookie: Cookie) = cookie.name == cookieName && !cookie.value.isEmpty
+  private def shouldBeEncrypted(cookie: Cookie) = cookie.name == COOKIE_NAME && !cookie.value.isEmpty
 }
+
+class DefaultCookieCryptoFilter @Inject() (
+                                            override val encrypter: Encrypter,
+                                            override val decrypter: Decrypter
+                                          )
+                                          (implicit
+                                           override val mat: Materializer,
+                                           override val ec: ExecutionContext
+                                          ) extends CookieCryptoFilter

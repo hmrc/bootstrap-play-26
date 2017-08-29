@@ -37,16 +37,15 @@ class FrontendFilters @Inject()
   metricsFilter: MetricsFilter,
   deviceIdFilter: DeviceIdFilter,
   csrfFilter: CSRFFilter,
+  cookieCryptoFilter: CookieCryptoFilter,
   sessionTimeoutFilter: SessionTimeoutFilter,
-  csrfExceptionsFilter: CSRFExceptionsFilter,
   cacheControlFilter: CacheControlFilter
 ) extends HttpFilters {
 
   val frontendFilters = Seq(
     metricsFilter,
     headersFilter,
-    // TODO replace
-//    SessionCookieCryptoFilter,
+    cookieCryptoFilter,
     deviceIdFilter,
     loggingFilter,
     frontendAuditFilter,

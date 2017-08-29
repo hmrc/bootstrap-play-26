@@ -25,7 +25,7 @@ trait Base64ConfigDecoderTests extends WordSpec with MustMatchers {
 
   def decode(config: (String, Any)*): Configuration
 
-  def aBase64Decoder: Unit = {
+  def aBase64Decoder(): Unit = {
 
     val quux = Base64.encodeBase64String("quux".getBytes())
 
