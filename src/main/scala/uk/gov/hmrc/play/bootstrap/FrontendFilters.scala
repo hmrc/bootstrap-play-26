@@ -24,6 +24,7 @@ import play.api.http.HttpFilters
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
+import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter
 import uk.gov.hmrc.play.bootstrap.filters.{CacheControlFilter, LoggingFilter}
 
 @Singleton

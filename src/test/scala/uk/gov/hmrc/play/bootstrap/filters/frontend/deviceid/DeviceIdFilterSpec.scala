@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.frontend
+package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
@@ -31,7 +31,7 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite with ScalaFutures with MockitoSugar with BeforeAndAfterEach with TypeCheckedTripleEquals with Inspectors with OptionValues {
 
@@ -65,6 +65,9 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       override val appName = "SomeAppName"
 
       lazy val auditConnector = mock[AuditConnector]
+
+      override protected implicit def ec: ExecutionContext =
+        play.api.libs.concurrent.Execution.defaultContext
     }
 
     lazy val newFormatGoodCookieDeviceId = filter.mdtpCookie
@@ -85,8 +88,6 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       yield deviceCookie
       cookie.value
     }
-
-    def generateDeviceIdLegacy(uuid: String = filter.generateUUID): DeviceId = DeviceId(uuid, None, DeviceId.generateHash(uuid, None, filter.secret))
 
     def expectAuditIdEvent(badCookie: String, validCookie: String) = {
       val captor = ArgumentCaptor.forClass(classOf[DataEvent])
@@ -119,7 +120,7 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       for (prevSecret <- filter.previousSecrets) {
         val uuid = filter.generateUUID
         val timestamp = filter.getTimeStamp
-        val deviceIdMadeFromPrevKey = DeviceId(uuid, Some(timestamp), DeviceId.generateHash(uuid, Some(timestamp), prevSecret))
+        val deviceIdMadeFromPrevKey = DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, prevSecret))
         val cookie = filter.makeCookie(deviceIdMadeFromPrevKey)
 
         val result = invokeFilter(Seq(cookie), cookie, Some(2))
@@ -175,43 +176,6 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       val responseCookie = mdtpdiSetCookie(result)
       responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
-    }
-
-    "auto convert legacy DeviceId cookie to new format" in new Setup {
-
-      val (legacyDeviceIdCookie, newFormatDeviceIdCookie) = {
-        val testUUID = filter.generateUUID
-
-        val legacyDeviceId = generateDeviceIdLegacy(testUUID)
-        val currentDeviceId = filter.generateDeviceId(testUUID)
-
-        val legacyCookieValue = Cookie(DeviceId.MdtpDeviceId, legacyDeviceId.value, Some(DeviceId.TenYears))
-        val newFormatCookieValue = Cookie(DeviceId.MdtpDeviceId, currentDeviceId.value, Some(DeviceId.TenYears))
-
-        (legacyCookieValue, newFormatCookieValue)
-      }
-
-      val result = invokeFilter(Seq(legacyDeviceIdCookie), newFormatDeviceIdCookie)
-
-      val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatDeviceIdCookie.value
-      responseCookie.secure shouldBe true
-    }
-
-    "identify legacy deviceId cookie is invalid and create new deviceId cookie" in new Setup {
-
-      val legacyFormatBadCookieDeviceId = {
-        val legacyDeviceId = generateDeviceIdLegacy().copy(hash="wrongvalue")
-        Cookie(DeviceId.MdtpDeviceId, legacyDeviceId.value, Some(DeviceId.TenYears))
-      }
-
-      val result = invokeFilter(Seq(legacyFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
-
-      val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
-      responseCookie.secure shouldBe true
-
-      expectAuditIdEvent(legacyFormatBadCookieDeviceId.value,newFormatGoodCookieDeviceId.value)
     }
 
     "identify new format deviceId cookie has invalid hash and create new deviceId cookie" in new Setup {

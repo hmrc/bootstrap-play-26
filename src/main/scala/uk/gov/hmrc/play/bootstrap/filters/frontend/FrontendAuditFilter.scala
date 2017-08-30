@@ -32,6 +32,7 @@ import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
+import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, ResponseBodyCaptor}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 

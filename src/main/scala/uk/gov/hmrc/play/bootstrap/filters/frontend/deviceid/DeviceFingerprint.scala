@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.frontend
+package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
 import com.ning.http.util.Base64
 import play.api.Logger
@@ -28,6 +28,7 @@ object DeviceFingerprint {
 
   def deviceFingerprintFrom(request: RequestHeader): String =
     request.cookies.get(deviceFingerprintCookieName).map { cookie =>
+      // TODO This can't throw an exception...
       val decodeAttempt = Try {
         Base64.decode(cookie.value)
       }
@@ -36,5 +37,4 @@ object DeviceFingerprint {
         new String(_, "UTF-8")
       }.getOrElse("-")
     }.getOrElse("-")
-
 }

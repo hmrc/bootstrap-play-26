@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.frontend
+package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
-import akka.stream.Materializer
 import play.api.http.HeaderNames
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -25,16 +24,14 @@ import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait DeviceIdFilter extends Filter with DeviceIdCookie {
 
-  implicit def mat: Materializer
+  protected implicit def ec: ExecutionContext
 
-  def auditConnector: AuditConnector
-
-  def appName: String
+  protected def auditConnector: AuditConnector
+  protected def appName: String
 
   case class CookeResult(cookies: Seq[Cookie], newDeviceIdCookie: Cookie)
 
@@ -50,11 +47,6 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
       deviceCookeValueId =>
 
         DeviceId.from(deviceCookeValueId.value, secret, previousSecrets) match {
-
-          case Some(DeviceId(uuid, None, hash)) =>
-            // Replace legacy cookie with new format and add new cookie to response.
-            val deviceIdCookie = makeCookie(generateDeviceId(uuid))
-            CookeResult(allCookiesApartFromDeviceId ++ Seq(deviceIdCookie), deviceIdCookie)
 
           case Some(deviceId) =>
             // Valid new format cookie.
@@ -86,7 +78,7 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
   private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String): Unit = {
     val hc:HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
     auditConnector.sendEvent(DataEvent(appName, EventTypes.Failed,
-      tags = hc.toAuditTags("deviceIdFilter", rh.path) ++ hc.toAuditTags("tamperedDeviceId", "Hash check failure"),
+      tags = hc.toAuditTags("deviceIdFilter", rh.path),
       detail = getTamperDetails(badDeviceId, goodDeviceId)))
   }
 

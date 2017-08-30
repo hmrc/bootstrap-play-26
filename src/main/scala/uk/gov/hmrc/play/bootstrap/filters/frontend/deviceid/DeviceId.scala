@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.frontend
+package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
 import java.security.MessageDigest
 import java.util.UUID
 
 import org.apache.commons.codec.binary.Base64
+import play.api.mvc.Cookie
 
 import scala.util.Try
 
@@ -30,56 +31,48 @@ import scala.util.Try
  *
  *    mdtpdi#UUID#TIMESTAMP_hash
  *
- * The legacy deviceId had the format below. The legacy cookie is automatically converted to a new cookie...
- *
- *    UUID_hash
- *
  * Note the above hash is a one way hash of the value preceding the "_".
  *
  */
 
-case class DeviceId(uuid: String, timestamp:Option[Long], hash: String) {
+case class DeviceId(uuid: String, timestamp: Long, hash: String) {
 
-  def value = DeviceId.generateSignature(this)
+  import DeviceId.{Token1, Token2, MdtpDeviceId, TenYears}
+
+  def value = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp$Token2$hash"
+
+  def cookie = Cookie(DeviceId.MdtpDeviceId, value, Some(TenYears), secure = true)
 }
 
 object DeviceId {
-  final val Token1 = "#"
-  final val Token2 = "_"
-  final val TenYears = 315360000
-  final val MdtpDeviceId = "mdtpdi"
 
+  val Token1 = "#"
+  val Token2 = "_"
+  val TenYears = 315360000
+  val MdtpDeviceId = "mdtpdi"
 
-  def generateSignature(deviceId:DeviceId) =
-    deviceId.timestamp.fold(s"${deviceId.uuid}$Token2${deviceId.hash}")(time => s"$MdtpDeviceId$Token1${deviceId.uuid}$Token1$time$Token2${deviceId.hash}")
-
-  def generateHash(uuid:String, timestamp:Option[Long], secret:String) = {
-    val oneWayHash = timestamp.fold(uuid)(time => s"$MdtpDeviceId$Token1$uuid$Token1$time")
+  def generateHash(uuid: String, timestamp: Long, secret: String) = {
+    val oneWayHash = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp"
     val digest = MessageDigest.getInstance("MD5").digest((oneWayHash + secret).getBytes)
     new String(Base64.encodeBase64(digest))
   }
 
-  def deviceIdHashIsValid(hash:String, uuid:String, timestamp:Option[Long], secret:String, previousSecrets:Seq[String]) = {
+  def deviceIdHashIsValid(hash: String, uuid: String, timestamp: Long, secret: String, previousSecrets: Seq[String]) = {
     val secrets = Seq(secret) ++ previousSecrets
     val hashChecker = secrets.map(item => () => hash == generateHash(uuid, timestamp, item)).toStream
     hashChecker.map(_()).collectFirst { case true => true }.getOrElse(false)
   }
 
-  def from(value: String, secret:String, previousSecrets:Seq[String]) = {
+  def from(value: String, secret: String, previousSecrets: Seq[String]) = {
+
     def isValidPrefix(prefix:String) = prefix == MdtpDeviceId
 
-    def isValid(prefix:String, uuid:String, timestamp:String, hash:String) =
-      isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(hash, uuid, Some(timestamp.toLong), secret, previousSecrets)
-
-    def isValidLegacy(uuid:String, hash:String) = validUuid(uuid) && deviceIdHashIsValid(hash, uuid, None, secret, previousSecrets)
+    def isValid(prefix: String, uuid: String, timestamp: String, hash: String) =
+      isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(hash, uuid, timestamp.toLong, secret, previousSecrets)
 
     value.split("(#)|(_)") match {
       case Array(prefix, uuid, timestamp, hash) if isValid(prefix, uuid, timestamp, hash) =>
-        Some(DeviceId(uuid, Some(timestamp.toLong), hash))
-
-      case Array(uuid, hash) if isValidLegacy(uuid, hash) =>
-        Some(DeviceId(uuid, None, hash))
-
+        Some(DeviceId(uuid, timestamp.toLong, hash))
       case _ => None
     }
   }

@@ -20,6 +20,10 @@ object HmrcBuild extends Build {
       libraryDependencies ++= appDependencies,
       crossScalaVersions := Seq("2.11.11"),
       parallelExecution in Test := false,
+      scalacOptions ++= Seq(
+//        "-Xfatal-warnings",
+        "-deprecation"
+      ),
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
         Resolver.bintrayRepo("hmrc", "snapshots"),

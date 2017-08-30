@@ -41,6 +41,7 @@ import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.audit.EventKeys
+import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.frontend
+package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
 import java.util.UUID
 
@@ -29,7 +29,7 @@ trait DeviceIdCookie {
   def generateUUID = UUID.randomUUID().toString
 
   def generateDeviceId(uuid: String = generateUUID) = {
-    val timestamp = Some(getTimeStamp)
+    val timestamp = getTimeStamp
     DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, secret))
   }
 
