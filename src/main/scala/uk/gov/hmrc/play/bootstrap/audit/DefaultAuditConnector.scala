@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package audit
+package uk.gov.hmrc.play.bootstrap.audit
 
 import javax.inject.Inject
 
