@@ -40,8 +40,8 @@ object Dependencies {
   import play.core.PlayVersion
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "crypto" % "4.4.0",
     filters,
+    "uk.gov.hmrc" %% "crypto" % "4.4.0",
     "uk.gov.hmrc" %% "http-verbs" % "7.1.0",
     "uk.gov.hmrc" %% "http-verbs-play-25" % "0.9.0",
     "uk.gov.hmrc" %% "play-auditing" % "3.2.0",
@@ -59,7 +59,9 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % "2.2.4" % "test",
     "org.mockito" % "mockito-all" % "1.9.5" % "test",
     "org.pegdown" % "pegdown" % "1.5.0" % "test",
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test"
+    "com.github.tomakehurst" % "wiremock" % "2.7.1" % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
+    "uk.gov.hmrc" %% "hmrctest" % "2.3.0" % "test"
   )
 
 }

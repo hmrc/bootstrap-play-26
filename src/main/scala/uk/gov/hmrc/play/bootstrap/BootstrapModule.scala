@@ -20,6 +20,7 @@ import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.filters.frontend.{CookieCryptoFilter, DefaultCookieCryptoFilter}
 import uk.gov.hmrc.play.bootstrap.filters.{CacheControlConfig, DefaultLoggingFilter, LoggingFilter}
+import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient}
 
 abstract class BootstrapModule extends Module {
 
@@ -27,6 +28,7 @@ abstract class BootstrapModule extends Module {
     bind[CookieCryptoFilter].to[DefaultCookieCryptoFilter],
     bind[GraphiteConfiguration].toSelf.eagerly,
     bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)),
-    bind[LoggingFilter].to[DefaultLoggingFilter]
+    bind[LoggingFilter].to[DefaultLoggingFilter],
+    bind[HttpClient].to[DefaultHttpClient]
   )
 }

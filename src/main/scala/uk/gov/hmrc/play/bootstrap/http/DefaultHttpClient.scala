@@ -24,16 +24,15 @@ import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.ws._
 
+trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with HttpPatch
+
 @Singleton
 class DefaultHttpClient @Inject() (
                                     config: Configuration,
                                     override val auditConnector: AuditConnector
                                   )
-  extends WSGet with HttpGet
-    with WSPut with HttpPut
-    with WSPost with HttpPost
-    with WSDelete with HttpDelete
-    with WSPatch with HttpPatch
+  extends HttpClient
+    with WSHttp
     with HttpAuditing {
 
   // TODO extract into its own class
