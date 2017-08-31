@@ -19,27 +19,33 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend
 import java.util.UUID
 import javax.inject.Inject
 
-import akka.util.ByteString
-import play.api.libs.streams.Accumulator
+import akka.stream.Materializer
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderNames.{xRequestId, xRequestTimestamp}
 
-class HeadersFilter @Inject()() extends EssentialFilter {
+import scala.concurrent.Future
 
-  def apply(nextAction: EssentialAction): EssentialAction = new EssentialAction {
-    def apply(request: RequestHeader): Accumulator[ByteString, Result] = {
-      request.session.get(xRequestId) match {
-        case Some(s) => nextAction(request)
-        case _ => nextAction(addHeaders(request))
-      }
+class HeadersFilter @Inject()(override val mat: Materializer) extends Filter {
+
+  override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+
+    val request = rh.session.get(xRequestId) match {
+      case Some(_) =>
+        rh
+      case None =>
+        rh.copy(headers = rh.headers.add(newHeaders: _*))
     }
 
-    def addHeaders(request: RequestHeader): RequestHeader = {
-      val rid = s"govuk-tax-${UUID.randomUUID().toString}"
-      val requestIdHeader = xRequestId -> rid
-      val requestTimestampHeader = xRequestTimestamp -> System.nanoTime().toString
-      val newHeaders = request.headers.add(requestIdHeader, requestTimestampHeader)
-      request.copy(headers = newHeaders)
-    }
+    next(request)
+  }
+
+  protected def newHeaders: Seq[(String, String)] = {
+
+    val rid = s"govuk-tax-${UUID.randomUUID().toString}"
+
+    Seq(
+      xRequestId        -> rid,
+      xRequestTimestamp -> System.nanoTime().toString
+    )
   }
 }
