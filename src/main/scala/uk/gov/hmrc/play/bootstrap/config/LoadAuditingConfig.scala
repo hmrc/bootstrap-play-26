@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import play.api.Configuration
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
 
 object LoadAuditingConfig {
 
-  def apply(configuration: Configuration, key: String): AuditingConfig = {
-    configuration.getConfig(key).map { c =>
+  def apply(configuration: Configuration, env: Environment,  key: String): AuditingConfig = {
+    configuration.getConfig(s"${env.mode.toString.toLowerCase}.$key")
+      .orElse(configuration.getConfig(key)).map { c =>
 
       val enabled = c.getBoolean("enabled").getOrElse(true)
 

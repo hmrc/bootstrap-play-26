@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.http
+package uk.gov.hmrc.play.bootstrap.audit
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
-import play.api.Configuration
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.http.HttpAuditing
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.http.ws._
+import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
 
-trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with HttpPatch
-
-@Singleton
-class DefaultHttpClient @Inject() (config: Configuration, override val auditConnector: AuditConnector)
-  extends HttpClient with WSHttp with HttpAuditing {
-
-  // TODO extract into its own class
-  override val appName: String = config.getString("app.name").getOrElse("NO APP NAME SET")
-
-  override val hooks = Seq(AuditingHook)
+class DefaultAuditConnector @Inject() (config: Configuration, environment: Environment) extends AuditConnector {
+  override def auditingConfig: AuditingConfig = LoadAuditingConfig(config, environment, "auditing")
 }

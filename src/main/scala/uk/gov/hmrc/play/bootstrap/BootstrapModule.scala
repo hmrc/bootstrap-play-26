@@ -18,6 +18,8 @@ package uk.gov.hmrc.play.bootstrap
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
 import uk.gov.hmrc.play.bootstrap.filters.frontend.{CookieCryptoFilter, DefaultCookieCryptoFilter}
 import uk.gov.hmrc.play.bootstrap.filters.{CacheControlConfig, DefaultLoggingFilter, LoggingFilter}
 import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient}
@@ -25,6 +27,7 @@ import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient}
 abstract class BootstrapModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
+    bind[AuditConnector].to[DefaultAuditConnector],
     bind[CookieCryptoFilter].to[DefaultCookieCryptoFilter],
     bind[GraphiteConfiguration].toSelf.eagerly,
     bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)),
