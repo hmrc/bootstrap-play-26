@@ -20,7 +20,7 @@ import play.api.http.HttpFilters
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
-import uk.gov.hmrc.play.bootstrap.filters.frontend.{CookieCryptoFilter, DefaultCookieCryptoFilter, DefaultFrontendAuditFilter, FrontendAuditFilter}
+import uk.gov.hmrc.play.bootstrap.filters.frontend._
 
 class FrontendModule extends BootstrapModule {
 
@@ -29,6 +29,7 @@ class FrontendModule extends BootstrapModule {
       bind[HttpFilters].to[FrontendFilters],
       bind[AuditFilter].to[FrontendAuditFilter],
       bind[CookieCryptoFilter].to[DefaultCookieCryptoFilter],
-      bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter]
+      bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter],
+      bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration))
     )
 }

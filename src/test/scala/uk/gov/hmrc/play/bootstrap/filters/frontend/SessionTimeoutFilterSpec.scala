@@ -16,183 +16,313 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
+import javax.inject.Inject
+
+import akka.stream.Materializer
 import org.joda.time.{DateTime, Duration}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
-import org.scalatest.{Matchers, WordSpecLike}
-import org.scalatestplus.play.OneAppPerTest
-import play.api.Play
-import play.api.mvc.{RequestHeader, _}
-import play.api.test.{FakeHeaders, FakeRequest}
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import play.api.{Application, Configuration}
+import play.api.http.{DefaultHttpFilters, HttpFilters}
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
+import play.api.mvc._
+import play.api.routing.Router
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.http.SessionKeys._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter._
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
-class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutures with OneAppPerTest {
+object SessionTimeoutFilterSpec {
+
+  val now = new DateTime(2017, 1, 12, 14, 56)
+
+  class Filters @Inject() (timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
+
+  class StaticDateSessionTimeoutFilter @Inject() (
+                                                   config: SessionTimeoutFilterConfig
+                                                 )(implicit
+                                                   ec: ExecutionContext, mat: Materializer
+                                                 ) extends SessionTimeoutFilter(config)(ec, mat) {
+
+    override val clock: DateTime = now
+  }
+}
+
+class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutures with OptionValues with MockitoSugar {
+
+  import SessionTimeoutFilterSpec._
+
+  val router: Router = {
+    import play.api.routing.sird._
+    Router.from {
+      case GET(p"/test") =>
+        Action { request =>
+          Results.Ok(Json.obj(
+            "session" -> request.session.data,
+            "cookies" -> request.cookies.toSeq.map {
+              cookie => cookie.name -> cookie.value
+            }.toMap[String, String]
+          ))
+        }
+    }
+  }
+
+  val builder: GuiceApplicationBuilder = {
+
+    import play.api.inject._
+
+    new GuiceApplicationBuilder()
+      .router(router)
+      .overrides(
+        bind[HttpFilters].to[Filters],
+        bind[SessionTimeoutFilter].to[StaticDateSessionTimeoutFilter]
+      )
+  }
 
   "SessionTimeoutFilter" should {
 
-    val now = new DateTime(2017, 1, 12, 14, 56)
     val timeoutDuration = Duration.standardMinutes(1)
-    val clock = () => now
-    def filter = new SessionTimeoutFilter(clock, timeoutDuration,
-      additionalSessionKeysToKeep = Set("whitelisted"),
-      onlyWipeAuthToken = false,
-      mat = Play.current.materializer
+    val timestamp = now.minusMinutes(5).getMillis.toString
+
+    def filter = mock[SessionTimeoutFilter]
+
+    val config = SessionTimeoutFilterConfig(
+      timeoutDuration = Duration.standardMinutes(1),
+      additionalSessionKeys = Set("whitelisted")
     )
 
-    "strip non-whitelist session variables from request if timestamp is old" in {
-      val timestamp = now.minusMinutes(5).getMillis.toString
-      implicit val rh = exampleRequest.withSession(
-        lastRequestTimestamp -> timestamp,
-        authToken -> "a-token",
-        userId -> "some-userId",
-        "whitelisted" -> "whitelisted")
+    def app(config: SessionTimeoutFilterConfig = config): Application = {
 
-      filter.apply { req =>
-        req.session should onlyContainWhitelistedKeys(Set("whitelisted"))
-        req.session.get(lastRequestTimestamp) shouldBe Some(timestamp)
-        req.session.get("whitelisted") shouldBe Some("whitelisted")
-        Future.successful(Results.Ok)
-      }(rh)
+      import play.api.inject._
+
+      builder
+        .overrides(
+          bind[SessionTimeoutFilterConfig].toInstance(config)
+        )
+        .build()
+    }
+
+    "strip non-whitelist session variables from request if timestamp is old" in {
+
+      running(app()) {
+
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> timestamp,
+          authToken -> "a-token",
+          userId -> "some-userId",
+          "whitelisted" -> "whitelisted"
+        ))
+
+        val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+
+        rhSession should onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession.get(lastRequestTimestamp).value shouldEqual timestamp
+        rhSession.get("whitelisted").value shouldEqual "whitelisted"
+      }
     }
 
     "strip non-whitelist session variables from result if timestamp is old" in {
-      val timestamp = now.minusMinutes(5).getMillis.toString
-      implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> timestamp, loginOrigin -> "gg", authToken -> "a-token", "whitelisted" -> "whitelisted")
 
-      val result = filter(successfulResult)(rh)
+      running(app()) {
 
-      result.futureValue.session should onlyContainWhitelistedKeys(Set("whitelisted"))
-      result.futureValue.session.get(loginOrigin) shouldBe Some("gg")
-      result.futureValue.session.get("whitelisted") shouldBe Some("whitelisted")
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> timestamp,
+          loginOrigin -> "gg",
+          authToken -> "a-token",
+          "whitelisted" -> "whitelisted"
+        ))
+
+        val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+
+        rhSession should onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession.get(loginOrigin) shouldBe Some("gg")
+        rhSession.get("whitelisted") shouldBe Some("whitelisted")
+      }
     }
 
     "pass through all session values if timestamp is recent" in {
+
       val timestamp = now.minusSeconds(5).getMillis.toString
-      implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> timestamp, authToken -> "a-token", "custom" -> "custom")
 
-      val result = filter.apply { req =>
-        req.session.get("custom") shouldBe Some("custom")
-        Future.successful(Results.Ok)
-      }(rh)
+      running(app()) {
 
-      result.futureValue.session.get("custom") shouldBe Some("custom")
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> timestamp,
+          authToken -> "a-token",
+          "custom" -> "custom"
+        ))
+
+        val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+
+        rhSession shouldNot onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession.get("custom") shouldBe Some("custom")
+
+        session(result).get("custom") shouldBe Some("custom")
+      }
     }
 
     "create timestamp if it's missing" in {
-      implicit val rh = exampleRequest.withSession(
-        authToken -> "a-token",
-        token -> "another-token",
-        userId -> "a-userId",
-        "custom" -> "custom")
 
-      val result = filter.apply { req =>
-        req.session.get(authToken) shouldBe Some("a-token")
-        req.session.get(userId) shouldBe Some("a-userId")
-        req.session.get(token) shouldBe Some("another-token")
-        req.session.get("custom") shouldBe Some("custom")
-        req.session.get(lastRequestTimestamp) shouldBe None
-        Future.successful(Results.Ok)
-      }(rh)
+      running(app()) {
 
-      result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          authToken -> "a-token",
+          token -> "another-token",
+          userId -> "a-userId",
+          "custom" -> "custom"
+        ))
+
+        val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+
+        rhSession.get(authToken).value shouldEqual "a-token"
+        rhSession.get(userId).value shouldEqual "a-userId"
+        rhSession.get(token).value shouldEqual "another-token"
+        rhSession.get("custom").value shouldEqual "custom"
+        rhSession.get(lastRequestTimestamp) shouldBe None
+
+        session(result).get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
+      }
     }
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
+
+      val altConfig = config.copy(onlyWipeAuthToken = true)
       val oldTimestamp = now.minusMinutes(5).getMillis.toString
 
-      val filter = new SessionTimeoutFilter(
-        clock,
-        timeoutDuration,
-        Set("whitelisted"),
-        onlyWipeAuthToken = true,
-        mat = Play.current.materializer
-      )
+      running(app(altConfig)) {
 
-      implicit val rh = exampleRequest.withSession(
-        lastRequestTimestamp -> oldTimestamp,
-        authToken -> "a-token",
-        token -> "another-token",
-        userId -> "a-userId",
-        "custom" -> "custom",
-        "whitelisted" -> "whitelisted")
+        val Some(result) = route(app(altConfig), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> oldTimestamp,
+          authToken -> "a-token",
+          token -> "another-token",
+          userId -> "a-userId",
+          "custom" -> "custom",
+          "whitelisted" -> "whitelisted"
+        ))
 
-      val result = filter.apply { req =>
-        req.session.get("custom") shouldBe Some("custom")
-        req.session.get(authToken) shouldBe None
-        req.session.get(userId) shouldBe None
-        req.session.get(token) shouldBe None
-        Future.successful(Results.Ok)
-      }(rh)
+        val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-      result.futureValue.session.get("custom") shouldBe Some("custom")
-      result.futureValue.session.get(authToken) shouldBe None
+        rhSession.get("custom").value shouldEqual "custom"
+        rhSession.get(authToken) shouldNot be(defined)
+        rhSession.get(userId) shouldNot be(defined)
+        rhSession.get(token) shouldNot be(defined)
+
+        session(result).get("custom").value shouldEqual "custom"
+        session(result).get(authToken) shouldNot be(defined)
+      }
     }
 
     "update old timestamp with current time" in {
-      implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> now.minusDays(1).getMillis.toString)
-      val result = filter.apply(successfulResult)(rh)
-      result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
+
+      running(app()) {
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> now.minusDays(1).getMillis.toString
+        ))
+        session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
+      }
     }
 
     "update recent timestamp with current time" in {
-      implicit val rh = exampleRequest.withSession(lastRequestTimestamp -> now.minusSeconds(1).getMillis.toString)
-      val result = filter.apply(successfulResult)(rh)
-      result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
+
+      running(app()) {
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> now.minusSeconds(1).getMillis.toString
+        ))
+        session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
+      }
     }
 
     "treat an invalid timestamp as a missing timestamp" in {
-      implicit val rh = exampleRequest.withSession(
-        lastRequestTimestamp -> "invalid-format",
-        authToken -> "a-token",
-        token -> "another-token",
-        userId -> "a-userId",
-        loginOrigin -> "gg",
-        "custom" -> "custom")
 
-      val result = filter(successfulResult)(rh)
+      running(app()) {
 
-      result.futureValue.session.get(authToken) shouldBe Some("a-token")
-      result.futureValue.session.get(userId) shouldBe Some("a-userId")
-      result.futureValue.session.get(token) shouldBe Some("another-token")
-      result.futureValue.session.get(loginOrigin) shouldBe Some("gg")
-      result.futureValue.session.get("custom") shouldBe Some("custom")
-      result.futureValue.session.get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
+        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
+          lastRequestTimestamp -> "invalid-format",
+          authToken -> "a-token",
+          token -> "another-token",
+          userId -> "a-userId",
+          loginOrigin -> "gg",
+          "custom" -> "custom"
+        ))
+
+        session(result).get(authToken).value shouldEqual "a-token"
+        session(result).get(userId).value shouldEqual "a-userId"
+        session(result).get(token).value shouldEqual "another-token"
+        session(result).get(loginOrigin).value shouldEqual "gg"
+        session(result).get("custom").value shouldEqual "custom"
+        session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
+      }
     }
 
     "ensure non-session cookies are passed through to the action untouched" in {
-      val otherCookie = Cookie("aTestName", "aTestValue")
-
-      val cookieResult = (rh: RequestHeader) => {
-        rh.cookies.exists(_ == otherCookie) shouldBe true
-        Future.successful(Results.Ok)
-      }
 
       val timestamp = now.minusMinutes(5).getMillis.toString
-      implicit val rh = exampleRequest
-        .withSession(
-          lastRequestTimestamp -> timestamp,
-          authToken -> "a-token",
-          userId -> "some-userId")
-        .withCookies(otherCookie)
 
-      val result = filter(cookieResult)(rh)
-      result.futureValue.header.status shouldBe 200
+      running(app()) {
+
+        val request = FakeRequest(GET, "/test")
+          .withCookies(Cookie("aTestName", "aTestValue"))
+          .withSession(
+            lastRequestTimestamp -> timestamp,
+            authToken -> "a-token",
+            userId -> "some-userId"
+          )
+
+        val Some(result) = route(app(), request)
+        val rhCookies = (contentAsJson(result) \ "cookies").as[Map[String, String]]
+
+        rhCookies should contain("aTestName" -> "aTestValue")
+        status(result) shouldEqual OK
+      }
     }
-
   }
 
-  private def exampleRequest = FakeRequest("POST", "/something", FakeHeaders(), AnyContentAsEmpty)
-  private val successfulResult = (rh: RequestHeader) => Future.successful(Results.Ok)
+  "SessionTimeoutFilterConfig.fromConfig" should {
 
-  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String] = Set.empty) = new Matcher[Session] {
-    override def apply(session: Session): MatchResult = {
+    "return defaults when there is no config" in {
+      val config = Configuration.empty
+      val result = SessionTimeoutFilterConfig.fromConfig(config)
+      result.additionalSessionKeys should be('empty)
+      result.onlyWipeAuthToken shouldBe false
+      result.timeoutDuration shouldEqual Duration.standardMinutes(15)
+    }
+
+    "return defaults when config is set to the defaults" in {
+      val config = Configuration(
+        "session.timeoutSeconds"              -> Duration.standardMinutes(15).getStandardSeconds,
+        "session.wipeIdleSession"             -> true,
+        "session.additionalSessionKeysToKeep" -> Set.empty
+      )
+      val result = SessionTimeoutFilterConfig.fromConfig(config)
+      result.additionalSessionKeys should be('empty)
+      result.onlyWipeAuthToken shouldBe false
+      result.timeoutDuration shouldEqual Duration.standardMinutes(15)
+    }
+
+    "return custom settings" in {
+      val config = Configuration(
+        "session.timeoutSeconds"              -> Duration.standardMinutes(5).getStandardSeconds,
+        "session.wipeIdleSession"             -> false,
+        "session.additionalSessionKeysToKeep" -> Set("foo")
+      )
+      val result = SessionTimeoutFilterConfig.fromConfig(config)
+      result.additionalSessionKeys should contain("foo")
+      result.onlyWipeAuthToken shouldBe true
+      result.timeoutDuration shouldEqual Duration.standardMinutes(5)
+    }
+  }
+
+  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String] = Set.empty) = new Matcher[Map[String, String]] {
+    override def apply(data: Map[String, String]): MatchResult = {
       MatchResult(
-        (session.data.keySet -- whitelistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
-        s"""Session keys ${session.data.keySet} did not contain only whitelisted keys: $whitelistedSessionKeys""",
-        s"""Session keys ${session.data.keySet} contained only whitelisted keys: $whitelistedSessionKeys"""
+        (data.keySet -- whitelistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
+        s"""Session keys ${data.keySet} did not contain only whitelisted keys: $whitelistedSessionKeys""",
+        s"""Session keys ${data.keySet} contained only whitelisted keys: $whitelistedSessionKeys"""
       )
     }
   }
