@@ -19,7 +19,10 @@ object HmrcBuild extends Build {
       scalaVersion := "2.11.11",
       libraryDependencies ++= appDependencies,
       crossScalaVersions := Seq("2.11.11"),
-      parallelExecution in Test := false,
+      javaOptions in Test ++= Seq(
+        "-Dconfig.resource=application.test.conf"
+      ),
+      fork in Test := true,
       scalacOptions ++= Seq(
 //        "-Xfatal-warnings",
         "-deprecation"
@@ -47,7 +50,7 @@ object Dependencies {
     "uk.gov.hmrc" %% "play-auditing" % "3.2.0",
     "uk.gov.hmrc" %% "auth-client" % "0.2.0",
     "uk.gov.hmrc" %% "play-health" % "2.1.0",
-    "uk.gov.hmrc" %% "play-graphite" % "3.2.0",
+    "uk.gov.hmrc" %% "play-graphite" % "3.3.0",
     "uk.gov.hmrc" %% "logback-json-logger" % "3.1.0",
     "com.typesafe.play" %% "play" % "2.5.12",
     "de.threedimensions" %% "metrics-play" % "2.5.13",
@@ -63,5 +66,4 @@ object Dependencies {
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
     "uk.gov.hmrc" %% "hmrctest" % "2.3.0" % "test"
   )
-
 }

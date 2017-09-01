@@ -29,7 +29,6 @@ abstract class BootstrapModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
     bind[AuditConnector].to[DefaultAuditConnector],
     bind[CookieCryptoFilter].to[DefaultCookieCryptoFilter],
-    bind[GraphiteConfiguration].toSelf.eagerly,
     bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)),
     bind[LoggingFilter].to[DefaultLoggingFilter],
     bind[HttpClient].to[DefaultHttpClient]
