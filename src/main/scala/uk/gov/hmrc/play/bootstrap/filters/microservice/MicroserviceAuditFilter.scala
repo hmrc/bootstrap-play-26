@@ -32,7 +32,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
+import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -133,46 +133,7 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
         throw ex
     }
   }
-
 }
-
-
-trait HttpAuditEvent {
-
-  import uk.gov.hmrc.play.audit.AuditExtensions._
-
-  def appName: String
-
-  object auditDetailKeys {
-    val Input = "input"
-    val Method = "method"
-    val UserAgentString = "userAgentString"
-    val Referrer = "referrer"
-  }
-
-  object headers {
-    val UserAgent = "User-Agent"
-    val Referer = "Referer"
-  }
-
-  protected def dataEvent(eventType: String, transactionName: String, request: RequestHeader, detail: Map[String, String] = Map())
-                                 (implicit hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)): DataEvent = {
-
-    import auditDetailKeys._
-    import headers._
-    import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
-
-    val requiredFields = hc.toAuditDetails(Input -> s"Request to ${request.path}",
-      Method -> request.method.toUpperCase,
-      UserAgentString -> request.headers.get(UserAgent).getOrElse("-"),
-      Referrer -> request.headers.get(Referer).getOrElse("-"))
-
-    val tags = hc.toAuditTags(transactionName, request.path)
-
-    DataEvent(appName, eventType, detail = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap), tags = tags)
-  }
-}
-
 
 protected[filters] class RequestBodyCaptor(val loggingContext: String, val maxBodyLength: Int, callback: (ByteString) => Unit) extends GraphStage[FlowShape[ByteString, ByteString]] {
   val in = Inlet[ByteString]("ReqBodyCaptor.in")
@@ -208,7 +169,6 @@ protected[filters] class RequestBodyCaptor(val loggingContext: String, val maxBo
     })
   }
 }
-
 
 protected[filters] class ResponseBodyCaptor(val loggingContext: String, val maxBodyLength: Int, performAudit: (String) => Unit)
   extends GraphStage[SinkShape[ByteString]] {
