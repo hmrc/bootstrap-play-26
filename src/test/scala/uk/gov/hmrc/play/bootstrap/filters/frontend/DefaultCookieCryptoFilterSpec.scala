@@ -31,10 +31,24 @@ import play.api.routing.Router
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.crypto._
+import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, DefaultCookieCryptoFilter, SessionCookieCrypto}
 
 object DefaultCookieCryptoFilterSpec {
 
   class Filters @Inject() (cryptoFilter: CookieCryptoFilter) extends DefaultHttpFilters(cryptoFilter)
+
+  trait MockCrypto extends Encrypter with Decrypter {
+
+    override def encrypt(plain: PlainContent): Crypted = (plain: @unchecked) match {
+      case PlainText(v) => Crypted(v + "encrypted")
+    }
+
+    override def decrypt(reversiblyEncrypted: Crypted): PlainText =
+      PlainText(reversiblyEncrypted.value + "decrypted")
+
+    // UNUSED
+    override def decryptAsBytes(reversiblyEncrypted: Crypted) = ???
+  }
 }
 
 class DefaultCookieCryptoFilterSpec extends WordSpec with MustMatchers with OptionValues with MockitoSugar {
@@ -59,18 +73,7 @@ class DefaultCookieCryptoFilterSpec extends WordSpec with MustMatchers with Opti
     }
   }
 
-  val mockCrypto = new Encrypter with Decrypter {
-
-    override def encrypt(plain: PlainContent): Crypted = (plain: @unchecked) match {
-      case PlainText(v) => Crypted(v + "encrypted")
-    }
-
-    override def decrypt(reversiblyEncrypted: Crypted): PlainText =
-      PlainText(reversiblyEncrypted.value + "decrypted")
-
-    // UNUSED
-    override def decryptAsBytes(reversiblyEncrypted: Crypted) = ???
-  }
+  val mockAppCrypto = SessionCookieCrypto(new MockCrypto {})
 
   ".apply" must {
 
@@ -81,8 +84,7 @@ class DefaultCookieCryptoFilterSpec extends WordSpec with MustMatchers with Opti
       new GuiceApplicationBuilder()
         .router(router)
         .bindings(
-          bind[Encrypter].toInstance(mockCrypto),
-          bind[Decrypter].toInstance(mockCrypto)
+          bind[SessionCookieCrypto].toInstance(mockAppCrypto)
         )
         .overrides(
           bind[HttpFilters].to[Filters],
@@ -135,9 +137,14 @@ class DefaultCookieCryptoFilterSpec extends WordSpec with MustMatchers with Opti
           throw new Exception()
       })
 
+      val mockAppCrypto = SessionCookieCrypto(new MockCrypto {
+
+        override def decrypt(reversiblyEncrypted: Crypted) = decrypter.decrypt(reversiblyEncrypted)
+      })
+
       val app = builder
         .overrides(
-          bind[Decrypter].toInstance(decrypter)
+          bind[SessionCookieCrypto].toInstance(mockAppCrypto)
         )
         .build()
 

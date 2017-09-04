@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.frontend
+package uk.gov.hmrc.play.bootstrap.filters.frontend.crypto
 
 import javax.inject.Inject
 
@@ -104,10 +104,13 @@ trait CookieCryptoFilter extends Filter with CryptoImplicits {
 }
 
 class DefaultCookieCryptoFilter @Inject() (
-                                            override val encrypter: Encrypter,
-                                            override val decrypter: Decrypter
+                                            sessionCookieCrypto: SessionCookieCrypto
                                           )
                                           (implicit
                                            override val mat: Materializer,
                                            override val ec: ExecutionContext
-                                          ) extends CookieCryptoFilter
+                                          ) extends CookieCryptoFilter {
+
+  override protected lazy val encrypter: Encrypter = sessionCookieCrypto.crypto
+  override protected lazy val decrypter: Decrypter = sessionCookieCrypto.crypto
+}

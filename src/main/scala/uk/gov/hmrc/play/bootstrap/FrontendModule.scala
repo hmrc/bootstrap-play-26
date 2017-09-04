@@ -21,6 +21,7 @@ import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
+import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, DefaultCookieCryptoFilter}
 
 class FrontendModule extends BootstrapModule {
 
