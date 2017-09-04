@@ -16,24 +16,23 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import java.security.cert.X509Certificate
-
 import akka.stream.Materializer
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.play.OneAppPerTest
 import play.api.http.HttpEntity
+import play.api.i18n.MessagesApi
 import play.api.mvc._
-import play.api.test.FakeHeaders
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 
 class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPerTest {
 
   implicit lazy val materializer: Materializer = app.materializer
-  import play.api.i18n.Messages.Implicits._
 
   object TestFrontendErrorHandler extends FrontendErrorHandler {
     override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html = Html("error")
+    override def messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
   }
 
   import TestFrontendErrorHandler._
@@ -41,7 +40,7 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
   "resolving an error" should {
     "return a generic InternalServerError result" in {
       val exception = new Exception("Runtime exception")
-      val result = resolveError(FakeRequestHeader, exception)
+      val result = resolveError(FakeRequest(), exception)
 
       result.header.status shouldBe INTERNAL_SERVER_ERROR
       result.header.headers should contain (CACHE_CONTROL -> "no-cache")
@@ -49,7 +48,7 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
 
     "return a generic InternalServerError result if the exception cause is null" in {
       val exception = new Exception("Runtime exception", null)
-      val result = resolveError(FakeRequestHeader, exception)
+      val result = resolveError(FakeRequest(), exception)
 
       result.header.status shouldBe INTERNAL_SERVER_ERROR
       result.header.headers should contain (CACHE_CONTROL -> "no-cache")
@@ -65,33 +64,10 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
 
       val appException = new ApplicationException("paye", theResult, "application exception")
 
-      val result = resolveError(FakeRequestHeader, appException)
+      val result = resolveError(FakeRequest(), appException)
 
       result shouldBe theResult
     }
   }
 }
 
-case object FakeRequestHeader extends RequestHeader {
-  override def id: Long = 0L
-
-  override def remoteAddress: String = ""
-
-  override def headers: Headers = FakeHeaders()
-
-  override def queryString: Map[String, Seq[String]] = Map.empty
-
-  override def version: String = ""
-
-  override def method: String = "GET"
-
-  override def path: String = "some-path"
-
-  override def uri: String = ""
-
-  override def tags: Map[String, String] = Map.empty
-
-  override def secure: Boolean = false
-
-  override def clientCertificateChain: Option[Seq[X509Certificate]] = None
-}

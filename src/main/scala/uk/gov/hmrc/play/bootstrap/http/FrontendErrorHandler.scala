@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import akka.stream.Materializer
 import play.api.http.HeaderNames.CACHE_CONTROL
 import play.api.http.HttpErrorHandler
-import play.api.i18n.Messages
+import play.api.i18n.{I18nSupport, Messages}
 import play.api.mvc.Results.{BadRequest, InternalServerError, NotFound}
 import play.api.mvc.{Request, RequestHeader, Result, Results}
 import play.api.{DefaultGlobal, Logger, PlayException}
@@ -28,7 +27,7 @@ import play.twirl.api.Html
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-abstract class FrontendErrorHandler()(implicit messages: Messages) extends HttpErrorHandler {
+abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
     statusCode match{
