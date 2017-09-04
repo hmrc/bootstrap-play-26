@@ -21,7 +21,8 @@ import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
-import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, DefaultCookieCryptoFilter}
+import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, DefaultCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoProvider}
+import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.{DefaultDeviceIdFilter, DeviceIdFilter}
 
 class FrontendModule extends BootstrapModule {
 
@@ -29,8 +30,10 @@ class FrontendModule extends BootstrapModule {
     super.bindings(environment, configuration) ++ Seq(
       bind[HttpFilters].to[FrontendFilters],
       bind[AuditFilter].to[FrontendAuditFilter],
+      bind[SessionCookieCrypto].toProvider[SessionCookieCryptoProvider],
       bind[CookieCryptoFilter].to[DefaultCookieCryptoFilter],
       bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter],
+      bind[DeviceIdFilter].to[DefaultDeviceIdFilter],
       bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration))
     )
 }
