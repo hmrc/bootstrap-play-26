@@ -20,6 +20,7 @@ import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
+import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
 import uk.gov.hmrc.play.bootstrap.filters.{CacheControlConfig, DefaultLoggingFilter, LoggingFilter}
 import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient}
 
@@ -28,6 +29,7 @@ abstract class BootstrapModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
     bind[AuditConnector].to[DefaultAuditConnector],
     bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)),
+    bind[ControllerConfigs].toInstance(ControllerConfigs.fromConfig(configuration)),
     bind[LoggingFilter].to[DefaultLoggingFilter],
     bind[HttpClient].to[DefaultHttpClient]
   )
