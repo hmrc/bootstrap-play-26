@@ -22,6 +22,7 @@ import play.api.Configuration
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.http.ws._
 
 trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with HttpPatch
@@ -30,8 +31,9 @@ trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with
 class DefaultHttpClient @Inject() (config: Configuration, override val auditConnector: AuditConnector)
   extends HttpClient with WSHttp with HttpAuditing {
 
-  // TODO extract into its own class
-  override val appName: String = config.getString("app.name").getOrElse("NO APP NAME SET")
+  override val appName: String = new AppName {
+    override def configuration: Configuration = config
+  }.appName
 
   override val hooks = Seq(AuditingHook)
 }

@@ -21,16 +21,17 @@ import javax.inject.Inject
 import akka.stream.Materializer
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.bootstrap.config.AppName
 
 import scala.concurrent.ExecutionContext
 
 class DefaultDeviceIdFilter @Inject() (
-                            configuration: Configuration,
+                            val configuration: Configuration,
                             val auditConnector: AuditConnector
                           )(implicit
                             override val mat: Materializer,
                             override val ec: ExecutionContext
-                          ) extends DeviceIdFilter {
+                          ) extends DeviceIdFilter with AppName {
 
   private val currentSecretKey = "cookie.deviceId.secret"
   private val previousSecretKey = "cookie.deviceId.previous.secret"
@@ -41,6 +42,4 @@ class DefaultDeviceIdFilter @Inject() (
   override lazy val previousSecrets: Seq[String] =
     configuration.getStringSeq(previousSecretKey).getOrElse(Seq.empty)
 
-  override protected val appName: String =
-    configuration.getString("appName").getOrElse("APP NAME NOT SET")
 }

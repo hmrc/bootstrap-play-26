@@ -19,7 +19,6 @@ package uk.gov.hmrc.play.bootstrap.config
 import play.api.mvc.Result
 import play.api.mvc.Results._
 import play.api.{Configuration, Environment, Mode}
-import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.http.SessionKeys
 
 trait AuthRedirects {
@@ -70,16 +69,6 @@ trait AuthRedirects {
     SessionKeys.redirect -> continueUrl,
     SessionKeys.loginOrigin -> origin
   )
-
-  def toPersonalIV(continueUrl: String, confidenceLevel: ConfidenceLevel): Result =
-    toPersonalIV(continueUrl, continueUrl, confidenceLevel)
-
-  def toPersonalIV(completionUrl: String, failureUrl: String, confidenceLevel: ConfidenceLevel): Result = Redirect(personalIVUrl, Map(
-    "origin" -> Seq(origin),
-    "confidenceLevel" -> Seq(confidenceLevel.toString),
-    "completionURL" -> Seq(completionUrl),
-    "failureURL" -> Seq(failureUrl)
-  ))
 
   def toStrideLogin(successUrl: String, failureUrl: Option[String] = None): Result = Redirect(strideLoginUrl, Map(
     "successURL" -> Seq(successUrl),

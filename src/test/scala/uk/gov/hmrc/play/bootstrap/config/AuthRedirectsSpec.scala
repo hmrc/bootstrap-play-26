@@ -24,7 +24,6 @@ import play.api.http.HeaderNames
 import play.api.mvc.Result
 import play.api.{Configuration, Environment, Mode}
 import play.test.WithApplication
-import uk.gov.hmrc.auth.core.ConfidenceLevel
 
 class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
 
@@ -90,22 +89,6 @@ class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
       val expectedLocation = s"$ggLoginPath?continue=%2Fcontinue&origin=app"
 
       validate(Redirect.toGGLogin("/continue"))
-
-    }
-
-    "redirect to personal IV in Dev" in new Setup with Dev {
-
-      val expectedLocation = s"$ivService$ivPath?origin=app&confidenceLevel=100&completionURL=%2Fcontinue&failureURL=%2Fcontinue"
-
-      validate(Redirect.toPersonalIV("/continue", ConfidenceLevel.L100))
-
-    }
-
-    "redirect to personal IV in Prod" in new Setup with Prod {
-
-      val expectedLocation = s"$ivPath?origin=app&confidenceLevel=100&completionURL=%2Fcontinue&failureURL=%2Fcontinue"
-
-      validate(Redirect.toPersonalIV("/continue", ConfidenceLevel.L100))
 
     }
 

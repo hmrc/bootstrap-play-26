@@ -27,20 +27,17 @@ import play.api.mvc.{RequestHeader, Result}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
-
+import uk.gov.hmrc.play.bootstrap.config.{AppName, HttpAuditEvent}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
 case class ErrorResponse(statusCode: Int, message: String, xStatusCode: Option[String] = None, requested: Option[String] = None)
 
-class JsonErrorHandler @Inject()(configuration: Configuration, auditConnector: AuditConnector)
-  extends HttpErrorHandler with HttpAuditEvent {
+class JsonErrorHandler @Inject()(val configuration: Configuration, auditConnector: AuditConnector)
+  extends HttpErrorHandler with HttpAuditEvent with AppName {
 
   implicit val erFormats = Json.format[ErrorResponse]
-
-  override val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
 

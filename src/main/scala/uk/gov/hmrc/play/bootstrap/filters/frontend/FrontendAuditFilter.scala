@@ -30,7 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.bootstrap.config.{AppName, AuthRedirects, ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, ResponseBodyCaptor}
@@ -39,7 +39,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-trait FrontendAuditFilter extends AuditFilter with HttpAuditEvent {
+trait FrontendAuditFilter extends AuditFilter with HttpAuditEvent{
 
   def auditConnector: AuditConnector
 
@@ -223,11 +223,11 @@ trait FrontendAuditFilter extends AuditFilter with HttpAuditEvent {
 }
 
 class DefaultFrontendAuditFilter @Inject() (
-                                        configuration: Configuration,
+                                        val configuration: Configuration,
                                         controllerConfigs: ControllerConfigs,
                                         override val auditConnector: AuditConnector,
                                         override val mat: Materializer
-                                        ) extends FrontendAuditFilter {
+                                        ) extends FrontendAuditFilter with AppName {
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.get(controllerName).auditing
@@ -236,5 +236,4 @@ class DefaultFrontendAuditFilter @Inject() (
 
   override val applicationPort: Option[Int] = None
 
-  override val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
 }

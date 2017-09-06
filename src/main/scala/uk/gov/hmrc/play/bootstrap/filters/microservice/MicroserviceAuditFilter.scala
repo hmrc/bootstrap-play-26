@@ -32,7 +32,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -208,14 +208,13 @@ protected[filters] class ResponseBodyCaptor(val loggingContext: String, val maxB
 }
 
 class DefaultMicroserviceAuditFilter @Inject() (
-                                               configuration: Configuration,
+                                               val configuration: Configuration,
                                                controllerConfigs: ControllerConfigs,
                                                override val auditConnector: AuditConnector,
                                                override val mat: Materializer
-                                               ) extends MicroserviceAuditFilter {
+                                               ) extends MicroserviceAuditFilter with AppName {
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.get("controllerName").auditing
 
-  override val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
 }
