@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.Materializer
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatestplus.play.OneAppPerSuite
-import play.api.{Configuration, Play}
+import play.api.Configuration
 import play.api.http.HttpVerbs._
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.{FakeHeaders, FakeRequest}
@@ -34,7 +34,8 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
   private val csrfTokenKey = "Csrf-Token"
 
   private def csrfToken(rh: RequestHeader): Option[String] = rh.headers.get(csrfTokenKey)
-  def mat: Materializer = Play.current.materializer
+
+  def mat: Materializer = app.injector.instanceOf[Materializer]
 
   "CSRF exceptions filter" should {
 

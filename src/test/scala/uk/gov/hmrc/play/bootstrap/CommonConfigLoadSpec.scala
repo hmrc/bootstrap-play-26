@@ -51,7 +51,6 @@ class CommonConfigLoadSpec extends WordSpecLike with Matchers {
       injector.instanceOf[CryptoConfig] should not be(null)
       injector.instanceOf[CookieSigner] should not be(null)
       injector.instanceOf[CSRFTokenSigner] should not be(null)
-      injector.instanceOf[play.api.libs.Crypto] should not be(null)
       injector.instanceOf[TemporaryFileCreator] should not be(null)
     }
   }

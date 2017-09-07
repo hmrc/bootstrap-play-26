@@ -32,11 +32,13 @@ import org.scalatest.{BeforeAndAfterEach, Matchers, TestData, WordSpecLike}
 import org.scalatestplus.play._
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WS
+import play.api.libs.ws.ahc.AhcWSClient
+import play.api.libs.ws.{WS, WSClient}
 import play.api.mvc.Results.NotFound
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test.{FakeApplication, FakeRequest}
+import play.inject.Injector
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -443,6 +445,8 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
 
   val pc = PatienceConfig(Span(5, Seconds), Span(15, Millis))
 
+  val client: WSClient = AhcWSClient()
+
   // Generate a random string of length n from the given alphabet
   def randomString(alphabet: String)(n: Int): String =
     Stream.continually(random.nextInt(alphabet.length)).map(alphabet).take(n).mkString
@@ -465,7 +469,7 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
     reset(filter.auditConnector)
 
     val url = s"http://localhost:$port/longresponse"
-    val response = await(WS.url(url).get())
+    val response = await(client.url(url).get())
 
     eventually {
       response.body.length should equal(largeContent.length)
@@ -477,7 +481,7 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
     reset(filter.auditConnector)
 
     val url = s"http://localhost:$port/standardresponse"
-    val response = await(WS.url(url).get())
+    val response = await(client.url(url).get())
 
     eventually {
       response.body.length should equal(standardContent.length)
@@ -489,7 +493,7 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
     reset(filter.auditConnector)
 
     val url = s"http://localhost:$port/longrequest"
-    val response = await(WS.url(url).post(largeContent))
+    val response = await(client.url(url).post(largeContent))
 
     eventually {
       response.body.length should equal(0)
