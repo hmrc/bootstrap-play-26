@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.auth
-
-import javax.inject.Inject
+package uk.gov.hmrc.play.bootstrap.config
 
 import play.api.Configuration
-import uk.gov.hmrc.auth.core.PlayAuthConnector
-import uk.gov.hmrc.http.CorePost
-import uk.gov.hmrc.play.bootstrap.config.BaseUrl
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-class DefaultAuthConnector @Inject() (
-                                       httpClient: HttpClient,
-                                       override val configuration: Configuration
-                                     ) extends PlayAuthConnector with BaseUrl {
+import scala.language.implicitConversions
 
-  override val serviceUrl: String = baseUrl("auth")
+trait BaseUrl {
 
-  override def http: CorePost = httpClient
+  protected def configuration: Configuration
+
+  protected def defaultProtocol: String =
+    configuration.getString("microservice.services.protocol").getOrElse("http")
+
+  def baseUrl(serviceName: String): String = {
+
+    val config    = configuration.underlying.getConfig(s"microservice.services.$serviceName")
+
+    val protocol  = Configuration(config).getString("protocol").getOrElse(defaultProtocol)
+    val host      = config.getString("host")
+    val port      = config.getString("port")
+
+    s"$protocol://$host:$port"
+  }
 }
