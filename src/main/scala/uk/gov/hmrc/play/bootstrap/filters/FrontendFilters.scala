@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap
+package uk.gov.hmrc.play.bootstrap.filters
 
 import javax.inject.{Inject, Singleton}
 
@@ -26,7 +26,6 @@ import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.CookieCryptoFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter
-import uk.gov.hmrc.play.bootstrap.filters.{CacheControlFilter, LoggingFilter}
 
 @Singleton
 class FrontendFilters @Inject()

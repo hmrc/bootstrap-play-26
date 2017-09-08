@@ -20,7 +20,7 @@ import play.api.http.HttpFilters
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.crypto.{ApplicationCrypto, ApplicationCryptoDI}
-import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, FrontendFilters}
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, DefaultCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoProvider}
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.{DefaultDeviceIdFilter, DeviceIdFilter}
