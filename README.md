@@ -21,6 +21,7 @@ libraryDependencies += "uk.gov.hmrc" %% "bootstrap-play-25" % "x.x.x"
 In your application.conf file, add:
 
 ```
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.FrontendModule"
 ```
 
@@ -36,6 +37,7 @@ libraryDependencies += "uk.gov.hmrc" %% "govuk-template" % "x.x.x"
 In your application.conf file, add:
 
 ```
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.MicroserviceModule"
 ```
 
@@ -43,6 +45,15 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.MicroserviceModule"
 
 A default http client with pre-configured auditing hook can be injected into any connector. The http client uses http-verbs
 For more http-verbs examples see https://github.com/hmrc/http-verbs-example 
+
+
+Make sure you have the following modules in your application.conf file:
+
+```
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
+```
+
 
 ```scala
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -58,9 +69,11 @@ class SomeConnector @Inject() (client: HttpClient) {
 
 The library supports user authorisation on microservices
 
-In your application.conf file, add:
+Make sure you have the following modules in your application.conf file:
 
 ```
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuthModule"
 ```
 
