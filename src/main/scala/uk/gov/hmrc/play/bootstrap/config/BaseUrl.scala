@@ -16,20 +16,41 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import play.api.Configuration
+import play.api.Mode.Mode
+import play.api.{Configuration, Environment, Logger}
 
 import scala.language.implicitConversions
 
 trait BaseUrl {
 
   protected def configuration: Configuration
+  protected def environment: Environment
 
-  protected def defaultProtocol: String =
-    configuration.getString("microservice.services.protocol").getOrElse("http")
+  private lazy val mode: Mode = environment.mode
+
+  private lazy val root: Configuration = {
+
+    lazy val deprecated1 = {
+      val conf = configuration.getConfig(s"$mode.microservice.services")
+      conf.foreach(_ => Logger.warn(s"`$mode.microservice.services` is deprecated, use `microservice.services` instead"))
+      conf
+    }
+
+    lazy val deprecated2 = {
+      val conf = configuration.getConfig(s"govuk-tax.$mode.services")
+      conf.foreach(_ => Logger.warn(s"`govuk-tax.$mode.services` is deprecated, use `microservice.services` instead"))
+      conf
+    }
+
+    configuration.getConfig("microservice.services") orElse deprecated1 orElse deprecated2
+  }.getOrElse(Configuration.empty)
+
+  private lazy val defaultProtocol: String =
+    root.getString("protocol").getOrElse("http")
 
   def baseUrl(serviceName: String): String = {
 
-    val config    = configuration.underlying.getConfig(s"microservice.services.$serviceName")
+    val config    = root.underlying.getConfig(serviceName)
 
     val protocol  = Configuration(config).getString("protocol").getOrElse(defaultProtocol)
     val host      = config.getString("host")

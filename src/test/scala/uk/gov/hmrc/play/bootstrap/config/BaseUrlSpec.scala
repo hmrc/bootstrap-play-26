@@ -18,87 +18,97 @@ package uk.gov.hmrc.play.bootstrap.config
 
 import com.typesafe.config.ConfigException
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.Configuration
+import play.api.{Configuration, Environment}
 
 class BaseUrlSpec extends WordSpec with MustMatchers {
 
-  trait TestSpec extends BaseUrl
+  trait TestSpec extends BaseUrl {
+    override lazy val environment: Environment = Environment.simple()
+  }
 
-  "BaseUrl" must {
+  val prefixes: Unit = Seq(
+    "microservice.services",
+    "Test.microservice.services",
+    "govuk-tax.Test.services"
+  ).foreach {
+    prefix =>
 
-    val service = "my-service"
-    val prefix  = s"microservice.services.$service"
+      s"BaseUrl, with config root: $prefix" must {
 
-    "return a path when all configuration is provided" in new TestSpec {
+        val service = "my-service"
+        val path = s"$prefix.$service"
 
-      override val configuration: Configuration = Configuration(
-        s"$prefix.protocol" -> "http",
-        s"$prefix.host"     -> "localhost",
-        s"$prefix.port"     -> "80"
-      )
+        "return a path when all configuration is provided" in new TestSpec {
 
-      val result: String = baseUrl(service)
-      result mustEqual "http://localhost:80"
-    }
+          override val configuration: Configuration = Configuration(
+            s"$path.protocol" -> "http",
+            s"$path.host"     -> "localhost",
+            s"$path.port"     -> "80"
+          )
 
-    "fallback to default protocol when it is ommitted" in new TestSpec {
+          val result: String = baseUrl(service)
+          result mustEqual "http://localhost:80"
+        }
 
-      override val configuration: Configuration = Configuration(
-        "microservice.services.protocol"  -> "http",
-        s"$prefix.host"                   -> "localhost",
-        s"$prefix.port"                   -> "80"
-      )
+        "fallback to default protocol when it is ommitted" in new TestSpec {
 
-      val result: String = baseUrl(service)
-      result mustEqual "http://localhost:80"
-    }
+          override val configuration: Configuration = Configuration(
+            s"$prefix.protocol"  -> "http",
+            s"$path.host"                   -> "localhost",
+            s"$path.port"                   -> "80"
+          )
 
-    "fallback to `http` when default is ommitted" in new TestSpec {
+          val result: String = baseUrl(service)
+          result mustEqual "http://localhost:80"
+        }
 
-      override val configuration: Configuration = Configuration(
-        s"$prefix.host"                   -> "localhost",
-        s"$prefix.port"                   -> "80"
-      )
+        "fallback to `http` when default is ommitted" in new TestSpec {
 
-      val result: String = baseUrl(service)
-      result mustEqual "http://localhost:80"
-    }
+          override val configuration: Configuration = Configuration(
+            s"$path.host"                   -> "localhost",
+            s"$path.port"                   -> "80"
+          )
 
-    "throw a configuration exception when no service block exists" in new TestSpec {
+          val result: String = baseUrl(service)
+          result mustEqual "http://localhost:80"
+        }
 
-      override val configuration: Configuration = Configuration.empty
+        "throw a configuration exception when no service block exists" in new TestSpec {
 
-      val e: ConfigException.Missing = intercept[ConfigException.Missing] {
-        baseUrl(service)
+          override val configuration: Configuration = Configuration.empty
+
+          val e: ConfigException.Missing = intercept[ConfigException.Missing] {
+            baseUrl(service)
+          }
+
+          e.getMessage mustEqual s"No configuration setting found for key '$service'"
+        }
+
+        "throw a configuration exception when no `host` exists" in new TestSpec {
+
+          override val configuration: Configuration = Configuration(
+            s"$path.port" -> "80"
+          )
+
+          val e: ConfigException.Missing = intercept[ConfigException.Missing] {
+            baseUrl(service)
+          }
+
+          e.getMessage mustEqual "No configuration setting found for key 'host'"
+        }
+
+        "throw a configuration exception when no `port` exists" in new TestSpec {
+
+          override val configuration: Configuration = Configuration(
+            s"$path.host" -> "localhost"
+          )
+
+          val e: ConfigException.Missing = intercept[ConfigException.Missing] {
+            baseUrl(service)
+          }
+
+          e.getMessage mustEqual "No configuration setting found for key 'port'"
+        }
       }
-
-      e.getMessage() mustEqual "No configuration setting found for key 'microservice'"
-    }
-
-    "throw a configuration exception when no `host` exists" in new TestSpec {
-
-      override val configuration: Configuration = Configuration(
-        s"$prefix.port" -> "80"
-      )
-
-      val e: ConfigException.Missing = intercept[ConfigException.Missing] {
-        baseUrl(service)
-      }
-
-      e.getMessage() mustEqual "No configuration setting found for key 'host'"
-    }
-
-    "throw a configuration exception when no `port` exists" in new TestSpec {
-
-      override val configuration: Configuration = Configuration(
-        s"$prefix.host" -> "localhost"
-      )
-
-      val e: ConfigException.Missing = intercept[ConfigException.Missing] {
-        baseUrl(service)
-      }
-
-      e.getMessage() mustEqual "No configuration setting found for key 'port'"
-    }
   }
 }
