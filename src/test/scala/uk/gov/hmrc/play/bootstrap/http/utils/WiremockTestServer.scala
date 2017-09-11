@@ -18,20 +18,20 @@ package uk.gov.hmrc.play.bootstrap.http.utils
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.BeforeAndAfterAll
 import uk.gov.hmrc.play.test.UnitSpec
 
 
-trait WiremockTestServer extends UnitSpec with BeforeAndAfterEach {
+trait WiremockTestServer extends UnitSpec with BeforeAndAfterAll {
 
   val wireMockServer = new WireMockServer(20001)
 
-  override protected def beforeEach(): Unit = {
+  override protected def beforeAll(): Unit = {
     wireMockServer.start()
     WireMock.configureFor("localhost", 20001)
   }
 
-  override protected def afterEach(): Unit = {
+  override protected def afterAll(): Unit = {
     wireMockServer.stop()
   }
 }
