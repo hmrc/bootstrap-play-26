@@ -23,6 +23,8 @@ import scala.language.implicitConversions
 
 trait BaseUrl {
 
+  // TODO, difference between `microservice.service` to `service` when we strip the `mode` prefix
+
   protected def configuration: Configuration
   protected def environment: Environment
 
