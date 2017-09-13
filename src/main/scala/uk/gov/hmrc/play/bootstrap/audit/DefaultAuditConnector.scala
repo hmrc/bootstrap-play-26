@@ -18,11 +18,11 @@ package uk.gov.hmrc.play.bootstrap.audit
 
 import javax.inject.Inject
 
-import play.api.{Configuration, Environment}
+import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
 
-class DefaultAuditConnector @Inject() (config: Configuration, environment: Environment) extends AuditConnector {
-  override def auditingConfig: AuditingConfig = LoadAuditingConfig(config, environment, "auditing")
+class DefaultAuditConnector @Inject() (config: Configuration) extends AuditConnector {
+  override def auditingConfig: AuditingConfig = LoadAuditingConfig(config, "auditing")
 }

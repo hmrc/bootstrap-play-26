@@ -26,8 +26,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 class DefaultAuthConnector @Inject() (
                                        httpClient: HttpClient,
-                                       override val configuration: Configuration,
-                                       override val environment: Environment
+                                       override val configuration: Configuration
                                      ) extends PlayAuthConnector with BaseUrl {
 
   override val serviceUrl: String = baseUrl("auth")

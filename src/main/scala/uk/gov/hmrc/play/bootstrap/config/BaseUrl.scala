@@ -16,35 +16,24 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import play.api.Mode.Mode
-import play.api.{Configuration, Environment, Logger}
+import play.api.{Configuration, Logger}
 
 import scala.language.implicitConversions
 
 trait BaseUrl {
 
-  // TODO, difference between `microservice.service` to `service` when we strip the `mode` prefix
-
   protected def configuration: Configuration
-  protected def environment: Environment
 
-  private lazy val mode: Mode = environment.mode
+  private lazy val legacyConfiguration: Option[Configuration] = configuration.getConfig("services")
 
   private lazy val root: Configuration = {
 
-    lazy val deprecated1 = {
-      val conf = configuration.getConfig(s"$mode.microservice.services")
-      conf.foreach(_ => Logger.warn(s"`$mode.microservice.services` is deprecated, use `microservice.services` instead"))
-      conf
+    legacyConfiguration.foreach {
+      _ =>
+        Logger.warn("`services` configuration is deprecated, use `microservice.services` instead")
     }
 
-    lazy val deprecated2 = {
-      val conf = configuration.getConfig(s"govuk-tax.$mode.services")
-      conf.foreach(_ => Logger.warn(s"`govuk-tax.$mode.services` is deprecated, use `microservice.services` instead"))
-      conf
-    }
-
-    configuration.getConfig("microservice.services") orElse deprecated1 orElse deprecated2
+    configuration.getConfig("microservice.services") orElse legacyConfiguration
   }.getOrElse(Configuration.empty)
 
   private lazy val defaultProtocol: String =

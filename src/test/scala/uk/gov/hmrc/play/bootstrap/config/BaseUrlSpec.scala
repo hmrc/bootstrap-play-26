@@ -22,14 +22,9 @@ import play.api.{Configuration, Environment}
 
 class BaseUrlSpec extends WordSpec with MustMatchers {
 
-  trait TestSpec extends BaseUrl {
-    override lazy val environment: Environment = Environment.simple()
-  }
-
   val prefixes: Unit = Seq(
     "microservice.services",
-    "Test.microservice.services",
-    "govuk-tax.Test.services"
+    "services"
   ).foreach {
     prefix =>
 
@@ -38,7 +33,7 @@ class BaseUrlSpec extends WordSpec with MustMatchers {
         val service = "my-service"
         val path = s"$prefix.$service"
 
-        "return a path when all configuration is provided" in new TestSpec {
+        "return a path when all configuration is provided" in new BaseUrl {
 
           override val configuration: Configuration = Configuration(
             s"$path.protocol" -> "http",
@@ -50,7 +45,7 @@ class BaseUrlSpec extends WordSpec with MustMatchers {
           result mustEqual "http://localhost:80"
         }
 
-        "fallback to default protocol when it is ommitted" in new TestSpec {
+        "fallback to default protocol when it is ommitted" in new BaseUrl {
 
           override val configuration: Configuration = Configuration(
             s"$prefix.protocol"  -> "http",
@@ -62,7 +57,7 @@ class BaseUrlSpec extends WordSpec with MustMatchers {
           result mustEqual "http://localhost:80"
         }
 
-        "fallback to `http` when default is ommitted" in new TestSpec {
+        "fallback to `http` when default is ommitted" in new BaseUrl {
 
           override val configuration: Configuration = Configuration(
             s"$path.host"                   -> "localhost",
@@ -73,7 +68,7 @@ class BaseUrlSpec extends WordSpec with MustMatchers {
           result mustEqual "http://localhost:80"
         }
 
-        "throw a configuration exception when no service block exists" in new TestSpec {
+        "throw a configuration exception when no service block exists" in new BaseUrl {
 
           override val configuration: Configuration = Configuration.empty
 
@@ -84,7 +79,7 @@ class BaseUrlSpec extends WordSpec with MustMatchers {
           e.getMessage mustEqual s"No configuration setting found for key '$service'"
         }
 
-        "throw a configuration exception when no `host` exists" in new TestSpec {
+        "throw a configuration exception when no `host` exists" in new BaseUrl {
 
           override val configuration: Configuration = Configuration(
             s"$path.port" -> "80"
@@ -97,7 +92,7 @@ class BaseUrlSpec extends WordSpec with MustMatchers {
           e.getMessage mustEqual "No configuration setting found for key 'host'"
         }
 
-        "throw a configuration exception when no `port` exists" in new TestSpec {
+        "throw a configuration exception when no `port` exists" in new BaseUrl {
 
           override val configuration: Configuration = Configuration(
             s"$path.host" -> "localhost"
