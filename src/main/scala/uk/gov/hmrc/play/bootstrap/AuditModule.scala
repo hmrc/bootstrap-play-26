@@ -21,7 +21,7 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
 
-abstract class AuditModule extends Module {
+class AuditModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
     bind[AuditConnector].to[DefaultAuditConnector]
