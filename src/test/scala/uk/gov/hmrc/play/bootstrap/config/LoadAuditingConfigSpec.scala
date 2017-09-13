@@ -28,10 +28,10 @@ class LoadAuditingConfigSpec extends UnitSpec {
 
       val config = Configuration(
         "auditing.enabled" -> "false",
-        "test.auditing.enabled" -> "true",
-        "test.auditing.traceRequests" -> "true",
-        "test.auditing.consumer.baseUri.host" -> "localhost",
-        "test.auditing.consumer.baseUri.port" -> "8100"
+        "Test.auditing.enabled" -> "true",
+        "Test.auditing.traceRequests" -> "true",
+        "Test.auditing.consumer.baseUri.host" -> "localhost",
+        "Test.auditing.consumer.baseUri.port" -> "8100"
       )
 
       LoadAuditingConfig(config, Environment.simple(), "auditing") shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
