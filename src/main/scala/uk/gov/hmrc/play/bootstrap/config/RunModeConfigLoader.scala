@@ -15,7 +15,7 @@
  */
 
 package uk.gov.hmrc.play.bootstrap.config
-ª
+
 import play.api.Configuration
 import play.api.Mode.Mode
 
