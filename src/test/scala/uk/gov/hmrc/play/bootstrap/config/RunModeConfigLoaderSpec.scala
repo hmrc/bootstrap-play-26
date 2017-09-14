@@ -51,7 +51,7 @@ trait RunModeConfigLoaderTests extends WordSpec with MustMatchers with OptionVal
           config.getString("foo").value mustEqual "baz"
         }
 
-        s"remove prefixed config, for prefix: ${prefix(Mode.Test)}" in {
+        s"preserve prefixed config, for prefix: ${prefix(Mode.Test)}" in {
 
           val config = resolve(
             s"${prefix(Mode.Test)}.foo"  -> "bar",
@@ -60,8 +60,8 @@ trait RunModeConfigLoaderTests extends WordSpec with MustMatchers with OptionVal
 
           config.getString("foo").value mustEqual "bar"
           config.getString("bar") mustNot be(defined)
-          config.getString(s"${prefix(Mode.Test)}.foo") mustNot be(defined)
-          config.getString(s"${prefix(Mode.Prod)}.bar") mustNot be(defined)
+          config.getString(s"${prefix(Mode.Test)}.foo").value mustEqual "bar"
+          config.getString(s"${prefix(Mode.Prod)}.bar").value mustEqual "baz"
         }
     }
 

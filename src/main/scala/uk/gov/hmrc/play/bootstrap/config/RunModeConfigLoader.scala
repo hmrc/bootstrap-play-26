@@ -15,9 +15,8 @@
  */
 
 package uk.gov.hmrc.play.bootstrap.config
-
-import com.typesafe.config.Config
-import play.api.{Configuration, Mode}
+ª
+import play.api.Configuration
 import play.api.Mode.Mode
 
 trait RunModeConfigLoader {
@@ -29,27 +28,15 @@ trait RunModeConfigLoader {
 
   def resolveConfig(configuration: Configuration, mode: Mode): Configuration = {
 
-    val allRunModePaths: Seq[String] = {
-      for {
-        mode <- Mode.values
-        path <- paths(mode)
-      } yield path
-    }.toSeq
-
     val currentRunModePaths: Seq[String] =
       paths(mode)
 
     val runModeConfigs: Seq[Configuration] = currentRunModePaths.flatMap(configuration.getConfig)
 
-    val cleanConfig: Config = allRunModePaths.foldLeft(configuration.underlying) {
-      case (config, key) =>
-        config.withoutPath(key)
-    }
-
     val newConfigEntries: Map[String, Any] = runModeConfigs
       .flatMap(_.entrySet.toSeq)
       .foldLeft(Map.empty[String, Any])(_ + _)
 
-    Configuration(cleanConfig) ++ Configuration(newConfigEntries.toSeq: _*)
+    configuration ++ Configuration(newConfigEntries.toSeq: _*)
   }
 }
