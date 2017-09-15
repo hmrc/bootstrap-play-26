@@ -52,14 +52,12 @@ object ControllerConfigs {
     ControllerConfigs(configMap)
   }
 
-  private def readCompositeValue(c : Configuration, key : String) : Option[Configuration] = {
-    try {
-      if (c.underlying.hasPathOrNull(key)) {
-        c.underlying.getValue(key) match {
-          case c : ConfigObject => Some(Configuration(c.toConfig))
-          case _ => None
-        }
-      } else None
-    }
+  private def readCompositeValue(configuration : Configuration, key : String) : Option[Configuration] = {
+    if (configuration.underlying.hasPathOrNull(key)) {
+      configuration.underlying.getValue(key) match {
+        case o : ConfigObject => Some(Configuration(o.toConfig))
+        case _ => None
+      }
+    } else None
   }
 }
