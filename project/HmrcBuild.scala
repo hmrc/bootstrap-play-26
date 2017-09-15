@@ -64,6 +64,6 @@ object Dependencies {
     "org.pegdown" % "pegdown" % "1.5.0" % "test",
     "com.github.tomakehurst" % "wiremock" % "2.7.1" % "test",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
-    "uk.gov.hmrc" %% "hmrctest" % "2.3.0" % "test"
+    "uk.gov.hmrc" %% "hmrctest" % "2.4.0" % "test"
   )
 }
