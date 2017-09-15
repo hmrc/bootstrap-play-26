@@ -46,6 +46,7 @@ class ControllerConfigSpec extends WordSpec with MustMatchers {
       config.auditing mustBe false
       config.logging mustBe false
     }
+
   }
 
   "ControllerConfigs.fromConfig" must {
@@ -69,6 +70,20 @@ class ControllerConfigSpec extends WordSpec with MustMatchers {
 
       config.auditing mustBe true
       config.logging mustBe true
+    }
+
+    "not fail if there are primitive values with controllers. prefix" in {
+      val controllerConfigsWithPrimitiveValues = ControllerConfigs.fromConfig(Configuration(
+        "controllers.confidenceLevel" -> 300,
+        "controllers.foo.needsAuditing" -> false,
+        "controllers.foo.needsLogging" -> false
+      ))
+
+      val config = controllerConfigsWithPrimitiveValues.get("bar")
+
+      config.auditing mustBe true
+      config.logging mustBe true
+
     }
   }
 }

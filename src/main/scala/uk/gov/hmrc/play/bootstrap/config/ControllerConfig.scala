@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import com.typesafe.config.ConfigObject
 import play.api.Configuration
 
 case class ControllerConfig(logging: Boolean = true, auditing: Boolean = true)
@@ -39,17 +40,26 @@ object ControllerConfigs {
 
   def fromConfig(configuration: Configuration): ControllerConfigs = {
 
-    val configMap = configuration.getConfig("controllers").map {
-      config =>
-        config.subKeys.foldLeft(Map.empty[String, ControllerConfig]) {
-          case (map, key) =>
-            config.getConfig(key)
-              .map(ControllerConfig.fromConfig)
-              .map(c => map + (key -> c))
-              .getOrElse(map)
-        }
-    }.getOrElse(Map.empty)
+    val configMap = (
+      for (
+      configs <- configuration.getConfig("controllers").toSeq;
+      key <- configs.subKeys;
+      entryForController <- readCompositeValue(configs, key);
+      parsedEntryForController = ControllerConfig.fromConfig(entryForController)
+    ) yield (key, parsedEntryForController)
+      ).toMap
 
     ControllerConfigs(configMap)
+  }
+
+  private def readCompositeValue(c : Configuration, key : String) : Option[Configuration] = {
+    try {
+      if (c.underlying.hasPathOrNull(key)) {
+        c.underlying.getValue(key) match {
+          case c : ConfigObject => Some(Configuration(c.toConfig))
+          case _ => None
+        }
+      } else None
+    }
   }
 }
