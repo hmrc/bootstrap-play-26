@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api._
 import play.api.http.HttpConfiguration
@@ -35,6 +35,7 @@ class CommonConfigLoadSpec extends WordSpecLike with Matchers {
   "config loading" should {
     "load config correctly" in {
       val app = new GuiceApplicationBuilder()
+        .configure(Configuration(ConfigFactory.load("common.conf")))
         .build()
       val injector = app.injector
       injector.instanceOf[Langs].availables should not be('empty)
