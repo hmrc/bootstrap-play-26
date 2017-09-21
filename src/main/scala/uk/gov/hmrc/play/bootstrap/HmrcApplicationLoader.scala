@@ -29,7 +29,8 @@ class HmrcApplicationLoader extends GuiceApplicationLoader with Base64ConfigDeco
       context.environment.mode
     ))
 
-    initialBuilder
-      .loadConfig(config)
+    val newContext = context.copy(initialConfiguration = config)
+
+    super.builder(newContext)
   }
 }
