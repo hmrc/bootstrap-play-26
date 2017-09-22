@@ -17,9 +17,9 @@
 package uk.gov.hmrc.play.bootstrap
 
 import play.api.{ApplicationLoader, Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.config.{Base64ConfigDecoderTests, RunModeConfigLoaderTests}
+import uk.gov.hmrc.play.bootstrap.config.Base64ConfigDecoderTests
 
-class HmrcApplicationLoaderSpec extends Base64ConfigDecoderTests with RunModeConfigLoaderTests {
+class HmrcApplicationLoaderSpec extends Base64ConfigDecoderTests  {
 
   val loader = new HmrcApplicationLoader()
 
@@ -33,18 +33,7 @@ class HmrcApplicationLoaderSpec extends Base64ConfigDecoderTests with RunModeCon
     loader.load(context).configuration
   }
 
-  override def resolve(config: (String, Any)*): Configuration = {
-
-    val context = {
-      val ctx = ApplicationLoader.createContext(Environment.simple())
-      ctx.copy(initialConfiguration = ctx.initialConfiguration ++ Configuration(config: _*))
-    }
-
-    loader.load(context).configuration
-  }
-
   ".load" must {
     behave like aBase64Decoder
-    behave like aRunModeConfigLoader
   }
 }
