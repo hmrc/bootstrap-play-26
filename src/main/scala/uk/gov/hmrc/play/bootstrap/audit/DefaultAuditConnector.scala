@@ -22,8 +22,10 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
-import uk.gov.hmrc.play.config.ModeAwareConfiguration
 
 class DefaultAuditConnector @Inject() (config: Configuration, environment : Environment) extends AuditConnector {
-  override def auditingConfig: AuditingConfig = LoadAuditingConfig(ModeAwareConfiguration.apply(config, environment.mode), "auditing")
+  override def auditingConfig: AuditingConfig = {
+
+    LoadAuditingConfig(config, environment.mode, "auditing")
+  }
 }

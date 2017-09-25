@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import play.api.{Configuration, Environment}
+import play.api.{Configuration, Mode}
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -32,7 +32,22 @@ class LoadAuditingConfigSpec extends UnitSpec {
         "auditing.consumer.baseUri.port" -> "8100"
       )
 
-      LoadAuditingConfig(config, "auditing") shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+    }
+
+    "use env specific settings if these provided" in {
+      val config = Configuration(
+        "Test.auditing.enabled" -> "true",
+        "Test.auditing.traceRequests" -> "true",
+        "Test.auditing.consumer.baseUri.host" -> "localhost",
+        "Test.auditing.consumer.baseUri.port" -> "8100",
+        "auditing.enabled" -> "false",
+        "auditing.traceRequests" -> "false",
+        "auditing.consumer.baseUri.host" -> "foo",
+        "auditing.consumer.baseUri.port" -> "1234"
+      )
+
+      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
     }
 
     "allow audit to be disabled" in {
@@ -40,7 +55,7 @@ class LoadAuditingConfigSpec extends UnitSpec {
         "auditing.enabled" -> "false"
       )
 
-      LoadAuditingConfig(config, "auditing") shouldBe AuditingConfig(None, enabled = false)
+      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(None, enabled = false)
     }
   }
 }
