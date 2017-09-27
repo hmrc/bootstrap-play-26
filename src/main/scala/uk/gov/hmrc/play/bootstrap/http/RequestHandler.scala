@@ -22,7 +22,7 @@ import play.api.http.{DefaultHttpRequestHandler, HttpConfiguration, HttpErrorHan
 import play.api.mvc.{Handler, RequestHeader}
 import play.api.routing.Router
 
-class DefaultRequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, configuration: HttpConfiguration, filters: HttpFilters)
+class RequestHandler @Inject()(router: Router, errorHandler: HttpErrorHandler, configuration: HttpConfiguration, filters: HttpFilters)
   extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
 
   // Play 2.0 doesn't support trailing slash

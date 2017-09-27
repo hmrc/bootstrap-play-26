@@ -35,7 +35,7 @@ class CommonConfigLoadSpec extends WordSpecLike with Matchers {
   "config loading" should {
     "load config correctly" in {
       val app = new GuiceApplicationBuilder()
-        .configure(Configuration(ConfigFactory.load("common.conf")))
+        .configure(Configuration(ConfigFactory.load("frontend.conf")))
         .build()
       val injector = app.injector
       injector.instanceOf[Langs].availables should not be('empty)
