@@ -20,7 +20,7 @@ import play.api.ApplicationLoader.Context
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceApplicationLoader}
 import uk.gov.hmrc.play.bootstrap.config.Base64ConfigDecoder
 
-class HmrcApplicationLoader extends GuiceApplicationLoader with Base64ConfigDecoder {
+class ApplicationLoader extends GuiceApplicationLoader with Base64ConfigDecoder {
 
   override def builder(context: Context): GuiceApplicationBuilder = super.builder(context.copy(initialConfiguration = decodeConfig(context.initialConfiguration)))
 }
