@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/hmrc/bootstrap-play-25.svg?branch=master)](https://travis-ci.org/hmrc/bootstrap-play-25) [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-25/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-25/_latestVersion)
 
-This library implements basic functionalities required from a platform microservice.
+This library implements basic functionality required by the platform frontend/microservices.
 
 
 ## Adding to your build
@@ -20,9 +20,25 @@ libraryDependencies += "uk.gov.hmrc" %% "bootstrap-play-25" % "x.x.x"
 
 In your application.conf file, add:
 
-```
+```properties
+# An ApplicationLoader that uses Guice to bootstrap the application.
+play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
+
+# Primary entry point for all HTTP requests on Play applications
+play.http.requestHandler = "uk.gov.hmrc.play.bootstrap.http.RequestHandler"
+
+# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.bootstrap.AuditModule` or create your own.
+# An audit connector must be provided.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+
+# Provides an implementation of MetricsFilter. Use `uk.gov.hmrc.play.graphite.GraphiteMetricsModule` or create your own.
+# A metric filter must be provided
+play.modules.enabled += "uk.gov.hmrc.play.graphite.GraphiteMetricsModule"
+
+# Provides an implementation and configures all filters required by a Platform frontend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.FrontendModule"
+play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.FrontendFilters"
+
 ```
 
 And in your SBT build add:
@@ -36,9 +52,25 @@ libraryDependencies += "uk.gov.hmrc" %% "govuk-template" % "x.x.x"
 
 In your application.conf file, add:
 
-```
+```properties
+# An ApplicationLoader that uses Guice to bootstrap the application.
+play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
+
+# Primary entry point for all HTTP requests on Play applications
+play.http.requestHandler = "uk.gov.hmrc.play.bootstrap.http.RequestHandler"
+
+# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.bootstrap.AuditModule` or create your own.
+# An audit connector must be provided.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+
+# Provides an implementation of MetricsFilter. Use `uk.gov.hmrc.play.graphite.GraphiteMetricsModule` or create your own.
+# A metric filter must be provided
+play.modules.enabled += "uk.gov.hmrc.play.graphite.GraphiteMetricsModule"
+
+# Provides an implementation and configures all filters required by a Platform frontend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.MicroserviceModule"
+play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters”
+
 ```
 
 ## Default HTTP client
@@ -49,7 +81,7 @@ For more http-verbs examples see https://github.com/hmrc/http-verbs-example
 
 Make sure you have the following modules in your application.conf file:
 
-```
+```properties
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 ```
