@@ -48,7 +48,7 @@ object Dependencies {
     "uk.gov.hmrc" %% "http-verbs" % "7.1.0",
     "uk.gov.hmrc" %% "http-verbs-play-25" % "0.9.0",
     "uk.gov.hmrc" %% "play-auditing" % "3.2.0",
-    "uk.gov.hmrc" %% "auth-client" % "0.2.0",
+    "uk.gov.hmrc" %% "auth-client" % "2.3.0",
     "uk.gov.hmrc" %% "play-health" % "2.1.0",
     "uk.gov.hmrc" %% "play-graphite" % "4.0.0",
     "uk.gov.hmrc" %% "play-config" % "5.0.0",
