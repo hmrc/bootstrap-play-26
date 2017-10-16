@@ -24,6 +24,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.mvc.Results._
 import play.api.mvc.{RequestHeader, Result}
+import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -63,6 +64,7 @@ class JsonErrorHandler @Inject()(val configuration: Configuration, auditConnecto
 
     val code = ex match {
       case e: NotFoundException => "ResourceNotFound"
+      case e: AuthorisationException => "ClientError"
       case jsError: JsValidationException => "ServerValidationError"
       case _ => "ServerInternalError"
     }
@@ -73,6 +75,7 @@ class JsonErrorHandler @Inject()(val configuration: Configuration, auditConnecto
 
   private def resolveError(ex: Throwable): Result = {
     val errorResponse = ex match {
+      case e: AuthorisationException => ErrorResponse(401, e.getMessage)
       case e: HttpException => ErrorResponse(e.responseCode, e.getMessage)
       case e: Upstream4xxResponse => ErrorResponse(e.reportAs, e.getMessage)
       case e: Upstream5xxResponse => ErrorResponse(e.reportAs, e.getMessage)

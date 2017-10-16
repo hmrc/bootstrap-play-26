@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap
 
-import play.api.{ApplicationLoader, Configuration, Environment}
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.Base64ConfigDecoderTests
 
 class ApplicationLoaderSpec extends Base64ConfigDecoderTests  {
@@ -26,7 +26,7 @@ class ApplicationLoaderSpec extends Base64ConfigDecoderTests  {
   override def decode(config: (String, Any)*): Configuration = {
 
     val context = {
-      val ctx = ApplicationLoader.createContext(Environment.simple())
+      val ctx = play.api.ApplicationLoader.createContext(Environment.simple())
       ctx.copy(initialConfiguration = ctx.initialConfiguration ++ Configuration(config: _*))
     }
 

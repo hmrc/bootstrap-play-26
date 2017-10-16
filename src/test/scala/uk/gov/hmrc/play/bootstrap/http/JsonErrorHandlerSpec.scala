@@ -21,14 +21,15 @@ import akka.stream.ActorMaterializer
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
-import org.scalatest.{LoneElement, Matchers, WordSpec}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{LoneElement, Matchers, WordSpec}
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.{RequestHeader, Result}
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import play.api.mvc.Result
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.BearerTokenExpired
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -70,6 +71,16 @@ class JsonErrorHandlerSpec extends WordSpec with Matchers with ScalaFutures with
       val resultF: Future[Result] = jsh.onClientError(requestHeader, 401, "unauthorized")
       status(resultF) shouldEqual UNAUTHORIZED
       contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":401,"message":"unauthorized"}""")
+
+      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
+      verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
+      captor.getValue.auditType shouldBe "ClientError"
+    }
+
+    "convert an AuthorisationException to Unauthorized response and audit the error" in new Setup {
+      val resultF: Future[Result] = jsh.onServerError(requestHeader, new BearerTokenExpired)
+      status(resultF) shouldEqual UNAUTHORIZED
+      contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":401,"message":"Bearer token expired"}""")
 
       val captor = ArgumentCaptor.forClass(classOf[DataEvent])
       verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
