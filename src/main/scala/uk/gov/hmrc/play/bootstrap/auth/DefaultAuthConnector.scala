@@ -21,15 +21,19 @@ import javax.inject.Inject
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.CorePost
-import uk.gov.hmrc.play.bootstrap.config.BaseUrl
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.config.ServicesConfig
+
 
 class DefaultAuthConnector @Inject() (
                                        httpClient: HttpClient,
-                                       override val configuration: Configuration
-                                     ) extends PlayAuthConnector with BaseUrl {
+                                       override val runModeConfiguration: Configuration,
+                                       val environment: Environment
+                                     ) extends PlayAuthConnector with ServicesConfig {
 
   override val serviceUrl: String = baseUrl("auth")
+
+  override protected def mode = environment.mode
 
   override def http: CorePost = httpClient
 }
