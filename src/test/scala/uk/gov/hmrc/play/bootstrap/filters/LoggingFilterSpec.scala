@@ -26,14 +26,13 @@ import play.api.LoggerLike
 import play.api.mvc.Results
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class LoggingFilterSpec extends WordSpecLike with MockitoSugar with Matchers with OptionValues with FutureAwaits with DefaultAwaitTimeout with Eventually {
 
   class LoggingFilterTest (loggerIn: LoggerLike, controllerNeedsLogging: Boolean)(implicit val mat: Materializer) extends LoggingFilter {
     override def logger = loggerIn
     override def controllerNeedsLogging(controllerName: String): Boolean = controllerNeedsLogging
-    override implicit def ec: ExecutionContext = play.api.libs.concurrent.Execution.Implicits.defaultContext
   }
 
   "the LoggingFilter should" should {
