@@ -22,20 +22,20 @@ import javax.inject.Inject
 import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
 import org.joda.time.DateTimeUtils
-import play.api.{Logger, LoggerLike}
 import play.api.mvc.{Filter, RequestHeader, Result}
+import play.api.{Logger, LoggerLike}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.LoggingDetails
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait LoggingFilter extends Filter {
   private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
 
   def controllerNeedsLogging(controllerName: String): Boolean
-  implicit def ec: ExecutionContext
 
   protected def logger:LoggerLike = Logger
 
@@ -71,10 +71,7 @@ trait LoggingFilter extends Filter {
 }
 
 class DefaultLoggingFilter @Inject() (config: ControllerConfigs)
-                                     (implicit
-                                     override val mat: Materializer,
-                                     override val ec: ExecutionContext
-                                     ) extends LoggingFilter {
+                                     (implicit override val mat: Materializer) extends LoggingFilter {
 
   override def controllerNeedsLogging(controllerName: String): Boolean =
     config.get(controllerName).logging

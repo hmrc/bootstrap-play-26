@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import javax.inject.Inject
+import javax.inject.Inject
 
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
@@ -27,16 +28,14 @@ import play.api.http.HttpEntity.Streamed
 import play.api.libs.streams.Accumulator
 import play.api.mvc.{Result, _}
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 
@@ -55,7 +54,7 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
   def apply(nextFilter: EssentialAction) = new EssentialAction {
     def apply(requestHeader: RequestHeader) = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
-      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(requestHeader.headers)
+      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(requestHeader.headers, Some(requestHeader.session))
 
       val loggingContext = s"${requestHeader.method} ${requestHeader.uri}"
 
@@ -82,7 +81,8 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
     (for (controllerName <- request.tags.get(play.routing.Router.Tags.ROUTE_CONTROLLER))
       yield controllerNeedsAuditing(controllerName)).getOrElse(true)
 
-  protected def onCompleteWithInput(loggingContext: String, next: Accumulator[ByteString, Result], handler: (String, Try[Result]) => String => Unit): Accumulator[ByteString, Result] = {
+  protected def onCompleteWithInput(loggingContext: String, next: Accumulator[ByteString, Result], handler: (String, Try[Result]) => String => Unit)
+                                   (implicit ec: ExecutionContext): Accumulator[ByteString, Result] = {
     val requestBodyPromise = Promise[String]()
     val requestBodyFuture = requestBodyPromise.future
 
