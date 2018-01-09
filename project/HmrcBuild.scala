@@ -46,7 +46,7 @@ object Dependencies {
     filters,
     "uk.gov.hmrc" %% "crypto" % "4.4.0",
     "uk.gov.hmrc" %% "http-verbs" % "7.2.0",
-    "uk.gov.hmrc" %% "http-verbs-play-25" % "0.9.0",
+    "uk.gov.hmrc" %% "http-verbs-play-25" % "0.10.0",
     "uk.gov.hmrc" %% "play-auditing" % "3.3.0",
     "uk.gov.hmrc" %% "auth-client" % "2.3.0",
     "uk.gov.hmrc" %% "play-health" % "2.1.0",
