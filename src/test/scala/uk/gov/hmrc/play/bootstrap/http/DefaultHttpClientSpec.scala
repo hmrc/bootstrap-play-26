@@ -20,24 +20,24 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import org.joda.time.LocalDate
 import org.scalatest.TestData
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatestplus.play.{OneAppPerSuite, OneAppPerTest, WsScalaTestClient}
+import org.scalatestplus.play.OneAppPerTest
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.http.utils._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class DefaultHttpClientSpec extends UnitSpec with ScalaFutures with IntegrationPatience with WiremockTestServer with OneAppPerSuite {
-  override lazy  val app: Application = new GuiceApplicationBuilder()
+class DefaultHttpClientSpec extends UnitSpec with ScalaFutures with IntegrationPatience with WiremockTestServer with OneAppPerTest {
+
+  override def newAppForTest(testData: TestData): Application = new GuiceApplicationBuilder()
     .overrides(
       bind[HttpClient].to[DefaultHttpClient],
       bind[AuditConnector].to[TestAuditConnector]
     ).build()
 
-  lazy val myHttpClient = app.injector.instanceOf[HttpClient]
+  def myHttpClient = app.injector.instanceOf[HttpClient]
 
 
   "A GET" should {
