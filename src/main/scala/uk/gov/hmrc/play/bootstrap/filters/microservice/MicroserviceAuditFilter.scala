@@ -215,6 +215,6 @@ class DefaultMicroserviceAuditFilter @Inject() (
                                                ) extends MicroserviceAuditFilter with AppName {
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
-    controllerConfigs.get("controllerName").auditing
+    controllerConfigs.get(controllerName).auditing
 
 }

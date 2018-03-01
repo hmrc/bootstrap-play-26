@@ -42,14 +42,22 @@ object ControllerConfigs {
 
     val configMap = (
       for (
-      configs <- configuration.getConfig("controllers").toSeq;
-      key <- configs.subKeys;
-      entryForController <- readCompositeValue(configs, key);
+      config <- configuration.getConfig("controllers").toSeq;
+      controllerName <- controllerNames(config);
+      entryForController <- readCompositeValue(config, controllerName);
       parsedEntryForController = ControllerConfig.fromConfig(entryForController)
-    ) yield (key, parsedEntryForController)
+    ) yield (controllerName, parsedEntryForController)
       ).toMap
 
     ControllerConfigs(configMap)
+  }
+
+  def controllerNames(config: Configuration): List[String] = {
+    def keepOnlyControllerName(s: String): String = {
+      val lastChar = if (s.lastIndexOf(".") != -1) s.lastIndexOf(".") else s.length
+      s.substring(0, lastChar)
+    }
+    config.keys.map(keepOnlyControllerName).toList
   }
 
   private def readCompositeValue(configuration : Configuration, key : String) : Option[Configuration] = {
