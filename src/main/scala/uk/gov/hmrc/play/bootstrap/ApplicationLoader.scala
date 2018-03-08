@@ -22,5 +22,6 @@ import uk.gov.hmrc.play.bootstrap.config.Base64ConfigDecoder
 
 class ApplicationLoader extends GuiceApplicationLoader with Base64ConfigDecoder {
 
-  override def builder(context: Context): GuiceApplicationBuilder = super.builder(context.copy(initialConfiguration = decodeConfig(context.initialConfiguration)))
+  override def builder(context: Context): GuiceApplicationBuilder =
+    super.builder(context.copy(initialConfiguration = decodeConfig(context.initialConfiguration)))
 }

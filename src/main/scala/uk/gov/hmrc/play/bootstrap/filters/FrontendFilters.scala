@@ -28,8 +28,7 @@ import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.CookieCryptoFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter
 
 @Singleton
-class FrontendFilters @Inject()
-(
+class FrontendFilters @Inject()(
   configuration: Configuration,
   loggingFilter: LoggingFilter,
   headersFilter: HeadersFilter,
@@ -55,7 +54,8 @@ class FrontendFilters @Inject()
     cacheControlFilter
   )
 
-  lazy val enableSecurityHeaderFilter: Boolean = configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
+  lazy val enableSecurityHeaderFilter: Boolean =
+    configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
 
   override val filters =
     if (enableSecurityHeaderFilter) Seq(securityFilter) ++ frontendFilters else frontendFilters

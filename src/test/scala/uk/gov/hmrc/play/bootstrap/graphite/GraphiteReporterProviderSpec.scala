@@ -29,7 +29,7 @@ class GraphiteReporterProviderSpec extends WordSpec with MustMatchers {
     "return a valid `GraphiteReporterProviderConfig` when given a prefix" in {
 
       val rootConfig = Configuration(
-        "appName" -> "testApp",
+        "appName"                              -> "testApp",
         "microservice.metrics.graphite.prefix" -> "test"
       )
 
@@ -46,10 +46,10 @@ class GraphiteReporterProviderSpec extends WordSpec with MustMatchers {
     "return a valid `GraphiteReporterProviderConfig` when given a prefix and optional config" in {
 
       val rootConfig = Configuration(
-          "microservice.metrics.graphite.prefix" -> "test",
-          "microservice.metrics.graphite.durations" -> "SECONDS",
-          "microservice.metrics.graphite.rates" -> "SECONDS"
-        )
+        "microservice.metrics.graphite.prefix"    -> "test",
+        "microservice.metrics.graphite.durations" -> "SECONDS",
+        "microservice.metrics.graphite.rates"     -> "SECONDS"
+      )
       val graphiteConfig = rootConfig.getConfig("microservice.metrics.graphite").get
 
       val config: GraphiteReporterProviderConfig =
@@ -62,7 +62,7 @@ class GraphiteReporterProviderSpec extends WordSpec with MustMatchers {
 
     "return a valid `GraphiteReporterProviderConfig` when given an appName" in {
 
-      val rootConfig = Configuration("appName" -> "testApp")
+      val rootConfig     = Configuration("appName" -> "testApp")
       val graphiteConfig = Configuration()
 
       val config: GraphiteReporterProviderConfig =

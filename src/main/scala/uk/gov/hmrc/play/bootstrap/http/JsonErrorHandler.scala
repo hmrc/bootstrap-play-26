@@ -33,10 +33,16 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-case class ErrorResponse(statusCode: Int, message: String, xStatusCode: Option[String] = None, requested: Option[String] = None)
+case class ErrorResponse(
+  statusCode: Int,
+  message: String,
+  xStatusCode: Option[String] = None,
+  requested: Option[String]   = None)
 
 class JsonErrorHandler @Inject()(val configuration: Configuration, auditConnector: AuditConnector)
-  extends HttpErrorHandler with HttpAuditEvent with AppName {
+    extends HttpErrorHandler
+    with HttpAuditEvent
+    with AppName {
 
   implicit val erFormats = Json.format[ErrorResponse]
 
@@ -47,7 +53,8 @@ class JsonErrorHandler @Inject()(val configuration: Configuration, auditConnecto
     statusCode match {
       case play.mvc.Http.Status.NOT_FOUND =>
         auditConnector.sendEvent(dataEvent("ResourceNotFound", "Resource Endpoint Not Found", request))
-        Future.successful(NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path)))))
+        Future.successful(
+          NotFound(Json.toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path)))))
       case play.mvc.Http.Status.BAD_REQUEST =>
         auditConnector.sendEvent(dataEvent("ServerValidationError", "Request bad format exception", request))
         Future.successful(BadRequest(Json.toJson(ErrorResponse(BAD_REQUEST, "bad request"))))
@@ -63,23 +70,24 @@ class JsonErrorHandler @Inject()(val configuration: Configuration, auditConnecto
     Logger.error(s"! Internal server error, for (${request.method}) [${request.uri}] -> ", ex)
 
     val code = ex match {
-      case e: NotFoundException => "ResourceNotFound"
-      case e: AuthorisationException => "ClientError"
+      case e: NotFoundException           => "ResourceNotFound"
+      case e: AuthorisationException      => "ClientError"
       case jsError: JsValidationException => "ServerValidationError"
-      case _ => "ServerInternalError"
+      case _                              => "ServerInternalError"
     }
 
-    auditConnector.sendEvent(dataEvent(code, "Unexpected error", request, Map("transactionFailureReason" -> ex.getMessage)))
+    auditConnector.sendEvent(
+      dataEvent(code, "Unexpected error", request, Map("transactionFailureReason" -> ex.getMessage)))
     Future.successful(resolveError(ex))
   }
 
   private def resolveError(ex: Throwable): Result = {
     val errorResponse = ex match {
       case e: AuthorisationException => ErrorResponse(401, e.getMessage)
-      case e: HttpException => ErrorResponse(e.responseCode, e.getMessage)
-      case e: Upstream4xxResponse => ErrorResponse(e.reportAs, e.getMessage)
-      case e: Upstream5xxResponse => ErrorResponse(e.reportAs, e.getMessage)
-      case e: Throwable => ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
+      case e: HttpException          => ErrorResponse(e.responseCode, e.getMessage)
+      case e: Upstream4xxResponse    => ErrorResponse(e.reportAs, e.getMessage)
+      case e: Upstream5xxResponse    => ErrorResponse(e.reportAs, e.getMessage)
+      case e: Throwable              => ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
     }
 
     new Status(errorResponse.statusCode)(Json.toJson(errorResponse))

@@ -28,9 +28,14 @@ import play.api.http.HttpVerbs._
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.{FakeHeaders, FakeRequest}
 
-class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutures with MockitoSugar with OneAppPerSuite {
+class CSRFExceptionsFilterSpec
+    extends WordSpecLike
+    with Matchers
+    with ScalaFutures
+    with MockitoSugar
+    with OneAppPerSuite {
 
-  private val now = () => DateTime.now().withZone(DateTimeZone.UTC)
+  private val now          = () => DateTime.now().withZone(DateTimeZone.UTC)
   private val csrfTokenKey = "Csrf-Token"
 
   private def csrfToken(rh: RequestHeader): Option[String] = rh.headers.get(csrfTokenKey)
@@ -40,7 +45,7 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
   "CSRF exceptions filter" should {
 
     "do nothing if POST request and not in whitelist" in {
-      val rh = FakeRequest(POST, "/something", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
+      val rh     = FakeRequest(POST, "/something", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
       when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(None)
 
@@ -50,7 +55,7 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     }
 
     "do nothing for GET requests" in {
-      val rh = FakeRequest(GET, "/ida/login", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
+      val rh     = FakeRequest(GET, "/ida/login", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
       when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
       val filter = new CSRFExceptionsFilter(config, mat)
@@ -59,7 +64,7 @@ class CSRFExceptionsFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     }
 
     "add Csrf-Token header with value nocheck to bypass validation for white-listed POST request" in {
-      val rh = FakeRequest(POST, "/ida/login", FakeHeaders(), AnyContentAsEmpty)
+      val rh     = FakeRequest(POST, "/ida/login", FakeHeaders(), AnyContentAsEmpty)
       val config = mock[Configuration]
       when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
       val filter = new CSRFExceptionsFilter(config, mat)

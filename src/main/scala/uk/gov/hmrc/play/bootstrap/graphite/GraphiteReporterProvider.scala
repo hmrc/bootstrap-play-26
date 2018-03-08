@@ -26,40 +26,42 @@ import com.typesafe.config.ConfigException
 import play.api.Configuration
 
 case class GraphiteReporterProviderConfig(
-                                         prefix: String,
-                                         rates: Option[TimeUnit],
-                                         durations: Option[TimeUnit]
-                                         )
+  prefix: String,
+  rates: Option[TimeUnit],
+  durations: Option[TimeUnit]
+)
 
 object GraphiteReporterProviderConfig {
 
-  def fromConfig(config: Configuration, graphiteConfiguration : Configuration): GraphiteReporterProviderConfig = {
+  def fromConfig(config: Configuration, graphiteConfiguration: Configuration): GraphiteReporterProviderConfig = {
 
-    val appName: Option[String]       = config.getString("appName")
-    val rates: Option[TimeUnit]       = graphiteConfiguration.getString("rates").map(TimeUnit.valueOf)
-    val durations: Option[TimeUnit]   = graphiteConfiguration.getString("durations").map(TimeUnit.valueOf)
+    val appName: Option[String]     = config.getString("appName")
+    val rates: Option[TimeUnit]     = graphiteConfiguration.getString("rates").map(TimeUnit.valueOf)
+    val durations: Option[TimeUnit] = graphiteConfiguration.getString("durations").map(TimeUnit.valueOf)
 
-    val prefix: String = graphiteConfiguration.getString("prefix")
+    val prefix: String = graphiteConfiguration
+      .getString("prefix")
       .orElse(appName.map(name => s"tax.$name"))
-      .getOrElse(throw new ConfigException.Generic("`metrics.graphite.prefix` in config or `appName` as parameter required"))
+      .getOrElse(
+        throw new ConfigException.Generic("`metrics.graphite.prefix` in config or `appName` as parameter required"))
 
     GraphiteReporterProviderConfig(prefix, rates, durations)
   }
 }
 
-class GraphiteReporterProvider @Inject() (
-                                         config: GraphiteReporterProviderConfig,
-                                         metrics: Metrics,
-                                         graphite: Graphite,
-                                         filter: MetricFilter
-                                         ) extends Provider[GraphiteReporter] {
+class GraphiteReporterProvider @Inject()(
+  config: GraphiteReporterProviderConfig,
+  metrics: Metrics,
+  graphite: Graphite,
+  filter: MetricFilter
+) extends Provider[GraphiteReporter] {
 
   override def get(): GraphiteReporter =
     GraphiteReporter
-        .forRegistry(metrics.defaultRegistry)
-        .prefixedWith(s"${config.prefix}.${java.net.InetAddress.getLocalHost.getHostName}")
-        .convertDurationsTo(config.durations.getOrElse(TimeUnit.SECONDS))
-        .convertRatesTo(config.rates.getOrElse(TimeUnit.MILLISECONDS))
-        .filter(filter)
-        .build(graphite)
+      .forRegistry(metrics.defaultRegistry)
+      .prefixedWith(s"${config.prefix}.${java.net.InetAddress.getLocalHost.getHostName}")
+      .convertDurationsTo(config.durations.getOrElse(TimeUnit.SECONDS))
+      .convertRatesTo(config.rates.getOrElse(TimeUnit.MILLISECONDS))
+      .filter(filter)
+      .build(graphite)
 }

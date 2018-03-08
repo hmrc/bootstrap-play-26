@@ -27,7 +27,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import scala.util.{Failure, Success, Try}
 
 trait Utf8MimeTypes {
-  self : Controller =>
+  self: Controller =>
 
   override val JSON = s"${MimeTypes.JSON};charset=utf-8"
 
@@ -38,10 +38,12 @@ trait BaseController extends Controller with Utf8MimeTypes {
 
   implicit def hc(implicit rh: RequestHeader) = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
-  protected def withJsonBody[T](f: (T) => Future[Result])(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]) =
+  protected def withJsonBody[T](
+    f: (T) => Future[Result])(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]) =
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
-      case Success(JsError(errs)) => Future.successful(BadRequest(s"Invalid ${m.runtimeClass.getSimpleName} payload: $errs"))
+      case Success(JsError(errs)) =>
+        Future.successful(BadRequest(s"Invalid ${m.runtimeClass.getSimpleName} payload: $errs"))
       case Failure(e) => Future.successful(BadRequest(s"could not parse body due to ${e.getMessage}"))
     }
 

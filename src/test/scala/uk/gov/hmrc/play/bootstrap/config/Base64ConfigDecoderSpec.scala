@@ -30,8 +30,8 @@ trait Base64ConfigDecoderTests extends WordSpec with MustMatchers {
     val quux = Base64.encodeBase64String("quux".getBytes())
 
     val config = decode(
-      "foo" -> "bar",
-      "womble" -> 7331,
+      "foo"        -> "bar",
+      "womble"     -> 7331,
       "baz.base64" -> quux
     )
 

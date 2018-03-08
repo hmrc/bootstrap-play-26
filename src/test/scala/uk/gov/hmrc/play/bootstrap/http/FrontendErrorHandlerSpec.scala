@@ -31,7 +31,8 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
   implicit lazy val materializer: Materializer = app.materializer
 
   object TestFrontendErrorHandler extends FrontendErrorHandler {
-    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html = Html("error")
+    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(
+      implicit rh: Request[_]): Html      = Html("error")
     override def messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
   }
 
@@ -40,26 +41,27 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
   "resolving an error" should {
     "return a generic InternalServerError result" in {
       val exception = new Exception("Runtime exception")
-      val result = resolveError(FakeRequest(), exception)
+      val result    = resolveError(FakeRequest(), exception)
 
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers should contain (CACHE_CONTROL -> "no-cache")
+      result.header.status  shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return a generic InternalServerError result if the exception cause is null" in {
       val exception = new Exception("Runtime exception", null)
-      val result = resolveError(FakeRequest(), exception)
+      val result    = resolveError(FakeRequest(), exception)
 
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers should contain (CACHE_CONTROL -> "no-cache")
+      result.header.status  shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return an InternalServerError result for an application error" in {
 
       val responseCode = SEE_OTHER
-      val location = "http://some.test.location/page"
+      val location     = "http://some.test.location/page"
       val theResult = Result(
-        ResponseHeader(responseCode, Map("Location" -> location)), HttpEntity.NoEntity
+        ResponseHeader(responseCode, Map("Location" -> location)),
+        HttpEntity.NoEntity
       )
 
       val appException = new ApplicationException("paye", theResult, "application exception")
@@ -70,4 +72,3 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
     }
   }
 }
-

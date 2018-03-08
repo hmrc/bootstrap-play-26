@@ -24,7 +24,7 @@ case class ControllerConfig(logging: Boolean = true, auditing: Boolean = true)
 object ControllerConfig {
 
   def fromConfig(configuration: Configuration): ControllerConfig = {
-    val logging = configuration.getBoolean("needsLogging").getOrElse(true)
+    val logging  = configuration.getBoolean("needsLogging").getOrElse(true)
     val auditing = configuration.getBoolean("needsAuditing").getOrElse(true)
     ControllerConfig(logging, auditing)
   }
@@ -41,13 +41,12 @@ object ControllerConfigs {
   def fromConfig(configuration: Configuration): ControllerConfigs = {
 
     val configMap = (
-      for (
-      config <- configuration.getConfig("controllers").toSeq;
-      controllerName <- controllerNames(config);
-      entryForController <- readCompositeValue(config, controllerName);
-      parsedEntryForController = ControllerConfig.fromConfig(entryForController)
-    ) yield (controllerName, parsedEntryForController)
-      ).toMap
+      for (config             <- configuration.getConfig("controllers").toSeq;
+           controllerName     <- controllerNames(config);
+           entryForController <- readCompositeValue(config, controllerName);
+           parsedEntryForController = ControllerConfig.fromConfig(entryForController))
+        yield (controllerName, parsedEntryForController)
+    ).toMap
 
     ControllerConfigs(configMap)
   }
@@ -60,12 +59,11 @@ object ControllerConfigs {
     config.keys.map(keepOnlyControllerName).toList
   }
 
-  private def readCompositeValue(configuration : Configuration, key : String) : Option[Configuration] = {
+  private def readCompositeValue(configuration: Configuration, key: String): Option[Configuration] =
     if (configuration.underlying.hasPathOrNull(key)) {
       configuration.underlying.getValue(key) match {
-        case o : ConfigObject => Some(Configuration(o.toConfig))
-        case _ => None
+        case o: ConfigObject => Some(Configuration(o.toConfig))
+        case _               => None
       }
     } else None
-  }
 }

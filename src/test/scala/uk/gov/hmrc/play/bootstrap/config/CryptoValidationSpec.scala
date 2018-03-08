@@ -24,14 +24,16 @@ class CryptoValidationSpec extends WordSpec with Matchers {
   "CryptoValidation" must {
 
     "Be created successfully if crypto configuration is valid" in {
-      new CryptoValidation(Configuration(
-        "cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
-        "queryParameter.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
-        "sso.encryption.key" -> "P5xsJ9Nt+quxGZzB4DeLfw=="))
+      new CryptoValidation(
+        Configuration(
+          "cookie.encryption.key"         -> "gvBoGdgzqG1AarzF1LY0zQ==",
+          "queryParameter.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
+          "sso.encryption.key"            -> "P5xsJ9Nt+quxGZzB4DeLfw=="
+        ))
     }
 
     "Fail if crypto configuration is invalid" in {
-      an[RuntimeException] shouldBe thrownBy (new CryptoValidation(Configuration()))
+      an[RuntimeException] shouldBe thrownBy(new CryptoValidation(Configuration()))
     }
 
   }

@@ -34,26 +34,35 @@ import uk.gov.hmrc.http.NotFoundException
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class FiltersForTestWithSecurityFilterFirst @Inject() (securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
+class FiltersForTestWithSecurityFilterFirst @Inject()(securityHeaderFilter: SecurityHeadersFilter) extends HttpFilters {
   def filters = Seq(securityHeaderFilter)
 }
 
 class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerTest {
 
   val routerForTest: Router = Router.from {
-    case GET(p"/ok") => Action { request => Results.Ok("OK") }
-    case GET(p"/error-async-404") => Action { request => throw new NotFoundException("Expect 404") }
+    case GET(p"/ok") =>
+      Action { request =>
+        Results.Ok("OK")
+      }
+    case GET(p"/error-async-404") =>
+      Action { request =>
+        throw new NotFoundException("Expect 404")
+      }
   }
 
-  override def newAppForTest(testData: TestData): Application = new GuiceApplicationBuilder()
-    .overrides(
-      bind[HttpFilters].to[FiltersForTestWithSecurityFilterFirst]
-    ).router(routerForTest).build()
+  override def newAppForTest(testData: TestData): Application =
+    new GuiceApplicationBuilder()
+      .overrides(
+        bind[HttpFilters].to[FiltersForTestWithSecurityFilterFirst]
+      )
+      .router(routerForTest)
+      .build()
 
   "Action throws no exception and returns 200 OK" in {
     val response = Await.result(wsUrl("/ok")(port).get(), Duration.Inf)
     response.status shouldBe (200)
-    response.body shouldBe ("OK")
+    response.body   shouldBe ("OK")
   }
 
   "No endpoint in router and returns 404" in {

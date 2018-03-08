@@ -24,27 +24,26 @@ import com.typesafe.config.Config
 import play.api.Configuration
 
 case class GraphiteProviderConfig(
-                                 host: String,
-                                 port: Int
-                                 )
+  host: String,
+  port: Int
+)
 
 object GraphiteProviderConfig {
 
   def fromConfig(graphiteConfiguration: Configuration): GraphiteProviderConfig = {
 
-    val graphite: Config  = graphiteConfiguration.underlying
-    val host: String      = graphite.getString("host")
-    val port: Int         = graphite.getInt("port")
+    val graphite: Config = graphiteConfiguration.underlying
+    val host: String     = graphite.getString("host")
+    val port: Int        = graphite.getInt("port")
 
     GraphiteProviderConfig(host, port)
   }
 }
 
-class GraphiteProvider @Inject() (
-                                   config: GraphiteProviderConfig
-                                 ) extends Provider[Graphite] {
+class GraphiteProvider @Inject()(
+  config: GraphiteProviderConfig
+) extends Provider[Graphite] {
 
-  override def get(): Graphite = {
+  override def get(): Graphite =
     new Graphite(new InetSocketAddress(config.host, config.port))
-  }
 }

@@ -26,28 +26,32 @@ class LoadAuditingConfigSpec extends UnitSpec {
 
     "look for config first under auditing" in {
       val config = Configuration(
-        "auditing.enabled" -> "true",
-        "auditing.traceRequests" -> "true",
+        "auditing.enabled"               -> "true",
+        "auditing.traceRequests"         -> "true",
         "auditing.consumer.baseUri.host" -> "localhost",
         "auditing.consumer.baseUri.port" -> "8100"
       )
 
-      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(
+        Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled = true)
     }
 
     "use env specific settings if these provided" in {
       val config = Configuration(
-        "Test.auditing.enabled" -> "true",
-        "Test.auditing.traceRequests" -> "true",
+        "Test.auditing.enabled"               -> "true",
+        "Test.auditing.traceRequests"         -> "true",
         "Test.auditing.consumer.baseUri.host" -> "localhost",
         "Test.auditing.consumer.baseUri.port" -> "8100",
-        "auditing.enabled" -> "false",
-        "auditing.traceRequests" -> "false",
-        "auditing.consumer.baseUri.host" -> "foo",
-        "auditing.consumer.baseUri.port" -> "1234"
+        "auditing.enabled"                    -> "false",
+        "auditing.traceRequests"              -> "false",
+        "auditing.consumer.baseUri.host"      -> "foo",
+        "auditing.consumer.baseUri.port"      -> "1234"
       )
 
-      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(
+        Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled = true)
     }
 
     "allow audit to be disabled" in {

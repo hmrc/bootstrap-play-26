@@ -33,7 +33,16 @@ import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite with ScalaFutures with MockitoSugar with BeforeAndAfterEach with TypeCheckedTripleEquals with Inspectors with OptionValues {
+class DeviceIdFilterSpec
+    extends WordSpecLike
+    with Matchers
+    with OneAppPerSuite
+    with ScalaFutures
+    with MockitoSugar
+    with BeforeAndAfterEach
+    with TypeCheckedTripleEquals
+    with Inspectors
+    with OptionValues {
 
   lazy val timestamp = System.currentTimeMillis()
 
@@ -43,14 +52,14 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
     val resultFromAction: Result = Ok
 
     lazy val action = {
-      val mockAction = mock[(RequestHeader) => Future[Result]]
+      val mockAction       = mock[(RequestHeader) => Future[Result]]
       val outgoingResponse = Future.successful(resultFromAction)
       when(mockAction.apply(any())).thenReturn(outgoingResponse)
       mockAction
     }
 
     lazy val filter = new DeviceIdFilter {
-      implicit val system = ActorSystem("test")
+      implicit val system            = ActorSystem("test")
       implicit val mat: Materializer = ActorMaterializer()
 
       lazy val mdtpCookie = super.buildNewDeviceIdCookie()
@@ -59,7 +68,7 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
 
       override def buildNewDeviceIdCookie() = mdtpCookie
 
-      override val secret = "SOME_SECRET"
+      override val secret          = "SOME_SECRET"
       override val previousSecrets = Seq("previous_key_1", "previous_key_2")
 
       override val appName = "SomeAppName"
@@ -72,10 +81,9 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
 
     lazy val newFormatGoodCookieDeviceId = filter.mdtpCookie
 
-
-    def requestPassedToAction(time:Option[Int]=None): RequestHeader = {
+    def requestPassedToAction(time: Option[Int] = None): RequestHeader = {
       val updatedRequest = ArgumentCaptor.forClass(classOf[RequestHeader])
-      verify(action, time.fold(times(1))(count=>Mockito.atMost(count))).apply(updatedRequest.capture())
+      verify(action, time.fold(times(1))(count => Mockito.atMost(count))).apply(updatedRequest.capture())
       updatedRequest.getValue
     }
 
@@ -84,8 +92,7 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
         header <- result.header.headers.get("Set-Cookie")
         setCookies = Cookies.decodeSetCookieHeader(header)
         deviceCookie <- setCookies.find(_.name == DeviceId.MdtpDeviceId)
-      }
-      yield deviceCookie
+      } yield deviceCookie
       cookie.value
     }
 
@@ -94,17 +101,16 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       verify(filter.auditConnector).sendEvent(captor.capture())(any(), any())
       val event = captor.getValue
 
-      event.auditType shouldBe EventTypes.Failed
+      event.auditType   shouldBe EventTypes.Failed
       event.auditSource shouldBe "SomeAppName"
 
       event.detail should contain("tamperedDeviceId" -> badCookie)
-      event.detail should contain("deviceID" -> validCookie)
+      event.detail should contain("deviceID"         -> validCookie)
     }
 
-
-    def invokeFilter(cookies: Seq[Cookie], expectedResultCookie: Cookie, times:Option[Int]=None) = {
+    def invokeFilter(cookies: Seq[Cookie], expectedResultCookie: Cookie, times: Option[Int] = None) = {
       val incomingRequest = if (cookies.isEmpty) FakeRequest() else FakeRequest().withCookies(cookies: _*)
-      val result = filter(action)(incomingRequest).futureValue
+      val result          = filter(action)(incomingRequest).futureValue
 
       val expectedCookie = requestPassedToAction(times).cookies.get(DeviceId.MdtpDeviceId).get
       expectedCookie.value shouldBe expectedResultCookie.value
@@ -118,15 +124,15 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
     "successfully validate the hash of deviceId's built from more than one previous key" in new Setup {
 
       for (prevSecret <- filter.previousSecrets) {
-        val uuid = filter.generateUUID
-        val timestamp = filter.getTimeStamp
+        val uuid                    = filter.generateUUID
+        val timestamp               = filter.getTimeStamp
         val deviceIdMadeFromPrevKey = DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, prevSecret))
-        val cookie = filter.makeCookie(deviceIdMadeFromPrevKey)
+        val cookie                  = filter.makeCookie(deviceIdMadeFromPrevKey)
 
         val result = invokeFilter(Seq(cookie), cookie, Some(2))
 
         val responseCookie = mdtpdiSetCookie(result)
-        responseCookie.value shouldBe deviceIdMadeFromPrevKey.value
+        responseCookie.value  shouldBe deviceIdMadeFromPrevKey.value
         responseCookie.secure shouldBe true
       }
     }
@@ -135,10 +141,10 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
   "During request pre-processing, the filter" should {
 
     "create a new deviceId if the deviceId cookie received contains an empty value " in new Setup {
-      val result = invokeFilter(Seq(newFormatGoodCookieDeviceId.copy(value="")), newFormatGoodCookieDeviceId)
+      val result = invokeFilter(Seq(newFormatGoodCookieDeviceId.copy(value = "")), newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
 
@@ -146,7 +152,7 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       val result = invokeFilter(Seq.empty, newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
 
@@ -160,12 +166,13 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       expectedCookie2.value shouldBe newFormatGoodCookieDeviceId.value
 
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
 
     "make an insecure mtdpdi cookie secure, keeping the same value" in new Setup {
-      val result = invokeFilter(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId.copy(secure = false))
+      val result =
+        invokeFilter(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId.copy(secure = false))
 
       val expectedCookie1 = requestPassedToAction().cookies.get("AnotherCookie1").get
       val expectedCookie2 = requestPassedToAction().cookies.get(DeviceId.MdtpDeviceId).get
@@ -174,55 +181,56 @@ class DeviceIdFilterSpec extends WordSpecLike with Matchers with OneAppPerSuite 
       expectedCookie2.value shouldBe newFormatGoodCookieDeviceId.value
 
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
 
     "identify new format deviceId cookie has invalid hash and create new deviceId cookie" in new Setup {
 
       val newFormatBadCookieDeviceId = {
-        val deviceId = filter.generateDeviceId().copy(hash="wrongvalue")
+        val deviceId = filter.generateDeviceId().copy(hash = "wrongvalue")
         Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears))
       }
 
       val result = invokeFilter(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
 
-
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
 
-      expectAuditIdEvent(newFormatBadCookieDeviceId.value,newFormatGoodCookieDeviceId.value)
+      expectAuditIdEvent(newFormatBadCookieDeviceId.value, newFormatGoodCookieDeviceId.value)
     }
 
     "identify new format deviceId cookie has invalid timestamp and create new deviceId cookie" in new Setup {
 
       val newFormatBadCookieDeviceId = {
-        val deviceId = filter.generateDeviceId().copy(hash="wrongvalue")
+        val deviceId = filter.generateDeviceId().copy(hash = "wrongvalue")
         Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears))
       }
 
       val result = invokeFilter(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
 
-
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
 
-      expectAuditIdEvent(newFormatBadCookieDeviceId.value,newFormatGoodCookieDeviceId.value)
+      expectAuditIdEvent(newFormatBadCookieDeviceId.value, newFormatGoodCookieDeviceId.value)
     }
 
     "identify new format deviceId cookie has invalid prefix and create new deviceId cookie" in new Setup {
 
       val newFormatBadCookieDeviceId = {
         val deviceId = filter.generateDeviceId()
-        Cookie(DeviceId.MdtpDeviceId, deviceId.value.replace(DeviceId.MdtpDeviceId,"BAD_PREFIX"), Some(DeviceId.TenYears))
+        Cookie(
+          DeviceId.MdtpDeviceId,
+          deviceId.value.replace(DeviceId.MdtpDeviceId, "BAD_PREFIX"),
+          Some(DeviceId.TenYears))
       }
 
       val result = invokeFilter(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
-      responseCookie.value shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
 

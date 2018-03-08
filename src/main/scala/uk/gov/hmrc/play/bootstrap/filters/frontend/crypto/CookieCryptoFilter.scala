@@ -55,12 +55,11 @@ trait CookieCryptoFilter extends Filter with CryptoImplicits {
     encryptCookie(next(decryptCookie(rh)))
 
   private def decryptCookie(rh: RequestHeader) = {
-    val updatedCookies = (
-      for {
-        cookie <- rh.headers.getAll(HeaderNames.COOKIE)
-        decoded <- Cookies.decodeCookieHeader(cookie)
-        decrypted = decrypt(decoded)
-      } yield decrypted).flatten
+    val updatedCookies = (for {
+      cookie  <- rh.headers.getAll(HeaderNames.COOKIE)
+      decoded <- Cookies.decodeCookieHeader(cookie)
+      decrypted = decrypt(decoded)
+    } yield decrypted).flatten
 
     if (updatedCookies.isEmpty) {
       rh.copy(headers = rh.headers.remove(HeaderNames.COOKIE))
@@ -76,40 +75,35 @@ trait CookieCryptoFilter extends Filter with CryptoImplicits {
       None
   }
 
-  private def decrypt(cookie: Cookie): Option[Cookie] = {
+  private def decrypt(cookie: Cookie): Option[Cookie] =
     if (shouldBeEncrypted(cookie))
       tryDecrypting(cookie.value).map { decryptedValue =>
         cookie.copy(value = decryptedValue)
-      }
-    else Some(cookie)
-  }
+      } else Some(cookie)
 
+  private def encryptCookie(f: Future[Result]): Future[Result] = f.map { result =>
+    val updatedHeader: Option[String] = result.header.headers.get(HeaderNames.SET_COOKIE).map { cookieHeader =>
+      Cookies.encodeSetCookieHeader(Cookies.decodeSetCookieHeader(cookieHeader).map { cookie: Cookie =>
+        if (shouldBeEncrypted(cookie))
+          cookie.copy(value = encrypter.encrypt(cookie.value))
+        else
+          cookie
+      })
+    }
 
-  private def encryptCookie(f: Future[Result]): Future[Result] = f.map {
-    result =>
-      val updatedHeader: Option[String] = result.header.headers.get(HeaderNames.SET_COOKIE).map {
-        cookieHeader =>
-          Cookies.encodeSetCookieHeader(Cookies.decodeSetCookieHeader(cookieHeader).map { cookie: Cookie =>
-            if (shouldBeEncrypted(cookie))
-              cookie.copy(value = encrypter.encrypt(cookie.value))
-            else
-              cookie
-          })
-      }
-
-      updatedHeader.map(header => result.withHeaders(HeaderNames.SET_COOKIE -> header)).getOrElse(result)
+    updatedHeader.map(header => result.withHeaders(HeaderNames.SET_COOKIE -> header)).getOrElse(result)
   }
 
   private def shouldBeEncrypted(cookie: Cookie) = cookie.name == COOKIE_NAME && !cookie.value.isEmpty
 }
 
-class DefaultCookieCryptoFilter @Inject() (
-                                            sessionCookieCrypto: SessionCookieCrypto
-                                          )
-                                          (implicit
-                                           override val mat: Materializer,
-                                           override val ec: ExecutionContext
-                                          ) extends CookieCryptoFilter {
+class DefaultCookieCryptoFilter @Inject()(
+  sessionCookieCrypto: SessionCookieCrypto
+)(
+  implicit
+  override val mat: Materializer,
+  override val ec: ExecutionContext)
+    extends CookieCryptoFilter {
 
   override protected lazy val encrypter: Encrypter = sessionCookieCrypto.crypto
   override protected lazy val decrypter: Decrypter = sessionCookieCrypto.crypto

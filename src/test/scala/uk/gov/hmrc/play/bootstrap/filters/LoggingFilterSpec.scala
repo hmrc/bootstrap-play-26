@@ -28,10 +28,18 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 
 import scala.concurrent.Future
 
-class LoggingFilterSpec extends WordSpecLike with MockitoSugar with Matchers with OptionValues with FutureAwaits with DefaultAwaitTimeout with Eventually {
+class LoggingFilterSpec
+    extends WordSpecLike
+    with MockitoSugar
+    with Matchers
+    with OptionValues
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with Eventually {
 
-  class LoggingFilterTest (loggerIn: LoggerLike, controllerNeedsLogging: Boolean)(implicit val mat: Materializer) extends LoggingFilter {
-    override def logger = loggerIn
+  class LoggingFilterTest(loggerIn: LoggerLike, controllerNeedsLogging: Boolean)(implicit val mat: Materializer)
+      extends LoggingFilter {
+    override def logger                                                  = loggerIn
     override def controllerNeedsLogging(controllerName: String): Boolean = controllerNeedsLogging
   }
 
@@ -39,21 +47,19 @@ class LoggingFilterSpec extends WordSpecLike with MockitoSugar with Matchers wit
 
     def buildFakeLogger() = new LoggerLike {
       var lastInfoMessage: Option[String] = None
-      override val logger: Logger = NOPLogger.NOP_LOGGER
-      override def info(s: => String): Unit = {
+      override val logger: Logger         = NOPLogger.NOP_LOGGER
+      override def info(s: => String): Unit =
         lastInfoMessage = Some(s)
-      }
     }
 
-    def requestWith(loggingFilter: LoggingFilter, someTags: Map[String, String] = Map()) = {
+    def requestWith(loggingFilter: LoggingFilter, someTags: Map[String, String] = Map()) =
       loggingFilter.apply(rh => Future.successful(Results.NoContent))(FakeRequest().copyFakeRequest(tags = someTags))
-    }
 
     "log when a requests' path matches a controller which is configured to log" in {
       val fakeLogger = buildFakeLogger()
 
       implicit val mat: Materializer = mock[Materializer]
-      val loggingFilter = new LoggingFilterTest(fakeLogger, true)
+      val loggingFilter              = new LoggingFilterTest(fakeLogger, true)
 
       await(requestWith(loggingFilter))
 
@@ -66,7 +72,7 @@ class LoggingFilterSpec extends WordSpecLike with MockitoSugar with Matchers wit
       val fakeLogger = buildFakeLogger()
 
       implicit val mat: Materializer = mock[Materializer]
-      val loggingFilter = new LoggingFilterTest(fakeLogger, false)
+      val loggingFilter              = new LoggingFilterTest(fakeLogger, false)
 
       await(requestWith(loggingFilter, Map(play.routing.Router.Tags.ROUTE_CONTROLLER -> "exists")))
 

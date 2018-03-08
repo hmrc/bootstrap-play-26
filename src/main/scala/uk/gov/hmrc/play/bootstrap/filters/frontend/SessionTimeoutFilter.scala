@@ -28,10 +28,10 @@ import uk.gov.hmrc.http.SessionKeys._
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SessionTimeoutFilterConfig(
-                                     timeoutDuration: Duration,
-                                     additionalSessionKeys: Set[String] = Set.empty,
-                                     onlyWipeAuthToken: Boolean = false
-                                     )
+  timeoutDuration: Duration,
+  additionalSessionKeys: Set[String] = Set.empty,
+  onlyWipeAuthToken: Boolean         = false
+)
 
 object SessionTimeoutFilterConfig {
 
@@ -50,12 +50,13 @@ object SessionTimeoutFilterConfig {
 
     val additionalSessionKeysToKeep = configuration
       .getStringSeq("session.additionalSessionKeysToKeep")
-      .getOrElse(Seq.empty).toSet
+      .getOrElse(Seq.empty)
+      .toSet
 
     SessionTimeoutFilterConfig(
-      timeoutDuration = timeoutDuration,
+      timeoutDuration       = timeoutDuration,
       additionalSessionKeys = additionalSessionKeysToKeep,
-      onlyWipeAuthToken = !wipeIdleSession
+      onlyWipeAuthToken     = !wipeIdleSession
     )
   }
 }
@@ -75,12 +76,13 @@ object SessionTimeoutFilterConfig {
   *                        of this class
   * @param mat             a `Materializer` instance for Play! to use when dealing with the underlying Akka streams
   */
-class SessionTimeoutFilter @Inject() (
-                            config: SessionTimeoutFilterConfig
-                          )(implicit
-                            ec: ExecutionContext,
-                            override val mat: Materializer
-                          ) extends Filter {
+class SessionTimeoutFilter @Inject()(
+  config: SessionTimeoutFilterConfig
+)(
+  implicit
+  ec: ExecutionContext,
+  override val mat: Materializer)
+    extends Filter {
 
   def clock(): DateTime = DateTime.now(DateTimeZone.UTC)
 
@@ -133,21 +135,22 @@ class SessionTimeoutFilter @Inject() (
     mkRequest(requestHeader, Session.deserialize(sessionMap))
   }
 
-  private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader = {
+  private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader =
     mkRequest(requestHeader, wipeFromSession(requestHeader.session, authRelatedKeys))
-  }
 
   private def mkRequest(requestHeader: RequestHeader, session: Session): RequestHeader = {
     val wipedSessionCookie = Session.encodeAsCookie(session)
-    val otherCookies = requestHeader.cookies.filterNot(_.name == wipedSessionCookie.name).toSeq
-    val wipedHeaders = requestHeader.headers.replace(COOKIE -> Cookies.encodeCookieHeader(Seq(wipedSessionCookie) ++ otherCookies))
+    val otherCookies       = requestHeader.cookies.filterNot(_.name == wipedSessionCookie.name).toSeq
+    val wipedHeaders =
+      requestHeader.headers.replace(COOKIE -> Cookies.encodeCookieHeader(Seq(wipedSessionCookie) ++ otherCookies))
     requestHeader.copy(headers = wipedHeaders)
   }
 
-  private def preservedSessionData(session: Session): Seq[(String, String)] = for {
-    key <- (SessionTimeoutFilter.whitelistedSessionKeys ++ config.additionalSessionKeys).toSeq
-    value <- session.get(key)
-  } yield key -> value
+  private def preservedSessionData(session: Session): Seq[(String, String)] =
+    for {
+      key   <- (SessionTimeoutFilter.whitelistedSessionKeys ++ config.additionalSessionKeys).toSeq
+      value <- session.get(key)
+    } yield key -> value
 
 }
 

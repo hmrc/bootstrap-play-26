@@ -22,7 +22,8 @@ import uk.gov.hmrc.crypto.{ApplicationCrypto, Decrypter, Encrypter}
 
 case class SessionCookieCrypto(crypto: Encrypter with Decrypter)
 
-class SessionCookieCryptoProvider @Inject() (applicationCrypto: ApplicationCrypto) extends Provider[SessionCookieCrypto] {
+class SessionCookieCryptoProvider @Inject()(applicationCrypto: ApplicationCrypto)
+    extends Provider[SessionCookieCrypto] {
   override def get(): SessionCookieCrypto =
     SessionCookieCrypto(applicationCrypto.SessionCookieCrypto)
 }

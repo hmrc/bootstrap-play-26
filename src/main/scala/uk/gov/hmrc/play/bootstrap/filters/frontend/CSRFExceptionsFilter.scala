@@ -27,20 +27,22 @@ import play.api.mvc.{Result, _}
 import scala.concurrent.Future
 
 @deprecated("this should be removed from this library as it's only used by a handful of auth services", "-")
-class CSRFExceptionsFilter @Inject() (
-                                     configuration: Configuration,
-                                     override val mat: Materializer
-                                     ) extends Filter {
+class CSRFExceptionsFilter @Inject()(
+  configuration: Configuration,
+  override val mat: Materializer
+) extends Filter {
 
   lazy val whitelist: Set[String] = configuration
     .getStringSeq("csrfexceptions.whitelist")
-    .getOrElse(Seq.empty).toSet
+    .getOrElse(Seq.empty)
+    .toSet
 
-  def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+  def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
     f(filteredHeaders(rh))
-  }
 
-  private[filters] def filteredHeaders(rh: RequestHeader, now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)) =
+  private[filters] def filteredHeaders(
+    rh: RequestHeader,
+    now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)) =
     if (rh.method == POST && whitelist.contains(rh.path))
       rh.copy(headers = rh.headers.add("Csrf-Token" -> "nocheck"))
     else rh

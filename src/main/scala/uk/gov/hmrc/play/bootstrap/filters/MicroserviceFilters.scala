@@ -22,10 +22,9 @@ import com.kenshoo.play.metrics.MetricsFilter
 import play.api.http.DefaultHttpFilters
 
 @Singleton
-class MicroserviceFilters @Inject()
-(
+class MicroserviceFilters @Inject()(
   metricsFilter: MetricsFilter,
   auditFilter: AuditFilter,
   loggingFilter: LoggingFilter,
   cacheFilter: CacheControlFilter
-) extends DefaultHttpFilters (metricsFilter, auditFilter, loggingFilter, cacheFilter)
+) extends DefaultHttpFilters(metricsFilter, auditFilter, loggingFilter, cacheFilter)

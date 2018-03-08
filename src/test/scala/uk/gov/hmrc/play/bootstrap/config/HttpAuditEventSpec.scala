@@ -27,17 +27,24 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
   "The optional audit fields code" should {
 
     "Return the correct size map when fed with a given amount of items" in {
-      val optionalFields = HeaderFieldsExtractor.optionalAuditFields(Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool"))
+      val optionalFields =
+        HeaderFieldsExtractor.optionalAuditFields(Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool"))
       optionalFields.loneElement shouldBe ("surrogate" -> "Cool")
     }
 
     "Return the correct size map when fed with two identicle items" in {
-      val optionalFields = HeaderFieldsExtractor.optionalAuditFields(Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool"))
+      val optionalFields = HeaderFieldsExtractor.optionalAuditFields(
+        Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool"))
       optionalFields.loneElement shouldBe ("surrogate" -> "Cool")
     }
 
     "Return the correct size map when fed with seq values" in {
-      val optionalFields = HeaderFieldsExtractor.optionalAuditFieldsSeq(Map("Foo" -> Seq("Bar"), "Ehh" -> Seq("Meh"), "Surrogate" -> Seq("Cool"), "Surrogate" -> Seq("Cool", "funk", "grr")))
+      val optionalFields = HeaderFieldsExtractor.optionalAuditFieldsSeq(
+        Map(
+          "Foo"       -> Seq("Bar"),
+          "Ehh"       -> Seq("Meh"),
+          "Surrogate" -> Seq("Cool"),
+          "Surrogate" -> Seq("Cool", "funk", "grr")))
       optionalFields.loneElement shouldBe ("surrogate" -> "Cool,funk,grr")
     }
 
@@ -56,12 +63,13 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
     }
 
     "create a valid audit event with optional headers" in {
-      val r = FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"), ("Surrogate" -> "Cool"), ("Surrogate" -> "Cool"))
+      val r =
+        FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"), ("Surrogate" -> "Cool"), ("Surrogate" -> "Cool"))
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
       event.detail.get("surrogate") shouldBe Some("Cool,Cool") //FRIC - play 2.5 now comman delimits multiple headers with the same name into a single header
     }
     "create a valid audit event with no optional headers" in {
-      val r = FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"))
+      val r     = FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"))
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
       event.detail.get("surrogate") shouldBe None
     }

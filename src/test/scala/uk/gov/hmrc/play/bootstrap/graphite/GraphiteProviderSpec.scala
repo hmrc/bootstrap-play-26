@@ -45,19 +45,18 @@ class GraphiteProviderSpec extends WordSpec with MustMatchers {
       config.port mustEqual 9999
     }
 
-    configuration.keys.foreach {
-      key =>
-        s"throw a configuration exception when config key: $key, is missing" in {
+    configuration.keys.foreach { key =>
+      s"throw a configuration exception when config key: $key, is missing" in {
 
-          val injector = new GuiceApplicationBuilder()
-            .configure(configuration - key)
-            .build()
-            .injector
+        val injector = new GuiceApplicationBuilder()
+          .configure(configuration - key)
+          .build()
+          .injector
 
-          intercept[ConfigException.Missing] {
-            GraphiteProviderConfig.fromConfig(injector.instanceOf[Configuration])
-          }
+        intercept[ConfigException.Missing] {
+          GraphiteProviderConfig.fromConfig(injector.instanceOf[Configuration])
         }
+      }
     }
   }
 }

@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.filters.microservice.{DefaultMicroserviceAudit
 class MicroserviceModule extends BootstrapModule {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
-    bind[AuditFilter].to[MicroserviceAuditFilter],
-    bind[MicroserviceAuditFilter].to[DefaultMicroserviceAuditFilter]
-  )
+      bind[AuditFilter].to[MicroserviceAuditFilter],
+      bind[MicroserviceAuditFilter].to[DefaultMicroserviceAuditFilter]
+    )
 }

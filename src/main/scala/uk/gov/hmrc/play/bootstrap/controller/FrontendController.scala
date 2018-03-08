@@ -28,20 +28,28 @@ import scala.concurrent._
 
 trait FrontendController extends BaseController with Utf8MimeTypes {
 
-  override implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
+  override implicit def hc(implicit rh: RequestHeader): HeaderCarrier =
+    HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
 
-  implicit def mdcExecutionContext(implicit loggingDetails: LoggingDetails): ExecutionContext = MdcLoggingExecutionContext.fromLoggingDetails
+  implicit def mdcExecutionContext(implicit loggingDetails: LoggingDetails): ExecutionContext =
+    MdcLoggingExecutionContext.fromLoggingDetails
 
   implicit class SessionKeyRemover(result: Future[Result]) {
-    def removeSessionKey(key: String)(implicit request: Request[_]) = result.map {_.withSession(request.session - key)}
+    def removeSessionKey(key: String)(implicit request: Request[_]) = result.map {
+      _.withSession(request.session - key)
+    }
   }
 
 }
 
 object UnauthorisedAction {
-  def apply(body: (Request[AnyContent] => Result), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] = unauthedAction(ActionWithMdc(body), sensitiveDataFormKeys)
+  def apply(body: (Request[AnyContent] => Result), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] =
+    unauthedAction(ActionWithMdc(body), sensitiveDataFormKeys)
 
-  def async(body: (Request[AnyContent] => Future[Result]), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] = unauthedAction(Action.async(body), sensitiveDataFormKeys)
+  def async(
+    body: (Request[AnyContent] => Future[Result]),
+    sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] =
+    unauthedAction(Action.async(body), sensitiveDataFormKeys)
 
   private def unauthedAction(body: Action[AnyContent], sensitiveDataFormKeys: Seq[String]): Action[AnyContent] = body
 }

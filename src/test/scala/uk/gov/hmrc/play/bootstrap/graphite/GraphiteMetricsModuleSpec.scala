@@ -24,7 +24,12 @@ import play.api.Configuration
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 
-class GraphiteMetricsModuleSpec extends FreeSpec with MustMatchers with BeforeAndAfterEach with PropertyChecks with GivenWhenThen {
+class GraphiteMetricsModuleSpec
+    extends FreeSpec
+    with MustMatchers
+    with BeforeAndAfterEach
+    with PropertyChecks
+    with GivenWhenThen {
 
   def app: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -35,13 +40,12 @@ class GraphiteMetricsModuleSpec extends FreeSpec with MustMatchers with BeforeAn
     SharedMetricRegistries.clear()
   }
 
-  def setupInjector(configuration: Configuration): Injector = {
+  def setupInjector(configuration: Configuration): Injector =
     new GuiceApplicationBuilder()
       .bindings(new GraphiteMetricsModule)
       .configure(configuration)
       .build()
       .injector
-  }
 
   "if missing 'metrics.enabled'" in {
 
@@ -54,7 +58,6 @@ class GraphiteMetricsModuleSpec extends FreeSpec with MustMatchers with BeforeAn
   }
 
   for (prefix <- Seq("", "Test.")) {
-
 
     s"if missing kensho metrics enabled, but '${prefix}microservice.metrics.graphite.enabled' missing" in {
 
@@ -73,20 +76,19 @@ class GraphiteMetricsModuleSpec extends FreeSpec with MustMatchers with BeforeAn
     s"property testing with prefix [$prefix]" in {
 
       forAll { (kenshooEnabled: Boolean, graphiteEnabled: Boolean) =>
-
         SharedMetricRegistries.clear()
 
         val configuration = Configuration("metrics.enabled" -> kenshooEnabled) ++
           (if (graphiteEnabled) {
-            Configuration(
-              s"${prefix}microservice.metrics.graphite.enabled" -> true,
-              s"${prefix}microservice.metrics.graphite.host" -> "test",
-              s"${prefix}microservice.metrics.graphite.port" -> "9999",
-              "appName" -> "test"
-            )
-          } else {
-            Configuration(s"${prefix}microservice.metrics.graphite.enabled" -> false)
-          })
+             Configuration(
+               s"${prefix}microservice.metrics.graphite.enabled" -> true,
+               s"${prefix}microservice.metrics.graphite.host"    -> "test",
+               s"${prefix}microservice.metrics.graphite.port"    -> "9999",
+               "appName"                                         -> "test"
+             )
+           } else {
+             Configuration(s"${prefix}microservice.metrics.graphite.enabled" -> false)
+           })
 
         val injector: Injector = setupInjector(configuration)
 

@@ -32,7 +32,7 @@ import uk.gov.hmrc.http.HeaderNames
 
 object HeadersFilterSpec {
 
-  class Filters @Inject() (headersFilter: HeadersFilter) extends DefaultHttpFilters(headersFilter)
+  class Filters @Inject()(headersFilter: HeadersFilter) extends DefaultHttpFilters(headersFilter)
 }
 
 class HeadersFilterSpec extends WordSpec with MustMatchers with OneAppPerSuite {
@@ -44,17 +44,17 @@ class HeadersFilterSpec extends WordSpec with MustMatchers with OneAppPerSuite {
     import play.api.routing.sird._
 
     Router.from {
-      case GET(p"/test") => Action {
-        request =>
-
+      case GET(p"/test") =>
+        Action { request =>
           val headers = request.headers.toMap
             .filterKeys(Seq(HeaderNames.xRequestId, HeaderNames.xRequestTimestamp).contains)
 
-          Results.Ok(Json.obj(
-            HeaderNames.xRequestId        -> headers.get(HeaderNames.xRequestId),
-            HeaderNames.xRequestTimestamp -> headers.get(HeaderNames.xRequestTimestamp)
-          ))
-      }
+          Results.Ok(
+            Json.obj(
+              HeaderNames.xRequestId        -> headers.get(HeaderNames.xRequestId),
+              HeaderNames.xRequestTimestamp -> headers.get(HeaderNames.xRequestTimestamp)
+            ))
+        }
     }
   }
 
@@ -74,7 +74,7 @@ class HeadersFilterSpec extends WordSpec with MustMatchers with OneAppPerSuite {
 
     "add headers to a request which doesn't already have an xRequestId header" in {
       val Some(result) = route(app, FakeRequest(GET, "/test"))
-      val body = contentAsJson(result)
+      val body         = contentAsJson(result)
 
       (body \ HeaderNames.xRequestId).toOption mustBe defined
       (body \ HeaderNames.xRequestTimestamp).toOption mustBe defined
@@ -82,7 +82,7 @@ class HeadersFilterSpec extends WordSpec with MustMatchers with OneAppPerSuite {
 
     "not add headers to a request which already has an xRequestId header" in {
       val Some(result) = route(app, FakeRequest(GET, "/test").withSession(HeaderNames.xRequestId -> "foo"))
-      val body = contentAsJson(result)
+      val body         = contentAsJson(result)
 
       (body \ HeaderNames.xRequestId).get mustEqual JsNull
       (body \ HeaderNames.xRequestTimestamp).get mustEqual JsNull

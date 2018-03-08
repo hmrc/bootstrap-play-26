@@ -31,7 +31,7 @@ import play.api.{Application, Configuration, Environment}
 
 object CacheControlFilterSpec {
 
-  class Filters @Inject() (cacheControl: CacheControlFilter) extends DefaultHttpFilters(cacheControl)
+  class Filters @Inject()(cacheControl: CacheControlFilter) extends DefaultHttpFilters(cacheControl)
 
   class TestModule extends Module {
 

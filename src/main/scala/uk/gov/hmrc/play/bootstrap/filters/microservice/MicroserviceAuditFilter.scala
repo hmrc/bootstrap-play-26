@@ -38,7 +38,6 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-
 trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
 
   def auditConnector: AuditConnector
@@ -54,22 +53,23 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
   def apply(nextFilter: EssentialAction) = new EssentialAction {
     def apply(requestHeader: RequestHeader) = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
-      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(requestHeader.headers, Some(requestHeader.session))
+      implicit val hc                           = HeaderCarrierConverter.fromHeadersAndSession(requestHeader.headers, Some(requestHeader.session))
 
       val loggingContext = s"${requestHeader.method} ${requestHeader.uri}"
 
-      def performAudit(requestBody: String, maybeResult: Try[Result])(responseBody: String): Unit = {
+      def performAudit(requestBody: String, maybeResult: Try[Result])(responseBody: String): Unit =
         maybeResult match {
           case Success(result) =>
             auditConnector.sendEvent(
-              dataEvent(requestReceived, requestHeader.uri, requestHeader,
+              dataEvent(
+                requestReceived,
+                requestHeader.uri,
+                requestHeader,
                 Map(ResponseMessage -> responseBody, StatusCode -> result.header.status.toString)))
           case Failure(f) =>
             auditConnector.sendEvent(
-              dataEvent(requestReceived, requestHeader.uri, requestHeader,
-                Map(FailedRequestMessage -> f.getMessage)))
+              dataEvent(requestReceived, requestHeader.uri, requestHeader, Map(FailedRequestMessage -> f.getMessage)))
         }
-      }
 
       if (needsAuditing(requestHeader)) {
         onCompleteWithInput(loggingContext, next, performAudit)
@@ -81,10 +81,13 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
     (for (controllerName <- request.tags.get(play.routing.Router.Tags.ROUTE_CONTROLLER))
       yield controllerNeedsAuditing(controllerName)).getOrElse(true)
 
-  protected def onCompleteWithInput(loggingContext: String, next: Accumulator[ByteString, Result], handler: (String, Try[Result]) => String => Unit)
-                                   (implicit ec: ExecutionContext): Accumulator[ByteString, Result] = {
+  protected def onCompleteWithInput(
+    loggingContext: String,
+    next: Accumulator[ByteString, Result],
+    handler: (String, Try[Result]) => String => Unit)(
+    implicit ec: ExecutionContext): Accumulator[ByteString, Result] = {
     val requestBodyPromise = Promise[String]()
-    val requestBodyFuture = requestBodyPromise.future
+    val requestBodyFuture  = requestBodyPromise.future
 
     var requestBody: String = ""
     def callback(body: ByteString): Unit = {
@@ -94,7 +97,8 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
 
     //grabbed from plays csrf filter
     val wrappedAcc: Accumulator[ByteString, Result] = Accumulator(
-      Flow[ByteString].via(new RequestBodyCaptor(loggingContext, maxBodySize, callback))
+      Flow[ByteString]
+        .via(new RequestBodyCaptor(loggingContext, maxBodySize, callback))
         .splitWhen(_ => false)
         .prefixAndTail(0)
         .map(_._2)
@@ -104,115 +108,136 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
       next.run(bodySource)
     }
 
-    wrappedAcc.mapFuture { result =>
-      requestBodyFuture flatMap { res => {
-        val auditedBody = result.body match {
-          case str: Streamed => {
-            val auditFlow = Flow[ByteString].alsoTo(new ResponseBodyCaptor(loggingContext, maxBodySize, handler(requestBody, Success(result))))
-            str.copy(data = str.data.via(auditFlow))
-          }
-          case h: HttpEntity => {
-            h.consumeData map { rb =>
-              val auditString = if (rb.size > maxBodySize) {
-                Logger.warn(s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength ${maxBodySize} - do you need to be auditing this payload?")
-                rb.take(maxBodySize).decodeString("UTF-8")
-              } else {
-                rb.decodeString("UTF-8")
+    wrappedAcc
+      .mapFuture { result =>
+        requestBodyFuture flatMap { res =>
+          {
+            val auditedBody = result.body match {
+              case str: Streamed => {
+                val auditFlow = Flow[ByteString].alsoTo(
+                  new ResponseBodyCaptor(loggingContext, maxBodySize, handler(requestBody, Success(result))))
+                str.copy(data = str.data.via(auditFlow))
               }
-              handler(res, Success(result))(auditString)
+              case h: HttpEntity => {
+                h.consumeData map { rb =>
+                  val auditString = if (rb.size > maxBodySize) {
+                    Logger.warn(
+                      s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")
+                    rb.take(maxBodySize).decodeString("UTF-8")
+                  } else {
+                    rb.decodeString("UTF-8")
+                  }
+                  handler(res, Success(result))(auditString)
+                }
+                h
+              }
             }
-            h
+            Future(result.copy(body = auditedBody))
           }
         }
-        Future(result.copy(body = auditedBody))
       }
+      .recover[Result] {
+        case ex: Throwable =>
+          handler(requestBody, Failure(ex))("")
+          throw ex
       }
-    }.recover[Result] {
-      case ex: Throwable =>
-        handler(requestBody, Failure(ex))("")
-        throw ex
-    }
   }
 }
 
-protected[filters] class RequestBodyCaptor(val loggingContext: String, val maxBodyLength: Int, callback: (ByteString) => Unit) extends GraphStage[FlowShape[ByteString, ByteString]] {
-  val in = Inlet[ByteString]("ReqBodyCaptor.in")
-  val out = Outlet[ByteString]("ReqBodyCaptor.out")
+protected[filters] class RequestBodyCaptor(
+  val loggingContext: String,
+  val maxBodyLength: Int,
+  callback: (ByteString) => Unit)
+    extends GraphStage[FlowShape[ByteString, ByteString]] {
+  val in             = Inlet[ByteString]("ReqBodyCaptor.in")
+  val out            = Outlet[ByteString]("ReqBodyCaptor.out")
   override val shape = FlowShape.of(in, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) {
     private var buffer: ByteString = ByteString.empty
-    private var bodyLength = 0
+    private var bodyLength         = 0
 
-    setHandlers(in, out, new InHandler with OutHandler {
+    setHandlers(
+      in,
+      out,
+      new InHandler with OutHandler {
 
-      override def onPull(): Unit = {
-        pull(in)
+        override def onPull(): Unit =
+          pull(in)
+
+        override def onPush(): Unit = {
+          val chunk = grab(in)
+          bodyLength += chunk.length
+          if (buffer.size < maxBodyLength)
+            buffer ++= chunk
+          push(out, chunk)
+        }
+
+        override def onUpstreamFinish(): Unit = {
+          if (bodyLength > maxBodyLength)
+            Logger.warn(
+              s"txm play auditing: $loggingContext sanity check request body $bodyLength exceeds maxLength $maxBodyLength - do you need to be auditing this payload?")
+          callback(buffer.take(maxBodyLength))
+          if (isAvailable(out) && buffer == ByteString.empty)
+            push(out, buffer)
+          completeStage()
+        }
       }
-
-      override def onPush(): Unit = {
-        val chunk = grab(in)
-        bodyLength += chunk.length
-        if (buffer.size < maxBodyLength)
-          buffer ++= chunk
-        push(out, chunk)
-      }
-
-      override def onUpstreamFinish(): Unit = {
-        if (bodyLength > maxBodyLength)
-          Logger.warn(s"txm play auditing: $loggingContext sanity check request body ${bodyLength} exceeds maxLength ${maxBodyLength} - do you need to be auditing this payload?")
-        callback(buffer.take(maxBodyLength))
-        if (isAvailable(out) && buffer == ByteString.empty)
-          push(out, buffer)
-        completeStage()
-      }
-    })
+    )
   }
 }
 
-protected[filters] class ResponseBodyCaptor(val loggingContext: String, val maxBodyLength: Int, performAudit: (String) => Unit)
-  extends GraphStage[SinkShape[ByteString]] {
-  val in = Inlet[ByteString]("RespBodyCaptor.in")
+protected[filters] class ResponseBodyCaptor(
+  val loggingContext: String,
+  val maxBodyLength: Int,
+  performAudit: (String) => Unit)
+    extends GraphStage[SinkShape[ByteString]] {
+  val in             = Inlet[ByteString]("RespBodyCaptor.in")
   override val shape = SinkShape.of(in)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) {
     private var buffer: ByteString = ByteString.empty
-    private var bodyLength = 0
+    private var bodyLength         = 0
 
     override def preStart(): Unit = pull(in)
 
-    setHandler(in, new InHandler {
+    setHandler(
+      in,
+      new InHandler {
 
-      override def onPush(): Unit = {
-        val chunk = grab(in)
-        bodyLength += chunk.length
-        if (buffer.size < maxBodyLength)
-          buffer ++= chunk
-        pull(in)
+        override def onPush(): Unit = {
+          val chunk = grab(in)
+          bodyLength += chunk.length
+          if (buffer.size < maxBodyLength)
+            buffer ++= chunk
+          pull(in)
+        }
+
+        override def onUpstreamFinish(): Unit = {
+          if (bodyLength > maxBodyLength)
+            Logger.warn(
+              s"txm play auditing: $loggingContext sanity check request body $bodyLength exceeds maxLength $maxBodyLength - do you need to be auditing this payload?")
+          performAudit(buffer.take(maxBodyLength).decodeString("UTF-8"))
+          completeStage()
+        }
+
+        override def onUpstreamFailure(ex: Throwable): Unit = {
+          performAudit("")
+          super.onUpstreamFailure(ex)
+        }
+
       }
-
-      override def onUpstreamFinish(): Unit = {
-        if (bodyLength > maxBodyLength)
-          Logger.warn(s"txm play auditing: $loggingContext sanity check request body ${bodyLength} exceeds maxLength ${maxBodyLength} - do you need to be auditing this payload?")
-        performAudit(buffer.take(maxBodyLength).decodeString("UTF-8"))
-        completeStage()
-      }
-
-      override def onUpstreamFailure(ex: Throwable): Unit = {
-        performAudit("")
-        super.onUpstreamFailure(ex)
-      }
-
-    })
+    )
   }
 }
 
-class DefaultMicroserviceAuditFilter @Inject() (
-                                               val configuration: Configuration,
-                                               controllerConfigs: ControllerConfigs,
-                                               override val auditConnector: AuditConnector,
-                                               override val mat: Materializer
-                                               ) extends MicroserviceAuditFilter with AppName {
+class DefaultMicroserviceAuditFilter @Inject()(
+  val configuration: Configuration,
+  controllerConfigs: ControllerConfigs,
+  override val auditConnector: AuditConnector,
+  override val mat: Materializer
+) extends MicroserviceAuditFilter
+    with AppName {
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.get(controllerName).auditing

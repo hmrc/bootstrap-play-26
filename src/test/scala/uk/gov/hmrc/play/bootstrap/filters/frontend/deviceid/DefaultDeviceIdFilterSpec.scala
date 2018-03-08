@@ -30,23 +30,29 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 object DefaultDeviceIdFilterSpec {
 
-  class Filters @Inject() (deviceId: DeviceIdFilter) extends DefaultHttpFilters(deviceId)
+  class Filters @Inject()(deviceId: DeviceIdFilter) extends DefaultHttpFilters(deviceId)
 }
 
-class DefaultDeviceIdFilterSpec extends WordSpecLike with Matchers with MockitoSugar with OptionValues with ScalaFutures {
+class DefaultDeviceIdFilterSpec
+    extends WordSpecLike
+    with Matchers
+    with MockitoSugar
+    with OptionValues
+    with ScalaFutures {
 
   import DefaultDeviceIdFilterSpec._
 
-  val theSecret = "some_secret"
+  val theSecret         = "some_secret"
   val thePreviousSecret = "some previous secret with spaces since spaces cause an issue unless encoded!!!"
 
   val createDeviceId = new DeviceIdCookie {
-    override val secret = theSecret
+    override val secret          = theSecret
     override val previousSecrets = Seq(thePreviousSecret)
   }
 
   val appConfigNoPreviousKey: Map[String, Any] = Map("cookie.deviceId.secret" -> theSecret)
-  val appConfig: Map[String, Any] = appConfigNoPreviousKey + ("cookie.deviceId.previous.secret" -> Seq(thePreviousSecret))
+  val appConfig: Map[String, Any] = appConfigNoPreviousKey + ("cookie.deviceId.previous.secret" -> Seq(
+    thePreviousSecret))
 
   val auditConnector: AuditConnector = mock[AuditConnector]
 
@@ -86,14 +92,13 @@ class DefaultDeviceIdFilterSpec extends WordSpecLike with Matchers with MockitoS
       }
     }
 
-
     "do nothing when a valid cookie exists" in {
 
       val app: Application = builder.configure(appConfig).build()
 
       running(app) {
         val existingCookie = createDeviceId.buildNewDeviceIdCookie()
-        val Some(result) = route(app, FakeRequest(GET, "/test").withCookies(existingCookie))
+        val Some(result)   = route(app, FakeRequest(GET, "/test").withCookies(existingCookie))
         cookies(result) should contain(existingCookie)
       }
     }
@@ -108,7 +113,8 @@ class DefaultDeviceIdFilterSpec extends WordSpecLike with Matchers with MockitoS
 
         val existingCookie = {
           val timestamp = createDeviceId.getTimeStamp
-          val deviceIdMadeFromPrevKey = DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, thePreviousSecret))
+          val deviceIdMadeFromPrevKey =
+            DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, thePreviousSecret))
           createDeviceId.makeCookie(deviceIdMadeFromPrevKey)
         }
 

@@ -21,16 +21,16 @@ import javax.inject.Inject
 import org.slf4j.MDC
 import play.api.{Configuration, Environment, Logger}
 
-class MDCInstance @Inject() () {
+class MDCInstance @Inject()() {
   def put(k: String, v: String): Unit =
     MDC.put(k, v)
 }
 
-class MDCLoggingSetup @Inject() (
-                                  override val configuration: Configuration,
-                                  mdc: MDCInstance,
-                                  environment: Environment
-                                ) extends AppName {
+class MDCLoggingSetup @Inject()(
+  override val configuration: Configuration,
+  mdc: MDCInstance,
+  environment: Environment
+) extends AppName {
 
   val loggerDateFormat: Option[String] = configuration.getString("logger.json.dateformat")
 

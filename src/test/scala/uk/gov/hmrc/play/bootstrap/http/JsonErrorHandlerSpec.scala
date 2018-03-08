@@ -38,11 +38,18 @@ import uk.gov.hmrc.play.bootstrap.config.DummyRequestHeader
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MaterializerSupport {
-  implicit val system: ActorSystem = ActorSystem("Sys")
+  implicit val system: ActorSystem             = ActorSystem("Sys")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 }
 
-class JsonErrorHandlerSpec extends WordSpec with Matchers with ScalaFutures with MockitoSugar with LoneElement with Eventually with MaterializerSupport {
+class JsonErrorHandlerSpec
+    extends WordSpec
+    with Matchers
+    with ScalaFutures
+    with MockitoSugar
+    with LoneElement
+    with Eventually
+    with MaterializerSupport {
 
   "error handling in onError function" should {
 
@@ -98,15 +105,16 @@ class JsonErrorHandlerSpec extends WordSpec with Matchers with ScalaFutures with
     }
 
     sealed trait Setup {
-      val method = "some-method"
-      val uri = "some-uri"
+      val method        = "some-method"
+      val uri           = "some-uri"
       val requestHeader = new DummyRequestHeader
 
       val auditConnector = mock[AuditConnector]
-      when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Success))
+      when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(Success))
 
       val configuration = Configuration("appName" -> "myApp")
-      val jsh = new JsonErrorHandler(configuration, auditConnector)
+      val jsh           = new JsonErrorHandler(configuration, auditConnector)
     }
   }
 }

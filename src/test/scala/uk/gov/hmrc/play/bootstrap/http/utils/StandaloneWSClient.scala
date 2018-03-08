@@ -23,7 +23,7 @@ import play.api.libs.ws.ahc.AhcWSClient
 
 object StandaloneWSClient {
 
-  implicit val actorSystem = ActorSystem()
+  implicit val actorSystem  = ActorSystem()
   implicit val materializer = ActorMaterializer()
-  val client: WSClient = AhcWSClient()
+  val client: WSClient      = AhcWSClient()
 }

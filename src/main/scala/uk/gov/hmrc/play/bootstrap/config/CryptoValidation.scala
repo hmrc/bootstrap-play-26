@@ -21,6 +21,6 @@ import javax.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.crypto.ApplicationCryptoDI
 
-class CryptoValidation @Inject() (configuration : Configuration) {
+class CryptoValidation @Inject()(configuration: Configuration) {
   new ApplicationCryptoDI(configuration).verifyConfiguration()
 }

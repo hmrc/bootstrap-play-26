@@ -21,7 +21,7 @@ import java.util.UUID
 import play.api.mvc.Cookie
 
 trait DeviceIdCookie {
-  val secret : String
+  val secret: String
   val previousSecrets: Seq[String]
 
   def getTimeStamp = System.currentTimeMillis()
@@ -38,5 +38,6 @@ trait DeviceIdCookie {
     makeCookie(deviceId)
   }
 
-  def makeCookie(deviceId: DeviceId) = Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears), secure = true)
+  def makeCookie(deviceId: DeviceId) =
+    Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears), secure = true)
 }

@@ -21,7 +21,6 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import org.scalatest.BeforeAndAfterAll
 import uk.gov.hmrc.play.test.UnitSpec
 
-
 trait WiremockTestServer extends UnitSpec with BeforeAndAfterAll {
 
   val wireMockServer = new WireMockServer(20001)
@@ -31,7 +30,6 @@ trait WiremockTestServer extends UnitSpec with BeforeAndAfterAll {
     WireMock.configureFor("localhost", 20001)
   }
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll(): Unit =
     wireMockServer.stop()
-  }
 }

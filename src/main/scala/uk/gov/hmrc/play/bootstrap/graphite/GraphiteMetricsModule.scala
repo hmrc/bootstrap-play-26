@@ -31,15 +31,11 @@ class GraphiteMetricsModule extends Module {
       bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly
     )
 
-    val kenshoBindings : Seq[Binding[_]] =
+    val kenshoBindings: Seq[Binding[_]] =
       if (kenshoMetricsEnabled(configuration)) {
-        Seq(
-          bind[MetricsFilter].to[MetricsFilterImpl].eagerly,
-          bind[Metrics].to[MetricsImpl].eagerly)
+        Seq(bind[MetricsFilter].to[MetricsFilterImpl].eagerly, bind[Metrics].to[MetricsImpl].eagerly)
       } else {
-        Seq(
-          bind[MetricsFilter].to[DisabledMetricsFilter].eagerly,
-          bind[Metrics].to[DisabledMetrics].eagerly)
+        Seq(bind[MetricsFilter].to[DisabledMetricsFilter].eagerly, bind[Metrics].to[DisabledMetrics].eagerly)
       }
 
     val graphiteConfiguration = extractGraphiteConfiguration(environment, configuration)
@@ -48,7 +44,8 @@ class GraphiteMetricsModule extends Module {
       if (kenshoMetricsEnabled(configuration) && graphitePublisherEnabled(graphiteConfiguration)) {
         Seq(
           bind[GraphiteProviderConfig].toInstance(GraphiteProviderConfig.fromConfig(graphiteConfiguration)),
-          bind[GraphiteReporterProviderConfig].toInstance(GraphiteReporterProviderConfig.fromConfig(configuration, graphiteConfiguration)),
+          bind[GraphiteReporterProviderConfig].toInstance(
+            GraphiteReporterProviderConfig.fromConfig(configuration, graphiteConfiguration)),
           bind[Graphite].toProvider[GraphiteProvider],
           bind[GraphiteReporter].toProvider[GraphiteReporterProvider],
           bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly
@@ -70,7 +67,8 @@ class GraphiteMetricsModule extends Module {
 
   private def extractGraphiteConfiguration(environment: Environment, configuration: Configuration): Configuration = {
     val env = RunMode(environment.mode, configuration).env
-    configuration.getConfig(s"$env.microservice.metrics.graphite")
+    configuration
+      .getConfig(s"$env.microservice.metrics.graphite")
       .orElse(configuration.getConfig("microservice.metrics.graphite"))
       .getOrElse(Configuration())
   }

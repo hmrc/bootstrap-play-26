@@ -25,15 +25,17 @@ import uk.gov.hmrc.play.bootstrap.config.AppName
 
 import scala.concurrent.ExecutionContext
 
-class DefaultDeviceIdFilter @Inject() (
-                            val configuration: Configuration,
-                            val auditConnector: AuditConnector
-                          )(implicit
-                            override val mat: Materializer,
-                            override val ec: ExecutionContext
-                          ) extends DeviceIdFilter with AppName {
+class DefaultDeviceIdFilter @Inject()(
+  val configuration: Configuration,
+  val auditConnector: AuditConnector
+)(
+  implicit
+  override val mat: Materializer,
+  override val ec: ExecutionContext)
+    extends DeviceIdFilter
+    with AppName {
 
-  private val currentSecretKey = "cookie.deviceId.secret"
+  private val currentSecretKey  = "cookie.deviceId.secret"
   private val previousSecretKey = "cookie.deviceId.previous.secret"
 
   override lazy val secret: String =

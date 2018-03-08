@@ -39,37 +39,35 @@ object CacheControlConfig {
   }
 }
 
-class CacheControlFilter @Inject() (
-                                   config: CacheControlConfig,
-                                   override val mat: Materializer
-                                   )(implicit ec: ExecutionContext) extends Filter {
+class CacheControlFilter @Inject()(
+  config: CacheControlConfig,
+  override val mat: Materializer
+)(implicit ec: ExecutionContext)
+    extends Filter {
 
   if (config.cacheableContentTypes.nonEmpty) {
     Logger.info(s"Will allow caching of content types starting with: ${config.cacheableContentTypes.mkString(", ")}")
   }
 
   override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
-    f(rh).map {
-      result =>
+    f(rh).map { result =>
+      def status = result.header.status
 
-        def status = result.header.status
+      def existingHeader = result.header.headers.get(CACHE_CONTROL)
 
-        def existingHeader = result.header.headers.get(CACHE_CONTROL)
-
-        def contentTypeIsCacheable =
-          result.body.contentType.exists {
-            contentType =>
-              config.cacheableContentTypes.exists(contentType.startsWith)
-          }
-
-        def headerShouldBeSet =
-          !(status == Status.NOT_MODIFIED || existingHeader.isDefined || contentTypeIsCacheable)
-
-        if (headerShouldBeSet) {
-          result.withHeaders(CACHE_CONTROL -> CacheControlFilter.headerValue)
-        } else {
-          result
+      def contentTypeIsCacheable =
+        result.body.contentType.exists { contentType =>
+          config.cacheableContentTypes.exists(contentType.startsWith)
         }
+
+      def headerShouldBeSet =
+        !(status == Status.NOT_MODIFIED || existingHeader.isDefined || contentTypeIsCacheable)
+
+      if (headerShouldBeSet) {
+        result.withHeaders(CACHE_CONTROL -> CacheControlFilter.headerValue)
+      } else {
+        result
+      }
     }
 }
 

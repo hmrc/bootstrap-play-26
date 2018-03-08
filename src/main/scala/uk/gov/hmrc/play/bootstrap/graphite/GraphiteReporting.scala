@@ -33,11 +33,11 @@ class DisabledGraphiteReporting @Inject() extends GraphiteReporting {
 }
 
 @Singleton
-class EnabledGraphiteReporting @Inject() (
-                                  config: Configuration,
-                                  reporter: GraphiteReporter,
-                                  lifecycle: ApplicationLifecycle
-                                ) extends GraphiteReporting {
+class EnabledGraphiteReporting @Inject()(
+  config: Configuration,
+  reporter: GraphiteReporter,
+  lifecycle: ApplicationLifecycle
+) extends GraphiteReporting {
 
   protected def interval: Long = config.getLong("microservice.metrics.graphite.interval").getOrElse(10L)
 
@@ -47,8 +47,7 @@ class EnabledGraphiteReporting @Inject() (
   reporter.start(interval, TimeUnit.SECONDS)
 
   // stop graphite reporter on application shut down
-  lifecycle.addStopHook {
-    () =>
-      Future.successful(reporter.stop())
+  lifecycle.addStopHook { () =>
+    Future.successful(reporter.stop())
   }
 }

@@ -35,7 +35,7 @@ import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, D
 
 object DefaultCookieCryptoFilterSpec {
 
-  class Filters @Inject() (cryptoFilter: CookieCryptoFilter) extends DefaultHttpFilters(cryptoFilter)
+  class Filters @Inject()(cryptoFilter: CookieCryptoFilter) extends DefaultHttpFilters(cryptoFilter)
 
   trait MockCrypto extends Encrypter with Decrypter {
 
@@ -62,9 +62,11 @@ class DefaultCookieCryptoFilterSpec extends WordSpec with MustMatchers with Opti
     Router.from {
       case GET(p"/test") =>
         Action { implicit request =>
-          Results.Ok(
-            request.headers.get(HeaderNames.COOKIE).getOrElse("")
-          ).addingToSession("baz" -> "quux")
+          Results
+            .Ok(
+              request.headers.get(HeaderNames.COOKIE).getOrElse("")
+            )
+            .addingToSession("baz" -> "quux")
         }
       case GET(p"/other-cookie") =>
         Action { implicit request =>
@@ -118,9 +120,11 @@ class DefaultCookieCryptoFilterSpec extends WordSpec with MustMatchers with Opti
       val app = builder.build()
 
       Helpers.running(app) {
-        val Some(result) = route(app, FakeRequest(GET, "/other-cookie")
-          .withCookies(Cookie("womble", "spoon"))
-          .withSession("foo" -> "bar"))
+        val Some(result) = route(
+          app,
+          FakeRequest(GET, "/other-cookie")
+            .withCookies(Cookie("womble", "spoon"))
+            .withSession("foo" -> "bar"))
         contentAsString(result) mustEqual "spoon"
         cookies(result).get("fork").value.value mustEqual "knife"
       }

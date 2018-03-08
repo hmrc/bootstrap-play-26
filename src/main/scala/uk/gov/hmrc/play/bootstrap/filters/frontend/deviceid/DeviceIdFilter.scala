@@ -43,9 +43,8 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
     def allCookiesApartFromDeviceId = requestCookies.filterNot(_.name == DeviceId.MdtpDeviceId)
 
     val find: Option[Cookie] = requestCookies.find(isDeviceIdCookie)
-    val cookieResult = find.map {
-      deviceCookeValueId =>
-
+    val cookieResult = find
+      .map { deviceCookeValueId =>
         DeviceId.from(deviceCookeValueId.value, secret, previousSecrets) match {
 
           case Some(deviceId) =>
@@ -60,13 +59,14 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
             sendDataEvent(rh, deviceCookeValueId.value, deviceIdCookie.value)
             CookeResult(allCookiesApartFromDeviceId ++ Seq(deviceIdCookie), deviceIdCookie)
         }
-    }.getOrElse {
-      // No deviceId cookie found or empty cookie value. Create new deviceId cookie, add to request and response.
-      val newDeviceIdCookie = buildNewDeviceIdCookie()
-      CookeResult(allCookiesApartFromDeviceId ++ Seq(newDeviceIdCookie), newDeviceIdCookie)
-    }
+      }
+      .getOrElse {
+        // No deviceId cookie found or empty cookie value. Create new deviceId cookie, add to request and response.
+        val newDeviceIdCookie = buildNewDeviceIdCookie()
+        CookeResult(allCookiesApartFromDeviceId ++ Seq(newDeviceIdCookie), newDeviceIdCookie)
+      }
 
-    val newCookie = HeaderNames.COOKIE -> Cookies.encodeSetCookieHeader(cookieResult.cookies)
+    val newCookie           = HeaderNames.COOKIE -> Cookies.encodeSetCookieHeader(cookieResult.cookies)
     val updatedInputHeaders = rh.copy(headers = rh.headers.replace(newCookie))
 
     next(updatedInputHeaders).map(theHttpResponse => {
@@ -76,14 +76,16 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
   }
 
   private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String): Unit = {
-    val hc:HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
-    auditConnector.sendEvent(DataEvent(appName, EventTypes.Failed,
-      tags = hc.toAuditTags("deviceIdFilter", rh.path),
-      detail = getTamperDetails(badDeviceId, goodDeviceId)))
+    val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+    auditConnector.sendEvent(
+      DataEvent(
+        appName,
+        EventTypes.Failed,
+        tags   = hc.toAuditTags("deviceIdFilter", rh.path),
+        detail = getTamperDetails(badDeviceId, goodDeviceId)))
   }
 
   private def getTamperDetails(tamperDeviceId: String, newDeviceId: String) =
-    Map("tamperedDeviceId" -> tamperDeviceId,
-      "deviceID" -> newDeviceId)
+    Map("tamperedDeviceId" -> tamperDeviceId, "deviceID" -> newDeviceId)
 
 }

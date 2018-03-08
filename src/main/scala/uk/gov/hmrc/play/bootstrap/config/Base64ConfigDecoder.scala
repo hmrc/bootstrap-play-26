@@ -38,7 +38,7 @@ trait Base64ConfigDecoder {
     }
   }
 
-  private def decode(key: String, value: ConfigValue): (String, Any) = {
+  private def decode(key: String, value: ConfigValue): (String, Any) =
     decode(value).map(key.dropRight(suffix.length) -> _).getOrElse {
       throw new ConfigException.BadValue(
         value.origin,
@@ -46,7 +46,6 @@ trait Base64ConfigDecoder {
         "only strings can be Base64 decoded"
       )
     }
-  }
 
   protected def decodeConfig(configuration: Configuration): Configuration = {
 

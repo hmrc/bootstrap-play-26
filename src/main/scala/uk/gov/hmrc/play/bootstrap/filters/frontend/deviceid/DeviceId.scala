@@ -25,19 +25,18 @@ import play.api.mvc.Cookie
 import scala.util.Try
 
 /**
- * The DeviceId is a long lived cookie which represents a digital signature composed of a UUID, timestamp in milliseconds and a hash.
- *
- * The format of the cookie 'mdtpdi' is...
- *
- *    mdtpdi#UUID#TIMESTAMP_hash
- *
- * Note the above hash is a one way hash of the value preceding the "_".
- *
- */
-
+  * The DeviceId is a long lived cookie which represents a digital signature composed of a UUID, timestamp in milliseconds and a hash.
+  *
+  * The format of the cookie 'mdtpdi' is...
+  *
+  *    mdtpdi#UUID#TIMESTAMP_hash
+  *
+  * Note the above hash is a one way hash of the value preceding the "_".
+  *
+  */
 case class DeviceId(uuid: String, timestamp: Long, hash: String) {
 
-  import DeviceId.{Token1, Token2, MdtpDeviceId, TenYears}
+  import DeviceId.{MdtpDeviceId, TenYears, Token1, Token2}
 
   def value = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp$Token2$hash"
 
@@ -46,29 +45,34 @@ case class DeviceId(uuid: String, timestamp: Long, hash: String) {
 
 object DeviceId {
 
-  val Token1 = "#"
-  val Token2 = "_"
-  val TenYears = 315360000
+  val Token1       = "#"
+  val Token2       = "_"
+  val TenYears     = 315360000
   val MdtpDeviceId = "mdtpdi"
 
   def generateHash(uuid: String, timestamp: Long, secret: String) = {
     val oneWayHash = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp"
-    val digest = MessageDigest.getInstance("MD5").digest((oneWayHash + secret).getBytes)
+    val digest     = MessageDigest.getInstance("MD5").digest((oneWayHash + secret).getBytes)
     new String(Base64.encodeBase64(digest))
   }
 
   def deviceIdHashIsValid(hash: String, uuid: String, timestamp: Long, secret: String, previousSecrets: Seq[String]) = {
-    val secrets = Seq(secret) ++ previousSecrets
+    val secrets     = Seq(secret) ++ previousSecrets
     val hashChecker = secrets.map(item => () => hash == generateHash(uuid, timestamp, item)).toStream
     hashChecker.map(_()).collectFirst { case true => true }.getOrElse(false)
   }
 
   def from(value: String, secret: String, previousSecrets: Seq[String]) = {
 
-    def isValidPrefix(prefix:String) = prefix == MdtpDeviceId
+    def isValidPrefix(prefix: String) = prefix == MdtpDeviceId
 
     def isValid(prefix: String, uuid: String, timestamp: String, hash: String) =
-      isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(hash, uuid, timestamp.toLong, secret, previousSecrets)
+      isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(
+        hash,
+        uuid,
+        timestamp.toLong,
+        secret,
+        previousSecrets)
 
     value.split("(#)|(_)") match {
       case Array(prefix, uuid, timestamp, hash) if isValid(prefix, uuid, timestamp, hash) =>
@@ -77,8 +81,8 @@ object DeviceId {
     }
   }
 
-  private def validUuid(uuid: String) = Try {UUID.fromString(uuid)}.isSuccess
+  private def validUuid(uuid: String) = Try { UUID.fromString(uuid) }.isSuccess
 
-  private def validLongTime(timestamp: String) = Try {timestamp.toLong}.isSuccess
+  private def validLongTime(timestamp: String) = Try { timestamp.toLong }.isSuccess
 
 }

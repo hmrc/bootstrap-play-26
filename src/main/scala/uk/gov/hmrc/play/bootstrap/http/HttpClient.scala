@@ -30,8 +30,13 @@ import uk.gov.hmrc.play.http.ws._
 trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with HttpPatch
 
 @Singleton
-class DefaultHttpClient @Inject() (config: Configuration, override val auditConnector: AuditConnector, override val wsClient: WSClient)
-  extends HttpClient with WSHttp with HttpAuditing {
+class DefaultHttpClient @Inject()(
+  config: Configuration,
+  override val auditConnector: AuditConnector,
+  override val wsClient: WSClient)
+    extends HttpClient
+    with WSHttp
+    with HttpAuditing {
   override lazy val configuration: Option[Config] = Option(config.underlying)
 
   override val appName: String = new AppName {

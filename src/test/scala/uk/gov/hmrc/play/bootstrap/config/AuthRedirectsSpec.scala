@@ -37,15 +37,14 @@ class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
 
   trait BaseUri {
     val ggLoginService = "http://localhost:9025"
-    val ggLoginPath = "/gg/sign-in"
+    val ggLoginPath    = "/gg/sign-in"
 
     val ivService = "http://localhost:9938"
-    val ivPath = "/mdtp/uplift"
+    val ivPath    = "/mdtp/uplift"
 
     val strideService = "http://localhost:9041"
-    val stridePath = "/stride/sign-in"
+    val stridePath    = "/stride/sign-in"
   }
-
 
   trait Setup extends WithApplication with BaseUri {
 
@@ -57,10 +56,11 @@ class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
 
       val env = Environment(new File("."), getClass.getClassLoader, mode)
 
-      val config = Configuration.from(Map(
-        "appName" -> "app",
-        "run.mode" -> mode.toString
-      ) ++ extraConfig)
+      val config = Configuration.from(
+        Map(
+          "appName"  -> "app",
+          "run.mode" -> mode.toString
+        ) ++ extraConfig)
     }
 
     object Redirect extends TestRedirects
@@ -68,11 +68,10 @@ class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
     def expectedLocation: String
 
     def validate(redirect: Result): Unit = {
-      redirect.header.status shouldBe 303
+      redirect.header.status                        shouldBe 303
       redirect.header.headers(HeaderNames.LOCATION) shouldBe expectedLocation
     }
   }
-
 
   "redirect with defaults from config" should {
 
@@ -157,6 +156,5 @@ class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
     }
 
   }
-
 
 }

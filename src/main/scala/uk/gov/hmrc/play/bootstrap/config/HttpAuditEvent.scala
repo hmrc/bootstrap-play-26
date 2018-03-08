@@ -27,32 +27,41 @@ trait HttpAuditEvent {
   def appName: String
 
   object auditDetailKeys {
-    val Input = "input"
-    val Method = "method"
+    val Input           = "input"
+    val Method          = "method"
     val UserAgentString = "userAgentString"
-    val Referrer = "referrer"
+    val Referrer        = "referrer"
   }
 
   object headers {
     val UserAgent = "User-Agent"
-    val Referer = "Referer"
+    val Referer   = "Referer"
   }
 
-  protected[config] def dataEvent(eventType: String, transactionName: String, request: RequestHeader, detail: Map[String, String] = Map())
-                                 (implicit hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)): DataEvent = {
+  protected[config] def dataEvent(
+    eventType: String,
+    transactionName: String,
+    request: RequestHeader,
+    detail: Map[String, String] = Map())(
+    implicit hc: HeaderCarrier  = HeaderCarrierConverter.fromHeadersAndSession(request.headers)): DataEvent = {
 
     import auditDetailKeys._
     import headers._
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
-    val requiredFields = hc.toAuditDetails(Input -> s"Request to ${request.path}",
-     Method -> request.method.toUpperCase,
+    val requiredFields = hc.toAuditDetails(
+      Input           -> s"Request to ${request.path}",
+      Method          -> request.method.toUpperCase,
       UserAgentString -> request.headers.get(UserAgent).getOrElse("-"),
-      Referrer -> request.headers.get(Referer).getOrElse("-"))
+      Referrer        -> request.headers.get(Referer).getOrElse("-")
+    )
 
     val tags = hc.toAuditTags(transactionName, request.path)
 
-    DataEvent(appName, eventType, detail = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap), tags = tags)
+    DataEvent(
+      appName,
+      eventType,
+      detail = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap),
+      tags   = tags)
   }
 }
-

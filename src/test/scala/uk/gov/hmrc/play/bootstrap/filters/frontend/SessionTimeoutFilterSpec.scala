@@ -41,19 +41,26 @@ object SessionTimeoutFilterSpec {
 
   val now = new DateTime(2017, 1, 12, 14, 56)
 
-  class Filters @Inject() (timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
+  class Filters @Inject()(timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
 
-  class StaticDateSessionTimeoutFilter @Inject() (
-                                                   config: SessionTimeoutFilterConfig
-                                                 )(implicit
-                                                   ec: ExecutionContext, mat: Materializer
-                                                 ) extends SessionTimeoutFilter(config)(ec, mat) {
+  class StaticDateSessionTimeoutFilter @Inject()(
+    config: SessionTimeoutFilterConfig
+  )(
+    implicit
+    ec: ExecutionContext,
+    mat: Materializer)
+      extends SessionTimeoutFilter(config)(ec, mat) {
 
     override val clock: DateTime = now
   }
 }
 
-class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutures with OptionValues with MockitoSugar {
+class SessionTimeoutFilterSpec
+    extends WordSpecLike
+    with Matchers
+    with ScalaFutures
+    with OptionValues
+    with MockitoSugar {
 
   import SessionTimeoutFilterSpec._
 
@@ -62,12 +69,15 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     Router.from {
       case GET(p"/test") =>
         Action { request =>
-          Results.Ok(Json.obj(
-            "session" -> request.session.data,
-            "cookies" -> request.cookies.toSeq.map {
-              cookie => cookie.name -> cookie.value
-            }.toMap[String, String]
-          ))
+          Results.Ok(
+            Json.obj(
+              "session" -> request.session.data,
+              "cookies" -> request.cookies.toSeq
+                .map { cookie =>
+                  cookie.name -> cookie.value
+                }
+                .toMap[String, String]
+            ))
         }
     }
   }
@@ -87,12 +97,12 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
   "SessionTimeoutFilter" should {
 
     val timeoutDuration = Duration.standardMinutes(1)
-    val timestamp = now.minusMinutes(5).getMillis.toString
+    val timestamp       = now.minusMinutes(5).getMillis.toString
 
     def filter = mock[SessionTimeoutFilter]
 
     val config = SessionTimeoutFilterConfig(
-      timeoutDuration = Duration.standardMinutes(1),
+      timeoutDuration       = Duration.standardMinutes(1),
       additionalSessionKeys = Set("whitelisted")
     )
 
@@ -111,12 +121,14 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
       running(app()) {
 
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> timestamp,
-          authToken -> "a-token",
-          userId -> "some-userId",
-          "whitelisted" -> "whitelisted"
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> timestamp,
+            authToken            -> "a-token",
+            userId               -> "some-userId",
+            "whitelisted"        -> "whitelisted"
+          ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -130,17 +142,19 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
       running(app()) {
 
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> timestamp,
-          loginOrigin -> "gg",
-          authToken -> "a-token",
-          "whitelisted" -> "whitelisted"
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> timestamp,
+            loginOrigin          -> "gg",
+            authToken            -> "a-token",
+            "whitelisted"        -> "whitelisted"
+          ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession should onlyContainWhitelistedKeys(Set("whitelisted"))
-        rhSession.get(loginOrigin) shouldBe Some("gg")
+        rhSession                    should onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession.get(loginOrigin)   shouldBe Some("gg")
         rhSession.get("whitelisted") shouldBe Some("whitelisted")
       }
     }
@@ -151,11 +165,13 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
       running(app()) {
 
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> timestamp,
-          authToken -> "a-token",
-          "custom" -> "custom"
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> timestamp,
+            authToken            -> "a-token",
+            "custom"             -> "custom"
+          ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -170,12 +186,14 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
       running(app()) {
 
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          authToken -> "a-token",
-          token -> "another-token",
-          userId -> "a-userId",
-          "custom" -> "custom"
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            authToken -> "a-token",
+            token     -> "another-token",
+            userId    -> "a-userId",
+            "custom"  -> "custom"
+          ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -191,19 +209,22 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
 
-      val altConfig = config.copy(onlyWipeAuthToken = true)
+      val altConfig    = config.copy(onlyWipeAuthToken = true)
       val oldTimestamp = now.minusMinutes(5).getMillis.toString
 
       running(app(altConfig)) {
 
-        val Some(result) = route(app(altConfig), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> oldTimestamp,
-          authToken -> "a-token",
-          token -> "another-token",
-          userId -> "a-userId",
-          "custom" -> "custom",
-          "whitelisted" -> "whitelisted"
-        ))
+        val Some(result) = route(
+          app(altConfig),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> oldTimestamp,
+            authToken            -> "a-token",
+            token                -> "another-token",
+            userId               -> "a-userId",
+            "custom"             -> "custom",
+            "whitelisted"        -> "whitelisted"
+          )
+        )
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -220,9 +241,11 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     "update old timestamp with current time" in {
 
       running(app()) {
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> now.minusDays(1).getMillis.toString
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> now.minusDays(1).getMillis.toString
+          ))
         session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
       }
     }
@@ -230,9 +253,11 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
     "update recent timestamp with current time" in {
 
       running(app()) {
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> now.minusSeconds(1).getMillis.toString
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> now.minusSeconds(1).getMillis.toString
+          ))
         session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
       }
     }
@@ -241,14 +266,17 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
 
       running(app()) {
 
-        val Some(result) = route(app(), FakeRequest(GET, "/test").withSession(
-          lastRequestTimestamp -> "invalid-format",
-          authToken -> "a-token",
-          token -> "another-token",
-          userId -> "a-userId",
-          loginOrigin -> "gg",
-          "custom" -> "custom"
-        ))
+        val Some(result) = route(
+          app(),
+          FakeRequest(GET, "/test").withSession(
+            lastRequestTimestamp -> "invalid-format",
+            authToken            -> "a-token",
+            token                -> "another-token",
+            userId               -> "a-userId",
+            loginOrigin          -> "gg",
+            "custom"             -> "custom"
+          )
+        )
 
         session(result).get(authToken).value shouldEqual "a-token"
         session(result).get(userId).value shouldEqual "a-userId"
@@ -269,12 +297,12 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
           .withCookies(Cookie("aTestName", "aTestValue"))
           .withSession(
             lastRequestTimestamp -> timestamp,
-            authToken -> "a-token",
-            userId -> "some-userId"
+            authToken            -> "a-token",
+            userId               -> "some-userId"
           )
 
         val Some(result) = route(app(), request)
-        val rhCookies = (contentAsJson(result) \ "cookies").as[Map[String, String]]
+        val rhCookies    = (contentAsJson(result) \ "cookies").as[Map[String, String]]
 
         rhCookies should contain("aTestName" -> "aTestValue")
         status(result) shouldEqual OK
@@ -288,7 +316,7 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       val config = Configuration.empty
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
-      result.onlyWipeAuthToken shouldBe false
+      result.onlyWipeAuthToken     shouldBe false
       result.timeoutDuration shouldEqual Duration.standardMinutes(15)
     }
 
@@ -300,7 +328,7 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       )
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
-      result.onlyWipeAuthToken shouldBe false
+      result.onlyWipeAuthToken     shouldBe false
       result.timeoutDuration shouldEqual Duration.standardMinutes(15)
     }
 
@@ -312,18 +340,18 @@ class SessionTimeoutFilterSpec extends WordSpecLike with Matchers with ScalaFutu
       )
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should contain("foo")
-      result.onlyWipeAuthToken shouldBe true
+      result.onlyWipeAuthToken     shouldBe true
       result.timeoutDuration shouldEqual Duration.standardMinutes(5)
     }
   }
 
-  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String] = Set.empty) = new Matcher[Map[String, String]] {
-    override def apply(data: Map[String, String]): MatchResult = {
-      MatchResult(
-        (data.keySet -- whitelistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
-        s"""Session keys ${data.keySet} did not contain only whitelisted keys: $whitelistedSessionKeys""",
-        s"""Session keys ${data.keySet} contained only whitelisted keys: $whitelistedSessionKeys"""
-      )
+  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String] = Set.empty) =
+    new Matcher[Map[String, String]] {
+      override def apply(data: Map[String, String]): MatchResult =
+        MatchResult(
+          (data.keySet -- whitelistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
+          s"""Session keys ${data.keySet} did not contain only whitelisted keys: $whitelistedSessionKeys""",
+          s"""Session keys ${data.keySet} contained only whitelisted keys: $whitelistedSessionKeys"""
+        )
     }
-  }
 }
