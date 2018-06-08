@@ -60,10 +60,10 @@ class GraphiteMetricsModule extends Module {
   }
 
   private def kenshoMetricsEnabled(rootConfiguration: Configuration) =
-    rootConfiguration.getBoolean("metrics.enabled").getOrElse(false)
+    rootConfiguration.getOptional[Boolean]("metrics.enabled").getOrElse(false)
 
   private def graphitePublisherEnabled(graphiteConfiguration: Configuration) =
-    graphiteConfiguration.getBoolean("enabled").getOrElse(false)
+    graphiteConfiguration.getOptional[Boolean]("enabled").getOrElse(false)
 
   private def extractGraphiteConfiguration(environment: Environment, configuration: Configuration): Configuration = {
     val env = RunMode(environment.mode, configuration).env

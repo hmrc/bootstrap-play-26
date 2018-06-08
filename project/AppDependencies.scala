@@ -16,7 +16,7 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "logback-json-logger" % "3.1.0",
     "com.typesafe.play"     %% "play"                % PlayVersion.current,
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
-    "de.threedimensions"    %% "metrics-play"        % "2.5.13",
+    "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
     "ch.qos.logback"        % "logback-core"         % "1.1.7"
 //    "uk.gov.hmrc"           %% "play-health"         % "2.1.0" todo (konrad) needs updating to 2.6
   )
