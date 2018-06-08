@@ -13,7 +13,6 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.2.0",
     "uk.gov.hmrc"           %% "play-auditing"       % "3.3.0",
     "uk.gov.hmrc"           %% "auth-client"         % "2.6.0",
-    "uk.gov.hmrc"           %% "play-config"         % "5.0.0",
     "uk.gov.hmrc"           %% "logback-json-logger" % "3.1.0",
     "com.typesafe.play"     %% "play"                % PlayVersion.current,
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
@@ -24,7 +23,7 @@ object AppDependencies {
 
   val test = Seq(
     "com.typesafe.play"      %% "play-test"          % PlayVersion.current % Test,
-    "org.scalacheck"         % "scalacheck_2.11"     % "1.12.5"            % Test,
+    "org.scalacheck"         %% "scalacheck"         % "1.14.0"            % Test,
     "org.mockito"            % "mockito-all"         % "1.9.5"             % Test,
     "org.pegdown"            % "pegdown"             % "1.5.0"             % Test,
     "com.github.tomakehurst" % "wiremock"            % "2.7.1"             % Test,
