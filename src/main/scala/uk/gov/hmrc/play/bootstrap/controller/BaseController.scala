@@ -17,34 +17,17 @@
 package uk.gov.hmrc.play.bootstrap.controller
 
 import play.api.mvc._
-import play.api.http.MimeTypes
-
-import scala.concurrent.Future
-import play.api.mvc.Result
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Reads}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-import scala.util.{Failure, Success, Try}
+trait BackendController
+    extends play.api.mvc.BaseController
+    with Utf8MimeTypes
+    with WithJsonBody
+    with MdcExecutionContextProvider
+    with BackendHeaderCarrierProvider
 
-trait Utf8MimeTypes {
-  self: Controller =>
-
-  override val JSON = s"${MimeTypes.JSON};charset=utf-8"
-
-  override def HTML(implicit codec: Codec) = s"${MimeTypes.HTML};charset=utf-8"
-}
-
-trait BaseController extends Controller with Utf8MimeTypes {
-
-  implicit def hc(implicit rh: RequestHeader) = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
-
-  protected def withJsonBody[T](
-    f: (T) => Future[Result])(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]) =
-    Try(request.body.validate[T]) match {
-      case Success(JsSuccess(payload, _)) => f(payload)
-      case Success(JsError(errs)) =>
-        Future.successful(BadRequest(s"Invalid ${m.runtimeClass.getSimpleName} payload: $errs"))
-      case Failure(e) => Future.successful(BadRequest(s"could not parse body due to ${e.getMessage}"))
-    }
-
+trait BackendHeaderCarrierProvider {
+  implicit protected def hc(implicit rh: RequestHeader): HeaderCarrier =
+    HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 }

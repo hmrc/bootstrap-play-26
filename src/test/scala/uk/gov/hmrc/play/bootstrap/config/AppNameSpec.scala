@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
-import uk.gov.hmrc.play.test.UnitSpec
 
-class AppNameSpec extends UnitSpec {
+class AppNameSpec extends WordSpec with Matchers {
 
   "AppName" should {
     "return the name of the application" in new TestSetup {

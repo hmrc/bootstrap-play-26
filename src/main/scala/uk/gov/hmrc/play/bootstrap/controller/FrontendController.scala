@@ -19,65 +19,63 @@ package uk.gov.hmrc.play.bootstrap.controller
 import org.slf4j.MDC
 import play.api.Logger
 import play.api.mvc._
-import uk.gov.hmrc.http.logging.LoggingDetails
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionKeys}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 
 import scala.concurrent._
 
-trait FrontendController extends BaseController with Utf8MimeTypes {
+trait FrontendController
+    extends MessagesBaseController
+    with Utf8MimeTypes
+    with MdcExecutionContextProvider
+    with WithJsonBody
+    with FrontendHeaderCarrierProvider
+    with UnauthorisedActions
 
-  override implicit def hc(implicit rh: RequestHeader): HeaderCarrier =
+trait FrontendHeaderCarrierProvider {
+  implicit protected def hc(implicit rh: RequestHeader): HeaderCarrier =
     HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
+}
 
-  implicit def mdcExecutionContext(implicit loggingDetails: LoggingDetails): ExecutionContext =
-    MdcLoggingExecutionContext.fromLoggingDetails
+trait UnauthorisedActions { self: MessagesBaseController with FrontendHeaderCarrierProvider =>
 
-  implicit class SessionKeyRemover(result: Future[Result]) {
-    def removeSessionKey(key: String)(implicit request: Request[_]) = result.map {
-      _.withSession(request.session - key)
+  // todo (konrad): should we deprecate one of the below as they do the same thing?
+
+  /**
+    * Use this Action with your endpoints, if they are synchronous and require
+    * the header carrier values to be logged.
+    *
+    * For .async actions the MdcLoggingExecutionContext takes care of it.
+    */
+  def ActionWithMdc: ActionBuilder[MessagesRequest, AnyContent] =
+    controllerComponents.messagesActionBuilder.andThen(actionWithMdc)
+
+  def UnauthorizedAction: ActionBuilder[MessagesRequest, AnyContent] =
+    ActionWithMdc
+
+  private val actionWithMdc =
+    new ActionFunction[MessagesRequest, MessagesRequest] {
+
+      private def storeHeaders(request: RequestHeader) {
+        hc(request).mdcData.foreach {
+          case (k, v) => MDC.put(k, v)
+        }
+        Logger.debug("Request details added to MDC")
+      }
+
+      def invokeBlock[A](request: MessagesRequest[A], block: MessagesRequest[A] => Future[Result]): Future[Result] = {
+        Logger.debug("Invoke block, setting up MDC due to Action creation")
+        storeHeaders(request)
+        val r = block(request)
+        Logger.debug("Clearing MDC")
+        MDC.clear()
+        r
+      }
+
+      val parser: BodyParser[AnyContent] = parse.defaultBodyParser
+
+      protected val executionContext: ExecutionContext = defaultExecutionContext
+
     }
-  }
-
-}
-
-object UnauthorisedAction {
-  def apply(body: (Request[AnyContent] => Result), sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] =
-    unauthedAction(ActionWithMdc(body), sensitiveDataFormKeys)
-
-  def async(
-    body: (Request[AnyContent] => Future[Result]),
-    sensitiveDataFormKeys: Seq[String] = Seq.empty): Action[AnyContent] =
-    unauthedAction(Action.async(body), sensitiveDataFormKeys)
-
-  private def unauthedAction(body: Action[AnyContent], sensitiveDataFormKeys: Seq[String]): Action[AnyContent] = body
-}
-
-/**
-  * Use this Action with your endpoints, if they are synchronous and require
-  * the header carrier values to be logged.
-  *
-  * For .async actions the MdcLoggingExecutionContext takes care of it.
-  */
-object ActionWithMdc extends ActionBuilder[Request] {
-
-  private def storeHeaders(request: RequestHeader) {
-    request.session.get(SessionKeys.userId).foreach(MDC.put(HeaderNames.authorisation, _))
-    request.session.get(SessionKeys.token).foreach(MDC.put(HeaderNames.token, _))
-    request.session.get(SessionKeys.sessionId).foreach(MDC.put(HeaderNames.xSessionId, _))
-    request.headers.get(HeaderNames.xForwardedFor).foreach(MDC.put(HeaderNames.xForwardedFor, _))
-    request.headers.get(HeaderNames.xRequestId).foreach(MDC.put(HeaderNames.xRequestId, _))
-    Logger.debug("Request details added to MDC")
-  }
-
-  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
-    Logger.debug("Invoke block, setting up MDC due to Action creation")
-    storeHeaders(request)
-    val r = block(request)
-    Logger.debug("Clearing MDC")
-    MDC.clear()
-    r
-  }
 
 }

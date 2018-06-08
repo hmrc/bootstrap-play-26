@@ -18,10 +18,9 @@ package uk.gov.hmrc.play.bootstrap.http.utils
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.scalatest.BeforeAndAfterAll
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 
-trait WiremockTestServer extends UnitSpec with BeforeAndAfterAll {
+trait WiremockTestServer extends WordSpec with Matchers with BeforeAndAfterAll {
 
   val wireMockServer = new WireMockServer(20001)
 

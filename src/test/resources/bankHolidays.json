@@ -1,36 +1,28 @@
 {
   "events": [
     {
-      "title": "New Year's Day",
-      "date": "2017-01-02"
+      "title": "New Year's Day"
     },
     {
-      "title": "Good Friday",
-      "date": "2017-04-14"
+      "title": "Good Friday"
     },
     {
-      "title": "Easter Monday",
-      "date": "2017-04-17"
+      "title": "Easter Monday"
     },
     {
-      "title": "Early May bank holiday",
-      "date": "2017-05-01"
+      "title": "Early May bank holiday"
     },
     {
-      "title": "Spring bank holiday",
-      "date": "2017-05-29"
+      "title": "Spring bank holiday"
     },
     {
-      "title": "Summer bank holiday",
-      "date": "2017-08-28"
+      "title": "Summer bank holiday"
     },
     {
-      "title": "Christmas Day",
-      "date": "2017-12-25"
+      "title": "Christmas Day"
     },
     {
-      "title": "Boxing Day",
-      "date": "2017-12-26"
+      "title": "Boxing Day"
     }
   ]
 }

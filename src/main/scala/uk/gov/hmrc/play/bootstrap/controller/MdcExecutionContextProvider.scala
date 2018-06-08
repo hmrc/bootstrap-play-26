@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap
+package uk.gov.hmrc.play.bootstrap.controller
 
-import play.api.ApplicationLoader.Context
-import uk.gov.hmrc.play.bootstrap.config.Base64ConfigDecoder
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceApplicationLoader}
+import uk.gov.hmrc.http.logging.LoggingDetails
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext
 
-class ApplicationLoader(initialBuilder: GuiceApplicationBuilder)
-    extends GuiceApplicationLoader(initialBuilder)
-    with Base64ConfigDecoder {
+import scala.concurrent.ExecutionContext
 
-  override def builder(context: Context): GuiceApplicationBuilder =
-    super.builder(context.copy(initialConfiguration = decodeConfig(context.initialConfiguration)))
+trait MdcExecutionContextProvider {
+  implicit def mdcExecutionContext(implicit loggingDetails: LoggingDetails): ExecutionContext =
+    MdcLoggingExecutionContext.fromLoggingDetails
 }

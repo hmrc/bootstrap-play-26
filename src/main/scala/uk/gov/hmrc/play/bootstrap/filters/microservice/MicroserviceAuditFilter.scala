@@ -18,7 +18,6 @@ package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import javax.inject.Inject
 import javax.inject.Inject
-
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.stage._
@@ -27,6 +26,7 @@ import play.api.http.HttpEntity
 import play.api.http.HttpEntity.Streamed
 import play.api.libs.streams.Accumulator
 import play.api.mvc.{Result, _}
+import play.api.routing.Router.Attrs
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
@@ -78,8 +78,9 @@ trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
   }
 
   protected def needsAuditing(request: RequestHeader): Boolean =
-    (for (controllerName <- request.tags.get(play.routing.Router.Tags.ROUTE_CONTROLLER))
-      yield controllerNeedsAuditing(controllerName)).getOrElse(true)
+    request.attrs.get(Attrs.HandlerDef).forall { handlerDef =>
+      controllerNeedsAuditing(handlerDef.controller)
+    }
 
   protected def onCompleteWithInput(
     loggingContext: String,

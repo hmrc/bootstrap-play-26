@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import org.scalatest.{Matchers, WordSpec}
 import play.api.{Configuration, Mode}
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class LoadAuditingConfigSpec extends UnitSpec {
+class LoadAuditingConfigSpec extends WordSpec with Matchers {
 
   "LoadAuditingConfig" should {
 

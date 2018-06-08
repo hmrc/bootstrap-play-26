@@ -55,7 +55,7 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
       result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
-    "return an InternalServerError result for an application error" in {
+    "return 303 (See Other) result for an application error" in {
 
       val responseCode = SEE_OTHER
       val location     = "http://some.test.location/page"
@@ -64,7 +64,7 @@ class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with OneAppPer
         HttpEntity.NoEntity
       )
 
-      val appException = new ApplicationException("paye", theResult, "application exception")
+      val appException = ApplicationException(theResult, "application exception")
 
       val result = resolveError(FakeRequest(), appException)
 

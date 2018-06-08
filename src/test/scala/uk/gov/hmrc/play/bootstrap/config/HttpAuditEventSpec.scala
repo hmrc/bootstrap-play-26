@@ -74,16 +74,5 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
       event.detail.get("surrogate") shouldBe None
     }
 
-//    "Include the authorisation, token and ip address in the audit messages" in new WithApplication {
-//        val request = FakeRequest("GET", "/foo")
-//
-//        implicit val hcWithoutSessionData = new HeaderCarrier()
-//
-//        val event: DataEvent = AuditFilter.buildAuditRequestEvent(EventTypes.ServiceSentResponse, request, "")
-//        event.detail should contain ("Authorization" -> "-")
-//        event.detail should contain ("token" -> "-")
-//        event.detail.keySet should contain ("ipAddress")
-//      }
-
   }
 }

@@ -22,7 +22,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
-import play.api.LoggerLike
+import play.api.{LoggerLike, MarkerContext}
 import play.api.mvc.Results
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 
@@ -48,7 +48,7 @@ class LoggingFilterSpec
     def buildFakeLogger() = new LoggerLike {
       var lastInfoMessage: Option[String] = None
       override val logger: Logger         = NOPLogger.NOP_LOGGER
-      override def info(s: => String): Unit =
+      override def info(s: => String)(implicit mc: MarkerContext): Unit =
         lastInfoMessage = Some(s)
     }
 

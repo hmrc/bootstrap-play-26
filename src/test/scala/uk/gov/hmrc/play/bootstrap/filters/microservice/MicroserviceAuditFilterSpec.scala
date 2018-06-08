@@ -22,7 +22,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import play.api.test.FakeRequest
@@ -53,7 +53,8 @@ class MicroserviceAuditFilterSpec
     val deviceID         = "A_DEVICE_ID"
     val akamaiReputation = "AN_AKAMAI_REPUTATION"
 
-    val config = PatienceConfig(Span(5, Seconds), Span(15, Millis))
+    implicit val patienceConfig: PatienceConfig =
+      PatienceConfig(Span(5, Seconds), Span(15, Millis))
 
     implicit val system       = ActorSystem()
     implicit val materializer = ActorMaterializer()
@@ -101,7 +102,7 @@ class MicroserviceAuditFilterSpec
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
         event.detail("deviceID")        shouldBe deviceID
         event.detail("responseMessage") shouldBe actionNotFoundMessage
-      }(config)
+      }
     }
 
     "audit a response even when an action further down the chain throws an exception" in {
@@ -126,7 +127,7 @@ class MicroserviceAuditFilterSpec
         event.tags("X-Session-ID")      shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
         event.detail("deviceID")        shouldBe deviceID
-      }(config)
+      }
     }
   }
 }

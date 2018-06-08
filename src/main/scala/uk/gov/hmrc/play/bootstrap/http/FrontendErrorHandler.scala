@@ -21,11 +21,10 @@ import play.api.http.HttpErrorHandler
 import play.api.i18n.{I18nSupport, Messages}
 import play.api.mvc.Results.{BadRequest, InternalServerError, NotFound}
 import play.api.mvc.{Request, RequestHeader, Result, Results}
-import play.api.{DefaultGlobal, Logger, PlayException}
+import play.api.{Logger, PlayException}
 import play.twirl.api.Html
 
 import scala.concurrent.Future
-import scala.util.control.NonFatal
 
 abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
 
@@ -68,26 +67,22 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
     )
 
   private def logError(request: RequestHeader, ex: Throwable): Unit =
-    try {
-      Logger.error(
-        """
+    Logger.error(
+      """
           |
           |! %sInternal server error, for (%s) [%s] ->
           | """.stripMargin.format(ex match {
-          case p: PlayException => "@" + p.id + " - "
-          case _                => ""
-        }, request.method, request.uri),
-        ex
-      )
-
-    } catch {
-      case NonFatal(e) => DefaultGlobal.onError(request, e)
-    }
+        case p: PlayException => "@" + p.id + " - "
+        case _                => ""
+      }, request.method, request.uri),
+      ex
+    )
 
   def resolveError(rh: RequestHeader, ex: Throwable) = ex match {
-    case ApplicationException(domain, result, _) => result
-    case _                                       => InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
+    case ApplicationException(result, _) => result
+    case _ =>
+      InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
   }
 }
 
-case class ApplicationException(domain: String, result: Result, message: String) extends Exception(message)
+case class ApplicationException(result: Result, message: String) extends Exception(message)

@@ -16,32 +16,22 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import java.security.cert.X509Certificate
-
+import play.api.libs.typedmap.TypedMap
+import play.api.mvc.request.{RemoteConnection, RequestTarget}
 import play.api.mvc.{Headers, RequestHeader}
 import play.api.test.FakeHeaders
 
 class DummyRequestHeader extends RequestHeader {
 
-  override def remoteAddress: String = ???
-
   override def headers: Headers = FakeHeaders(Seq.empty)
-
-  override def queryString: Map[String, Seq[String]] = ???
 
   override def version: String = ???
 
   override def method: String = "GET"
 
-  override def path: String = "/"
+  def connection: RemoteConnection = ???
 
-  override def uri: String = "/"
+  def target: RequestTarget = ???
 
-  override def tags: Map[String, String] = ???
-
-  override def id: Long = ???
-
-  override def secure: Boolean = false
-
-  override def clientCertificateChain: Option[Seq[X509Certificate]] = ???
+  def attrs: TypedMap = ???
 }

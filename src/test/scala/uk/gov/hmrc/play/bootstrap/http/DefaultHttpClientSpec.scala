@@ -17,9 +17,8 @@
 package uk.gov.hmrc.play.bootstrap.http
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.joda.time.LocalDate
-import org.scalatest.TestData
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.{Matchers, TestData, WordSpec}
 import org.scalatestplus.play.OneAppPerTest
 import play.api.Application
 import play.api.inject.bind
@@ -27,10 +26,10 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.http.utils._
-import uk.gov.hmrc.play.test.UnitSpec
 
 class DefaultHttpClientSpec
-    extends UnitSpec
+    extends WordSpec
+    with Matchers
     with ScalaFutures
     with IntegrationPatience
     with WiremockTestServer
@@ -60,7 +59,7 @@ class DefaultHttpClientSpec
 
       val bankHolidays: BankHolidays =
         myHttpClient.GET[BankHolidays]("http://localhost:20001/bank-holidays.json").futureValue
-      bankHolidays.events.head shouldBe BankHoliday("New Year's Day", new LocalDate(2017, 1, 2))
+      bankHolidays.events.head shouldBe BankHoliday("New Year's Day")
     }
 
     "read some json and return a raw http response" in {

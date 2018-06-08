@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
-import javax.inject.Inject
-
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.util.ByteString
+import javax.inject.Inject
 import play.api.http.HttpEntity.Streamed
 import play.api.http.{HeaderNames, HttpEntity}
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
+import play.api.routing.Router.Attrs
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.{AppName, AuthRedirects, ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, ResponseBodyCaptor}
@@ -56,9 +56,6 @@ trait FrontendAuditFilter extends AuditFilter with HttpAuditEvent {
   def applicationPort: Option[Int]
 
   implicit def mat: Materializer
-
-  def buildAuditedHeaders(request: RequestHeader) =
-    HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 
   override def apply(nextFilter: EssentialAction) = new EssentialAction {
     def apply(requestHeader: RequestHeader) = {
@@ -93,8 +90,9 @@ trait FrontendAuditFilter extends AuditFilter with HttpAuditEvent {
   }
 
   protected def needsAuditing(request: RequestHeader): Boolean =
-    (for (controllerName <- request.tags.get(play.routing.Router.Tags.ROUTE_CONTROLLER))
-      yield controllerNeedsAuditing(controllerName)).getOrElse(true)
+    request.attrs.get(Attrs.HandlerDef).forall { handlerDef =>
+      controllerNeedsAuditing(handlerDef.controller)
+    }
 
   protected def onCompleteWithInput(
     loggingContext: String,

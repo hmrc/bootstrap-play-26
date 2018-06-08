@@ -17,7 +17,6 @@
 package uk.gov.hmrc.play.bootstrap.http.utils
 
 import org.apache.commons.io.IOUtils
-import org.joda.time.LocalDate
 import play.api.libs.json.Json
 
 object JsonPayloads {
@@ -27,7 +26,7 @@ object JsonPayloads {
 }
 
 case class BankHolidays(events: Seq[BankHoliday])
-case class BankHoliday(title: String, date: LocalDate)
+case class BankHoliday(title: String)
 
 object BankHolidays {
 

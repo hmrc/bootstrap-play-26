@@ -17,12 +17,13 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import java.util.Date
-import javax.inject.Inject
 
+import javax.inject.Inject
 import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
 import org.joda.time.DateTimeUtils
 import play.api.mvc.{Filter, RequestHeader, Result}
+import play.api.routing.Router.Attrs
 import play.api.{Logger, LoggerLike}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.LoggingDetails
@@ -54,9 +55,9 @@ trait LoggingFilter extends Filter {
   }
 
   private def needsLogging(request: RequestHeader): Boolean =
-    (for {
-      name <- request.tags.get(play.routing.Router.Tags.ROUTE_CONTROLLER)
-    } yield controllerNeedsLogging(name)).getOrElse(true)
+    request.attrs.get(Attrs.HandlerDef).forall { handlerDef =>
+      controllerNeedsLogging(handlerDef.controller)
+    }
 
   private def logString(rh: RequestHeader, result: Future[Result], startTime: Long)(
     implicit ld: LoggingDetails): Future[String] = {

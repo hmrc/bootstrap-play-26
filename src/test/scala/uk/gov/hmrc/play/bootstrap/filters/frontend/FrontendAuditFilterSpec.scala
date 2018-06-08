@@ -26,18 +26,18 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.Matchers._
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest._
-import org.scalatestplus.play._
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
 import play.api.mvc.Results.NotFound
 import play.api.mvc._
-import play.api.test.FakeRequest
+import play.api.test.{FakeHeaders, FakeRequest}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.EventKeys
@@ -54,7 +54,7 @@ class FrontendAuditFilterSpec
     with Eventually
     with ScalaFutures
     with MockitoSugar
-    with OneAppPerTest
+    with GuiceOneAppPerTest
     with BeforeAndAfterEach {
 
   implicit val system       = ActorSystem("test")
@@ -138,13 +138,13 @@ class FrontendAuditFilterSpec
       val source  = Source.single(ByteString(body))
       val request = FakeRequest("POST", "/foo").withHeaders("Content-Type" -> "application/x-www-form-urlencoded")
 
-      "when the request succeeds" in {
+      "the request succeeds" in {
         val result = await(filter.apply(nextAction)(request).run(source))
         await(enumerateResponseBody(result))
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in {
+      "an action further down the chain throws an exception" in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run(source))
         behave like expected
       }
@@ -154,7 +154,7 @@ class FrontendAuditFilterSpec
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
           event.detail    should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
-        }(PatienceConfig(Span(5, Seconds), Span(200, Millis)))
+        }
     }
 
     "generate audit events with the device finger print when it is supplied in a request cookie" when {
@@ -168,14 +168,14 @@ class FrontendAuditFilterSpec
       val request = FakeRequest("GET", "/foo").withCookies(
         Cookie(DeviceFingerprint.deviceFingerprintCookieName, encryptedFingerprint))
 
-      "when the request succeeds" in {
+      "the request succeeds" in {
         val result = await(filter.apply(nextAction)(request).run)
         await(enumerateResponseBody(result))
 
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in {
+      "an action further down the chain throws an exception" in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
       }
@@ -193,14 +193,14 @@ class FrontendAuditFilterSpec
     "generate audit events without the device finger print when it is not supplied in a request cookie" when {
       val request = FakeRequest("GET", "/foo")
 
-      "when the request succeeds" in {
+      "the request succeeds" in {
         val result = await(filter.apply(nextAction)(request).run)
         await(enumerateResponseBody(result))
 
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in {
+      "an action further down the chain throws an exception" in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
       }
@@ -219,12 +219,12 @@ class FrontendAuditFilterSpec
             DeviceFingerprint.deviceFingerprintCookieName,
             "THIS IS SOME JUST THAT SHOULDN'T BE DECRYPTABLE *!@&£$)B__!@£$"))
 
-      "when the request succeeds" taggedAs NonStrictCookies in {
+      "the request succeeds" taggedAs NonStrictCookies in {
         await(filter.apply(nextAction)(request).run)
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" taggedAs NonStrictCookies in {
+      "an action further down the chain throws an exception" taggedAs NonStrictCookies in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
       }
@@ -238,7 +238,7 @@ class FrontendAuditFilterSpec
 
     "use the session to read Authorization, session Id and token" when {
 
-      "when the request succeeds" in {
+      "the request succeeds" in {
         val request = FakeRequest("GET", "/foo").withSession(
           "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
@@ -250,7 +250,7 @@ class FrontendAuditFilterSpec
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in {
+      "an action further down the chain throws an exception" in {
         val request = FakeRequest("GET", "/foo").withSession(
           "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
@@ -286,18 +286,21 @@ class FrontendAuditFilterSpec
     }
 
     "generate audit events with the device ID when it is supplied in a request cookie" when {
+
+      // todo (konrad):     FakeRequest().withCookies doesn't change headers and HeaderCarrier fails to get
+      // todo (konrad):     deviceID from session
+
       val deviceID = "A_DEVICE_ID"
+      val request  = FakeRequest("GET", "/foo").withCookies(Cookie(CookieNames.deviceID, deviceID))
 
-      val request = FakeRequest("GET", "/foo").withCookies(Cookie(CookieNames.deviceID, deviceID))
-
-      "when the request succeeds" in {
+      "the request succeeds" in {
         val result = await(filter.apply(nextAction)(request).run)
         await(enumerateResponseBody(result))
 
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in {
+      "an action further down the chain throws an exception" in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
       }
@@ -314,12 +317,12 @@ class FrontendAuditFilterSpec
 
       val request = FakeRequest("GET", "/foo").withHeaders(HeaderNames.deviceID -> deviceID)
 
-      "when the request succeeds" in {
+      "the request succeeds" in {
         await(filter.apply(nextAction)(request).run)
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in {
+      "an action further down the chain throws an exception" in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
       }
@@ -378,7 +381,8 @@ class FrontendAuditFilterSpec
 
   "Retrieve host from request" should {
     "convert a not found value into a hyphen" in {
-      filter.getHost(FakeRequest()) should be("-")
+      val request = FakeRequest(method = "GET", uri = "/", headers = FakeHeaders(), body = AnyContentAsEmpty)
+      filter.getHost(request) should be("-")
     }
 
     "keep the host name when it does not contain any port" in {
@@ -464,7 +468,7 @@ class FrontendAuditFilterServerSpec
     with FrontendAuditFilterInstance
     with Eventually
     with MockitoSugar
-    with OneServerPerTest
+    with GuiceOneServerPerTest
     with BeforeAndAfterEach {
 
   override def beforeEach() {
