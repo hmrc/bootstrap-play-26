@@ -25,37 +25,37 @@ import controllers.Assets
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
+import org.scalatest.Matchers._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfterEach, Matchers, TestData, WordSpecLike}
+import org.scalatest._
 import org.scalatestplus.play._
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
-import play.api.libs.ws.{WS, WSClient}
 import play.api.mvc.Results.NotFound
 import play.api.mvc._
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import play.api.test.{FakeApplication, FakeRequest}
-import play.inject.Injector
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
+import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class FrontendAuditFilterSpec
-    extends WordSpecLike
-    with Matchers
+    extends WordSpec
+    with FrontendAuditFilterInstance
     with Eventually
     with ScalaFutures
     with MockitoSugar
+    with OneAppPerTest
     with BeforeAndAfterEach {
-  import MockMethods._
 
   implicit val system       = ActorSystem("test")
   implicit val materializer = ActorMaterializer()
@@ -64,34 +64,26 @@ class FrontendAuditFilterSpec
     r.body.dataStream.runForeach({ _ =>
       })
 
-  def actionNotFoundMessage = "404 Not Found"
-
-  def nextAction(implicit ec: ExecutionContext): Action[AnyContent] = Action(NotFound(actionNotFoundMessage))
+  def nextAction(implicit ec: ExecutionContext): Action[AnyContent] = Action(NotFound("404 Not Found"))
 
   def exceptionThrowingAction(implicit ec: ExecutionContext) = Action.async { request =>
     throw new RuntimeException("Something went wrong")
   }
 
-  val requestReceived = "RequestReceived"
-
-  implicit val filter = new FrontendAuditFilter {
-
-    override val maskedFormFields: Seq[String] = Seq("password")
-
-    override val applicationPort: Option[Int] = Some(80)
-
-    override val auditConnector: AuditConnector = mock[AuditConnector]
-
-    override val appName: String = "app"
-
-    override def controllerNeedsAuditing(controllerName: String): Boolean = false
-
-    implicit val system                     = ActorSystem("test")
-    implicit override def mat: Materializer = ActorMaterializer()
-  }
-
   override def beforeEach() {
     reset(filter.auditConnector)
+  }
+
+  private object NonStrictCookies extends Tag("NonStringCookies")
+
+  override def newAppForTest(testData: TestData): Application = {
+    val config: Map[String, Any] =
+      if (testData.tags contains NonStrictCookies.name) Map("play.http.cookies.strict" -> false)
+      else Map.empty
+
+    new GuiceApplicationBuilder()
+      .configure(config)
+      .build()
   }
 
   "A password" should {
@@ -160,7 +152,7 @@ class FrontendAuditFilterSpec
       def expected() =
         eventually {
           val event = verifyAndRetrieveEvent
-          event.auditType shouldBe requestReceived
+          event.auditType shouldBe "RequestReceived"
           event.detail    should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
         }(PatienceConfig(Span(5, Seconds), Span(200, Millis)))
     }
@@ -190,7 +182,7 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe requestReceived
+        event.auditType shouldBe "RequestReceived"
         event.detail should contain(
           "deviceFingerprint" -> ("""{"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.48 Safari/537.36",""" +
             """"language":"en-US","colorDepth":24,"resolution":"800x1280","timezone":0,"sessionStorage":true,"localStorage":true,"indexedDB":true,"platform":"MacIntel",""" +
@@ -215,7 +207,7 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe requestReceived
+        event.auditType shouldBe "RequestReceived"
         event.detail    should contain("deviceFingerprint" -> "-")
       }
     }
@@ -227,28 +219,26 @@ class FrontendAuditFilterSpec
             DeviceFingerprint.deviceFingerprintCookieName,
             "THIS IS SOME JUST THAT SHOULDN'T BE DECRYPTABLE *!@&£$)B__!@£$"))
 
-      "when the request succeeds" in running(
-        FakeApplication(additionalConfiguration = Map("play.http.cookies.strict" -> false))) {
+      "when the request succeeds" taggedAs NonStrictCookies in {
         await(filter.apply(nextAction)(request).run)
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in running(
-        FakeApplication(additionalConfiguration = Map("play.http.cookies.strict" -> false))) {
+      "when an action further down the chain throws an exception" taggedAs NonStrictCookies in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
       }
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe requestReceived
+        event.auditType shouldBe "RequestReceived"
         event.detail    should contain("deviceFingerprint" -> "-")
       }
     }
 
     "use the session to read Authorization, session Id and token" when {
 
-      "when the request succeeds" in running(FakeApplication()) {
+      "when the request succeeds" in {
         val request = FakeRequest("GET", "/foo").withSession(
           "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
@@ -260,7 +250,7 @@ class FrontendAuditFilterSpec
         behave like expected
       }
 
-      "when an action further down the chain throws an exception" in running(FakeApplication()) {
+      "when an action further down the chain throws an exception" in {
         val request = FakeRequest("GET", "/foo").withSession(
           "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
@@ -272,7 +262,7 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe requestReceived
+        event.auditType shouldBe "RequestReceived"
         event.detail    should contain("Authorization" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=")
         event.detail    should contain("token" -> "aToken")
         event.tags      should contain("X-Session-ID" -> "mySessionId")
@@ -314,7 +304,7 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe requestReceived
+        event.auditType shouldBe "RequestReceived"
         event.detail    should contain("deviceID" -> deviceID)
       }
     }
@@ -336,7 +326,7 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe requestReceived
+        event.auditType shouldBe "RequestReceived"
         event.detail    should contain("deviceID" -> deviceID)
       }
     }
@@ -469,8 +459,20 @@ class FrontendAuditFilterSpec
   }
 }
 
-class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServerPerTest {
-  import MockMethods._
+class FrontendAuditFilterServerSpec
+    extends WordSpec
+    with FrontendAuditFilterInstance
+    with Eventually
+    with MockitoSugar
+    with OneServerPerTest
+    with BeforeAndAfterEach {
+
+  override def beforeEach() {
+    reset(filter.auditConnector)
+  }
+
+  implicit val system: ActorSystem        = ActorSystem("test")
+  implicit def materializer: Materializer = ActorMaterializer()
 
   val random                  = new scala.util.Random
   val largeContent: String    = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize * 3)
@@ -505,7 +507,6 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
       .build()
 
   "Attempting to audit a large in-memory response" in {
-    reset(filter.auditConnector)
 
     val url      = s"http://localhost:$port/longresponse"
     val response = await(client.url(url).get())
@@ -517,7 +518,6 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
   }
 
   "Attempting to audit a standard in-memory response" in {
-    reset(filter.auditConnector)
 
     val url      = s"http://localhost:$port/standardresponse"
     val response = await(client.url(url).get())
@@ -529,7 +529,6 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
   }
 
   "Attempting to audit a large request" in {
-    reset(filter.auditConnector)
 
     val url      = s"http://localhost:$port/longrequest"
     val response = await(client.url(url).post(largeContent))
@@ -547,8 +546,26 @@ class FrontendAuditFilterServerSpec extends FrontendAuditFilterSpec with OneServ
   }
 }
 
-object MockMethods {
-  def verifyAndRetrieveEvent(implicit filter: FrontendAuditFilter): DataEvent = {
+trait FrontendAuditFilterInstance {
+  import MockitoSugar._
+
+  protected val filter: FrontendAuditFilter = new FrontendAuditFilter {
+
+    override val maskedFormFields: Seq[String] = Seq("password")
+
+    override val applicationPort: Option[Int] = Some(80)
+
+    override val auditConnector: AuditConnector = mock[AuditConnector]
+
+    override val appName: String = "app"
+
+    override def controllerNeedsAuditing(controllerName: String): Boolean = false
+
+    implicit val system                     = ActorSystem("test")
+    implicit override def mat: Materializer = ActorMaterializer()
+  }
+
+  protected def verifyAndRetrieveEvent: DataEvent = {
     val captor = ArgumentCaptor.forClass(classOf[DataEvent])
     verify(filter.auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
     captor.getValue

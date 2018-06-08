@@ -24,9 +24,9 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpec}
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import play.api.test.{FakeApplication, FakeRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class MicroserviceAuditFilterSpec
-    extends WordSpecLike
+    extends WordSpec
     with Matchers
     with Eventually
     with ScalaFutures
@@ -75,7 +75,7 @@ class MicroserviceAuditFilterSpec
         implicit override def mat: Materializer = ActorMaterializer()
       }
 
-    "audit a request and response with header information" in running(FakeApplication()) {
+    "audit a request and response with header information" in {
       val mockAuditConnector = mock[AuditConnector]
       val auditFilter        = createAuditFilter(mockAuditConnector)
 
@@ -104,7 +104,7 @@ class MicroserviceAuditFilterSpec
       }(config)
     }
 
-    "audit a response even when an action further down the chain throws an exception" in running(FakeApplication()) {
+    "audit a response even when an action further down the chain throws an exception" in {
       val mockAuditConnector = mock[AuditConnector]
       val auditFilter        = createAuditFilter(mockAuditConnector)
 
