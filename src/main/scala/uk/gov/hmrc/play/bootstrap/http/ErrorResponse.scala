@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.config
+package uk.gov.hmrc.play.bootstrap.http
 
-import play.api.libs.typedmap.TypedMap
-import play.api.mvc.request.{RemoteConnection, RequestTarget}
-import play.api.mvc.{Headers, RequestHeader}
-import play.api.test.FakeHeaders
+import play.api.libs.json.{Json, OFormat}
 
-class DummyRequestHeader extends RequestHeader {
+case class ErrorResponse(
+  statusCode: Int,
+  message: String,
+  xStatusCode: Option[String] = None,
+  requested: Option[String]   = None
+)
 
-  override def headers: Headers = FakeHeaders(Seq.empty)
-
-  override def version: String = ???
-
-  override def method: String = "GET"
-
-  def connection: RemoteConnection = ???
-
-  def target: RequestTarget = ???
-
-  def attrs: TypedMap = ???
+object ErrorResponse {
+  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }

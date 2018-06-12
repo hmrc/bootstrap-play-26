@@ -16,105 +16,255 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import org.mockito.ArgumentCaptor
-import org.mockito.Matchers.any
+import org.mockito.Matchers.{any, eq => is}
 import org.mockito.Mockito._
+import org.scalatest.Matchers._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.{LoneElement, Matchers, WordSpec}
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{LoneElement, WordSpec}
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.Result
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.BearerTokenExpired
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.auth.core.AuthorisationException
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.bootstrap.config.DummyRequestHeader
+import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
-trait MaterializerSupport {
-  implicit val system: ActorSystem             = ActorSystem("Sys")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-}
+class JsonErrorHandlerSpec extends WordSpec with ScalaFutures with MockitoSugar with LoneElement with Eventually {
 
-class JsonErrorHandlerSpec
-    extends WordSpec
-    with Matchers
-    with ScalaFutures
-    with MockitoSugar
-    with LoneElement
-    with Eventually
-    with MaterializerSupport {
-
-  "error handling in onError function" should {
+  "onServerError" should {
 
     "convert a NotFoundException to NotFound response and audit the error" in new Setup {
-      val resultF: Future[Result] = jsh.onServerError(requestHeader, new NotFoundException("test"))
-      status(resultF) shouldEqual NOT_FOUND
-      contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":404,"message":"test"}""")
+      val notFoundException = new NotFoundException("test")
+      val createdDataEvent  = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ResourceNotFound"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> notFoundException.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
 
-      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-      verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
-      captor.getValue.auditType shouldBe "ResourceNotFound"
+      val result = jsonErrorHandler.onServerError(requestHeader, notFoundException)
 
-    }
+      status(result)        shouldEqual NOT_FOUND
+      contentAsJson(result) shouldEqual Json.obj("statusCode" -> NOT_FOUND, "message" -> "test")
 
-    "convert a BadRequestException to NotFound response and audit the error" in new Setup {
-      val resultF: Future[Result] = jsh.onClientError(requestHeader, 400, "bad request")
-      status(resultF) shouldEqual BAD_REQUEST
-      contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":400,"message":"bad request"}""")
-
-      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-      verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
-      captor.getValue.auditType shouldBe "ServerValidationError"
-    }
-
-    "convert an UnauthorizedException to Unauthorized response and audit the error" in new Setup {
-      val resultF: Future[Result] = jsh.onClientError(requestHeader, 401, "unauthorized")
-      status(resultF) shouldEqual UNAUTHORIZED
-      contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":401,"message":"unauthorized"}""")
-
-      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-      verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
-      captor.getValue.auditType shouldBe "ClientError"
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert an AuthorisationException to Unauthorized response and audit the error" in new Setup {
-      val resultF: Future[Result] = jsh.onServerError(requestHeader, new BearerTokenExpired)
-      status(resultF) shouldEqual UNAUTHORIZED
-      contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":401,"message":"Bearer token expired"}""")
+      val authorisationException = new AuthorisationException("reason") {}
+      val createdDataEvent       = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ClientError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> authorisationException.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
 
-      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-      verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
-      captor.getValue.auditType shouldBe "ClientError"
+      val result = jsonErrorHandler.onServerError(requestHeader, authorisationException)
+
+      status(result) shouldEqual UNAUTHORIZED
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> UNAUTHORIZED, "message" -> authorisationException.getMessage)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert an Exception to InternalServerError and audit the error" in new Setup {
-      val resultF: Future[Result] = jsh.onServerError(requestHeader, new Exception("any application exception"))
-      status(resultF) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(resultF) shouldEqual Json.parse("""{"statusCode":500,"message":"any application exception"}""")
+      val exception        = new Exception("any application exception")
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerInternalError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
 
-      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-      verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
-      captor.getValue.auditType shouldBe "ServerInternalError"
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    sealed trait Setup {
-      val method        = "some-method"
-      val uri           = "some-uri"
-      val requestHeader = new DummyRequestHeader
+    "convert a JsValidationException to InternalServerError and audit the error" in new Setup {
+      val exception        = new JsValidationException(GET, uri, classOf[Int], "json deserialization error")
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerValidationError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
 
-      val auditConnector = mock[AuditConnector]
-      when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(Success))
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
-      val configuration = Configuration("appName" -> "myApp")
-      val jsh           = new JsonErrorHandler(configuration, auditConnector)
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
+
+    "convert a HttpException to responseCode from the exception and audit the error" in new Setup {
+      val responseCode     = Random.nextInt()
+      val exception        = new HttpException("error message", responseCode)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerInternalError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result) shouldEqual responseCode
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> responseCode, "message" -> exception.getMessage)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+
+    "convert a Upstream4xxResponse to reportAs from the exception and audit the error" in new Setup {
+      val reportAs         = Random.nextInt()
+      val exception        = Upstream4xxResponse("error message", Random.nextInt, reportAs)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerInternalError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result) shouldEqual reportAs
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> reportAs, "message" -> exception.getMessage)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+
+    "convert a Upstream5xxResponse to reportAs from the exception and audit the error" in new Setup {
+      val reportAs         = Random.nextInt()
+      val exception        = Upstream5xxResponse("error message", Random.nextInt, reportAs)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerInternalError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result) shouldEqual reportAs
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> reportAs, "message" -> exception.getMessage)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+  }
+
+  "onClientError" should {
+
+    "audit an error and return json response for 400" in new Setup {
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerValidationError"),
+          transactionName = is("Request bad format exception"),
+          request         = is(requestHeader),
+          detail          = is(Map.empty)
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onClientError(requestHeader, BAD_REQUEST, "some message we want to override")
+
+      status(result)        shouldEqual BAD_REQUEST
+      contentAsJson(result) shouldEqual Json.obj("statusCode" -> BAD_REQUEST, "message" -> "bad request")
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+
+    "audit an error and return json response for 404 including requested path" in new Setup {
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ResourceNotFound"),
+          transactionName = is("Resource Endpoint Not Found"),
+          request         = is(requestHeader),
+          detail          = is(Map.empty)
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onClientError(requestHeader, NOT_FOUND, "some message we want to override")
+
+      status(result) shouldEqual NOT_FOUND
+      contentAsJson(result) shouldEqual Json
+        .obj("statusCode" -> NOT_FOUND, "message" -> "URI not found", "requested" -> uri)
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+
+    "audit an error and return json response for 4xx except 404 and 400" in new Setup {
+      (401 to 403) ++ (405 to 499) foreach { statusCode =>
+        val createdDataEvent = DataEvent("auditSource", "auditType")
+        when(
+          httpAuditEvent.dataEvent(
+            eventType       = is("ClientError"),
+            transactionName = is(s"A client error occurred, status: $statusCode"),
+            request         = is(requestHeader),
+            detail          = is(Map.empty)
+          )(any[HeaderCarrier]))
+          .thenReturn(createdDataEvent)
+
+        val errorMessage = "unauthorized"
+
+        val result = jsonErrorHandler.onClientError(requestHeader, statusCode, errorMessage)
+
+        status(result)        shouldEqual statusCode
+        contentAsJson(result) shouldEqual Json.obj("statusCode" -> statusCode, "message" -> errorMessage)
+
+        verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      }
+    }
+  }
+
+  private trait Setup {
+    val uri           = "some-uri"
+    val requestHeader = FakeRequest(GET, uri)
+
+    val auditConnector = mock[AuditConnector]
+    when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.successful(Success))
+    val httpAuditEvent = mock[HttpAuditEvent]
+
+    val configuration    = Configuration("appName" -> "myApp")
+    val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent)
   }
 }

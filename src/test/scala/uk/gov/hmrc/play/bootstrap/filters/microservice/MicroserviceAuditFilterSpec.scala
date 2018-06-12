@@ -17,13 +17,12 @@
 package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.ActorMaterializer
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -31,6 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.FilterFlowMock
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -53,9 +53,6 @@ class MicroserviceAuditFilterSpec
     val deviceID         = "A_DEVICE_ID"
     val akamaiReputation = "AN_AKAMAI_REPUTATION"
 
-    implicit val patienceConfig: PatienceConfig =
-      PatienceConfig(Span(5, Seconds), Span(15, Millis))
-
     implicit val system       = ActorSystem()
     implicit val materializer = ActorMaterializer()
     implicit val hc           = HeaderCarrier
@@ -65,16 +62,13 @@ class MicroserviceAuditFilterSpec
       "deviceID"          -> deviceID,
       "Akamai-Reputation" -> akamaiReputation)
 
+    val controllerConfigs = mock[ControllerConfigs]
+    when(controllerConfigs.controllerNeedsAuditing(anyString())).thenReturn(true)
+
+    val httpAuditEvent = new HttpAuditEvent { override def appName = applicationName }
+
     def createAuditFilter(connector: AuditConnector) =
-      new MicroserviceAuditFilter {
-        override val auditConnector: AuditConnector = connector
-        override val appName: String                = applicationName
-
-        override def controllerNeedsAuditing(controllerName: String): Boolean = true
-
-        implicit val system                     = ActorSystem("test")
-        implicit override def mat: Materializer = ActorMaterializer()
-      }
+      new DefaultMicroserviceAuditFilter(controllerConfigs, connector, httpAuditEvent, materializer)
 
     "audit a request and response with header information" in {
       val mockAuditConnector = mock[AuditConnector]
@@ -91,7 +85,7 @@ class MicroserviceAuditFilterSpec
 
       eventually {
         val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-        verify(mockAuditConnector, times(1)).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockAuditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
         val event = captor.getValue
 
@@ -117,7 +111,7 @@ class MicroserviceAuditFilterSpec
 
       eventually {
         val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-        verify(mockAuditConnector, times(1)).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockAuditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
         val event = captor.getValue
 

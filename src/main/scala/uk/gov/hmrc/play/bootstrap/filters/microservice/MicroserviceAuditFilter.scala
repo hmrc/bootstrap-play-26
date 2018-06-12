@@ -16,33 +16,42 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.microservice
 
-import javax.inject.Inject
-import javax.inject.Inject
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.stage._
 import akka.util.ByteString
+import javax.inject.Inject
+import play.api.Logger
 import play.api.http.HttpEntity
 import play.api.http.HttpEntity.Streamed
 import play.api.libs.streams.Accumulator
 import play.api.mvc.{Result, _}
 import play.api.routing.Router.Attrs
-import play.api.{Configuration, Logger}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-trait MicroserviceAuditFilter extends AuditFilter with HttpAuditEvent {
+trait MicroserviceAuditFilter extends AuditFilter {
 
   def auditConnector: AuditConnector
 
   def controllerNeedsAuditing(controllerName: String): Boolean
+
+  def dataEvent(
+    eventType: String,
+    transactionName: String,
+    request: RequestHeader,
+    detail: Map[String, String] = Map())(
+    implicit hc: HeaderCarrier  = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+  ): DataEvent
 
   implicit def mat: Materializer
 
@@ -233,14 +242,19 @@ protected[filters] class ResponseBodyCaptor(
 }
 
 class DefaultMicroserviceAuditFilter @Inject()(
-  val configuration: Configuration,
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
+  httpAuditEvent: HttpAuditEvent,
   override val mat: Materializer
-) extends MicroserviceAuditFilter
-    with AppName {
+) extends MicroserviceAuditFilter {
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
-    controllerConfigs.get(controllerName).auditing
+    controllerConfigs.controllerNeedsAuditing(controllerName)
 
+  override def dataEvent(
+    eventType: String,
+    transactionName: String,
+    request: RequestHeader,
+    detail: Map[String, String])(implicit hc: HeaderCarrier): DataEvent =
+    httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
 }

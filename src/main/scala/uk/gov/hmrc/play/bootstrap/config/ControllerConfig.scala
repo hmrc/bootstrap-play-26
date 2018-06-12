@@ -34,6 +34,9 @@ case class ControllerConfigs(private val controllers: Map[String, ControllerConf
 
   def get(controllerName: String): ControllerConfig =
     controllers.getOrElse(controllerName, ControllerConfig())
+
+  def controllerNeedsAuditing(controllerName: String): Boolean =
+    get(controllerName).auditing
 }
 
 object ControllerConfigs {

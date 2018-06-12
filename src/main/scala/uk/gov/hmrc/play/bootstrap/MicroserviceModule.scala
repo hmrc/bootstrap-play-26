@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.play.bootstrap
 
-import play.api.http.HttpFilters
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, MicroserviceFilters}
+import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.microservice.{DefaultMicroserviceAuditFilter, MicroserviceAuditFilter}
 
 class MicroserviceModule extends BootstrapModule {

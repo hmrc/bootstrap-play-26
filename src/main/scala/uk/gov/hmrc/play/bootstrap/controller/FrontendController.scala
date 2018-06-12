@@ -33,8 +33,8 @@ trait FrontendController
     with UnauthorisedActions
 
 trait FrontendHeaderCarrierProvider {
-  implicit protected def hc(implicit rh: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromHeadersAndSession(rh.headers, Some(rh.session))
+  implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
+    HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
 }
 
 trait UnauthorisedActions { self: MessagesBaseController with FrontendHeaderCarrierProvider =>

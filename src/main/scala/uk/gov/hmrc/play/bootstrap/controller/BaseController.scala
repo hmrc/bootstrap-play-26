@@ -28,6 +28,6 @@ trait BackendController
     with BackendHeaderCarrierProvider
 
 trait BackendHeaderCarrierProvider {
-  implicit protected def hc(implicit rh: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+  implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
+    HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 }

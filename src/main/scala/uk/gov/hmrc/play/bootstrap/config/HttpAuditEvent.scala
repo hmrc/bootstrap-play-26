@@ -16,29 +16,36 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import com.google.inject.ImplementedBy
+import javax.inject.Inject
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.model.DataEvent
 
+class DefaultHttpAuditEvent @Inject()(appNameProvider: AppNameProvider) extends HttpAuditEvent {
+  override val appName: String = appNameProvider.appName
+}
+
+@ImplementedBy(classOf[DefaultHttpAuditEvent])
 trait HttpAuditEvent {
 
   def appName: String
 
-  object auditDetailKeys {
+  protected object auditDetailKeys {
     val Input           = "input"
     val Method          = "method"
     val UserAgentString = "userAgentString"
     val Referrer        = "referrer"
   }
 
-  object headers {
+  protected object headers {
     val UserAgent = "User-Agent"
     val Referer   = "Referer"
   }
 
-  protected[config] def dataEvent(
+  def dataEvent(
     eventType: String,
     transactionName: String,
     request: RequestHeader,
@@ -62,6 +69,7 @@ trait HttpAuditEvent {
       appName,
       eventType,
       detail = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap),
-      tags   = tags)
+      tags   = tags
+    )
   }
 }

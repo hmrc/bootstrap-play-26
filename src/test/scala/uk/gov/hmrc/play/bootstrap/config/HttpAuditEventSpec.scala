@@ -17,12 +17,12 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import org.scalatest.{LoneElement, Matchers, WordSpecLike}
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor
 
-class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement with OneAppPerSuite {
+class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement with GuiceOneAppPerSuite {
 
   "The optional audit fields code" should {
 
@@ -32,7 +32,7 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
       optionalFields.loneElement shouldBe ("surrogate" -> "Cool")
     }
 
-    "Return the correct size map when fed with two identicle items" in {
+    "Return the correct size map when fed with two identical items" in {
       val optionalFields = HeaderFieldsExtractor.optionalAuditFields(
         Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool"))
       optionalFields.loneElement shouldBe ("surrogate" -> "Cool")
@@ -56,7 +56,7 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
   }
 
   "The code to generate an audit event" should {
-    implicit val hc = new HeaderCarrier()
+    implicit val hc = HeaderCarrier()
 
     object HttpAuditEventForTest extends HttpAuditEvent {
       override def appName: String = "my-test-app"
