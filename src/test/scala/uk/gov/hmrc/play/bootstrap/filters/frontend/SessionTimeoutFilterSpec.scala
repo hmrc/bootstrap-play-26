@@ -22,7 +22,7 @@ import akka.stream.Materializer
 import org.joda.time.{DateTime, Duration}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.{Application, Configuration}
 import play.api.http.{DefaultHttpFilters, HttpFilters}
@@ -96,8 +96,7 @@ class SessionTimeoutFilterSpec
 
   "SessionTimeoutFilter" should {
 
-    val timeoutDuration = Duration.standardMinutes(1)
-    val timestamp       = now.minusMinutes(5).getMillis.toString
+    val timestamp = now.minusMinutes(5).getMillis.toString
 
     def filter = mock[SessionTimeoutFilter]
 
@@ -132,9 +131,9 @@ class SessionTimeoutFilterSpec
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession should onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession                                 should onlyContainWhitelistedKeys(Set("whitelisted"))
         rhSession.get(lastRequestTimestamp).value shouldEqual timestamp
-        rhSession.get("whitelisted").value shouldEqual "whitelisted"
+        rhSession.get("whitelisted").value        shouldEqual "whitelisted"
       }
     }
 
@@ -175,7 +174,7 @@ class SessionTimeoutFilterSpec
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession shouldNot onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession               shouldNot onlyContainWhitelistedKeys(Set("whitelisted"))
         rhSession.get("custom") shouldBe Some("custom")
 
         session(result).get("custom") shouldBe Some("custom")
@@ -197,10 +196,10 @@ class SessionTimeoutFilterSpec
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession.get(authToken).value shouldEqual "a-token"
-        rhSession.get(userId).value shouldEqual "a-userId"
-        rhSession.get(token).value shouldEqual "another-token"
-        rhSession.get("custom").value shouldEqual "custom"
+        rhSession.get(authToken).value      shouldEqual "a-token"
+        rhSession.get(userId).value         shouldEqual "a-userId"
+        rhSession.get(token).value          shouldEqual "another-token"
+        rhSession.get("custom").value       shouldEqual "custom"
         rhSession.get(lastRequestTimestamp) shouldBe None
 
         session(result).get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
@@ -229,12 +228,12 @@ class SessionTimeoutFilterSpec
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
         rhSession.get("custom").value shouldEqual "custom"
-        rhSession.get(authToken) shouldNot be(defined)
-        rhSession.get(userId) shouldNot be(defined)
-        rhSession.get(token) shouldNot be(defined)
+        rhSession.get(authToken)      shouldNot be(defined)
+        rhSession.get(userId)         shouldNot be(defined)
+        rhSession.get(token)          shouldNot be(defined)
 
         session(result).get("custom").value shouldEqual "custom"
-        session(result).get(authToken) shouldNot be(defined)
+        session(result).get(authToken)      shouldNot be(defined)
       }
     }
 
@@ -278,11 +277,11 @@ class SessionTimeoutFilterSpec
           )
         )
 
-        session(result).get(authToken).value shouldEqual "a-token"
-        session(result).get(userId).value shouldEqual "a-userId"
-        session(result).get(token).value shouldEqual "another-token"
-        session(result).get(loginOrigin).value shouldEqual "gg"
-        session(result).get("custom").value shouldEqual "custom"
+        session(result).get(authToken).value            shouldEqual "a-token"
+        session(result).get(userId).value               shouldEqual "a-userId"
+        session(result).get(token).value                shouldEqual "another-token"
+        session(result).get(loginOrigin).value          shouldEqual "gg"
+        session(result).get("custom").value             shouldEqual "custom"
         session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
       }
     }
@@ -304,7 +303,7 @@ class SessionTimeoutFilterSpec
         val Some(result) = route(app(), request)
         val rhCookies    = (contentAsJson(result) \ "cookies").as[Map[String, String]]
 
-        rhCookies should contain("aTestName" -> "aTestValue")
+        rhCookies      should contain("aTestName" -> "aTestValue")
         status(result) shouldEqual OK
       }
     }
@@ -317,7 +316,7 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
       result.onlyWipeAuthToken     shouldBe false
-      result.timeoutDuration shouldEqual Duration.standardMinutes(15)
+      result.timeoutDuration       shouldEqual Duration.standardMinutes(15)
     }
 
     "return defaults when config is set to the defaults" in {
@@ -329,7 +328,7 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
       result.onlyWipeAuthToken     shouldBe false
-      result.timeoutDuration shouldEqual Duration.standardMinutes(15)
+      result.timeoutDuration       shouldEqual Duration.standardMinutes(15)
     }
 
     "return custom settings" in {
@@ -341,7 +340,7 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should contain("foo")
       result.onlyWipeAuthToken     shouldBe true
-      result.timeoutDuration shouldEqual Duration.standardMinutes(5)
+      result.timeoutDuration       shouldEqual Duration.standardMinutes(5)
     }
   }
 

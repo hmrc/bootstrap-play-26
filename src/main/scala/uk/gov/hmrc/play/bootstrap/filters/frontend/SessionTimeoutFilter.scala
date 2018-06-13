@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
-import javax.inject.Inject
-
 import akka.stream.Materializer
+import javax.inject.Inject
 import org.joda.time.{DateTime, DateTimeZone, Duration}
 import play.api.Configuration
-import play.api.http.HeaderNames.COOKIE
 import play.api.mvc._
+import play.api.mvc.request.{AssignedCell, RequestAttrKey}
 import uk.gov.hmrc.http.SessionKeys._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,16 +39,16 @@ object SessionTimeoutFilterConfig {
     val defaultTimeout = Duration.standardMinutes(15)
 
     val timeoutDuration = configuration
-      .getLong("session.timeoutSeconds")
+      .getOptional[Long]("session.timeoutSeconds")
       .map(Duration.standardSeconds)
       .getOrElse(defaultTimeout)
 
     val wipeIdleSession = configuration
-      .getBoolean("session.wipeIdleSession")
+      .getOptional[Boolean]("session.wipeIdleSession")
       .getOrElse(true)
 
     val additionalSessionKeysToKeep = configuration
-      .getStringSeq("session.additionalSessionKeysToKeep")
+      .getOptional[Seq[String]]("session.additionalSessionKeysToKeep")
       .getOrElse(Seq.empty)
       .toSet
 
@@ -101,9 +100,6 @@ class SessionTimeoutFilter @Inject()(
     val wipeAuthRelatedKeysFromSessionCookie: (Result) => Result =
       result => result.withSession(wipeFromSession(result.session(rh), authRelatedKeys))
 
-    val wipeTimestampFromSessionCookie: (Result) => Result =
-      result => result.withSession(result.session(rh) - lastRequestTimestamp)
-
     val timestamp = rh.session.get(lastRequestTimestamp)
 
     (timestamp.flatMap(timestampToDatetime) match {
@@ -132,19 +128,17 @@ class SessionTimeoutFilter @Inject()(
 
   private def wipeSession(requestHeader: RequestHeader): RequestHeader = {
     val sessionMap: Map[String, String] = preservedSessionData(requestHeader.session).toMap
-    mkRequest(requestHeader, Session.deserialize(sessionMap))
+    requestWithUpdatedSession(requestHeader, Session.deserialize(sessionMap))
   }
 
   private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader =
-    mkRequest(requestHeader, wipeFromSession(requestHeader.session, authRelatedKeys))
+    requestWithUpdatedSession(requestHeader, wipeFromSession(requestHeader.session, authRelatedKeys))
 
-  private def mkRequest(requestHeader: RequestHeader, session: Session): RequestHeader = {
-    val wipedSessionCookie = Session.encodeAsCookie(session)
-    val otherCookies       = requestHeader.cookies.filterNot(_.name == wipedSessionCookie.name).toSeq
-    val wipedHeaders =
-      requestHeader.headers.replace(COOKIE -> Cookies.encodeCookieHeader(Seq(wipedSessionCookie) ++ otherCookies))
-    requestHeader.copy(headers = wipedHeaders)
-  }
+  private def requestWithUpdatedSession(requestHeader: RequestHeader, session: Session): RequestHeader =
+    requestHeader.addAttr(
+      key   = RequestAttrKey.Session,
+      value = new AssignedCell(session)
+    )
 
   private def preservedSessionData(session: Session): Seq[(String, String)] =
     for {
