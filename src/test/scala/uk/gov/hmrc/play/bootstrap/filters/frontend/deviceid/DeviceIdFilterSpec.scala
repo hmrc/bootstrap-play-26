@@ -24,9 +24,10 @@ import org.mockito.{ArgumentCaptor, Mockito}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc._
+import play.api.mvc.request.RequestAttrKey
 import play.api.test.FakeRequest
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
@@ -36,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeviceIdFilterSpec
     extends WordSpecLike
     with Matchers
-    with OneAppPerSuite
+    with GuiceOneAppPerSuite
     with ScalaFutures
     with MockitoSugar
     with BeforeAndAfterEach
@@ -87,14 +88,8 @@ class DeviceIdFilterSpec
       updatedRequest.getValue
     }
 
-    def mdtpdiSetCookie(result: Result): Cookie = {
-      val cookie = for {
-        header <- result.header.headers.get("Set-Cookie")
-        setCookies = Cookies.decodeSetCookieHeader(header)
-        deviceCookie <- setCookies.find(_.name == DeviceId.MdtpDeviceId)
-      } yield deviceCookie
-      cookie.value
-    }
+    def mdtpdiSetCookie(result: Result): Cookie =
+      result.newCookies.find(_.name == DeviceId.MdtpDeviceId).value
 
     def expectAuditIdEvent(badCookie: String, validCookie: String) = {
       val captor = ArgumentCaptor.forClass(classOf[DataEvent])
@@ -109,10 +104,16 @@ class DeviceIdFilterSpec
     }
 
     def invokeFilter(cookies: Seq[Cookie], expectedResultCookie: Cookie, times: Option[Int] = None) = {
-      val incomingRequest = if (cookies.isEmpty) FakeRequest() else FakeRequest().withCookies(cookies: _*)
+      val incomingRequest = FakeRequest().withCookies(cookies: _*)
       val result          = filter(action)(incomingRequest).futureValue
 
-      val expectedCookie = requestPassedToAction(times).cookies.get(DeviceId.MdtpDeviceId).get
+      val expectedCookie =
+        requestPassedToAction(times)
+          .attrs(RequestAttrKey.Cookies)
+          .value
+          .find(_.name == DeviceId.MdtpDeviceId)
+          .value
+
       expectedCookie.value shouldBe expectedResultCookie.value
 
       result

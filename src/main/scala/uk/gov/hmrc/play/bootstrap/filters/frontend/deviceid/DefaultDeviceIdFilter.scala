@@ -42,6 +42,6 @@ class DefaultDeviceIdFilter @Inject()(
     configuration.underlying.getString(currentSecretKey)
 
   override lazy val previousSecrets: Seq[String] =
-    configuration.getStringSeq(previousSecretKey).getOrElse(Seq.empty)
+    configuration.getOptional[Seq[String]](previousSecretKey).getOrElse(Seq.empty)
 
 }

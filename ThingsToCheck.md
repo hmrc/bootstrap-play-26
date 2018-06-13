@@ -5,3 +5,4 @@
 * move ControllerConfig etc to package: uk.gov.hmrc.play.config + do DI
 * remove one of AppName
 * review cookie encoding, it now uses JWT
+* review how DeviceIdFilter is used and if it needs changes with accessing from attrs

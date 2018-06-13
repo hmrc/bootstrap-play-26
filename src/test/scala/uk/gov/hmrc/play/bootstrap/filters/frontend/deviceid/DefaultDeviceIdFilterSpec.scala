@@ -20,21 +20,12 @@ import javax.inject.Inject
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpecLike}
-import play.api.http.{DefaultHttpFilters, HeaderNames, HttpFilters}
+import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{Cookie, Cookies, Headers, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceId.MdtpDeviceId
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
-object DefaultDeviceIdFilterSpec {
-
-  class Filters @Inject()(deviceId: DeviceIdFilter) extends DefaultHttpFilters(deviceId)
-}
 
 class DefaultDeviceIdFilterSpec
     extends WordSpecLike
@@ -50,14 +41,14 @@ class DefaultDeviceIdFilterSpec
     "create the deviceId when no cookie exists" in {
       running(application(having = appConfig)) { application =>
         val Some(result) = route(application, FakeRequest(GET, "/test"))
-        header(HeaderNames.SET_COOKIE, result.withBakedCookies) shouldBe defined
+        cookies(result).get(DeviceId.MdtpDeviceId) shouldBe 'defined
       }
     }
 
     "create the deviceId when no cookie exists and previous keys are empty" in {
       running(application(having = appConfigNoPreviousKey)) { application =>
         val Some(result) = route(application, FakeRequest(GET, "/test"))
-        header(HeaderNames.SET_COOKIE, result.withBakedCookies) shouldBe defined
+        cookies(result).get(DeviceId.MdtpDeviceId) shouldBe 'defined
       }
     }
 
@@ -68,10 +59,10 @@ class DefaultDeviceIdFilterSpec
 
         val Some(result) = route(
           application,
-          FakeRequest(GET, "/test").withHeaders(existingCookie.asCookieHeaders)
+          FakeRequest(GET, "/test").withCookies(existingCookie)
         )
 
-        cookies(result.withBakedCookies) should contain(existingCookie)
+        cookies(result) should contain(existingCookie)
       }
     }
 
@@ -88,10 +79,10 @@ class DefaultDeviceIdFilterSpec
 
         val Some(result) = route(
           application,
-          FakeRequest(GET, "/test").withHeaders(existingCookie.asCookieHeaders)
+          FakeRequest(GET, "/test").withCookies(existingCookie)
         )
 
-        val Some(mdtpidCookieValue) = cookies(result.withBakedCookies).get(MdtpDeviceId).map(_.value)
+        val Some(mdtpidCookieValue) = cookies(result).get(MdtpDeviceId).map(_.value)
         mdtpidCookieValue should include(uuid)
       }
     }
@@ -124,14 +115,8 @@ class DefaultDeviceIdFilterSpec
         )
         .configure(having)
     }
+}
 
-  private implicit class ResultOps(futureResult: Future[Result]) {
-    lazy val withBakedCookies: Future[Result] = futureResult map (_.bakeCookies())
-  }
-
-  private implicit class CookieOps(cookie: Cookie) {
-    lazy val asCookieHeaders: Headers = Headers(
-      HeaderNames.COOKIE -> Cookies.encodeCookieHeader(Seq(cookie))
-    )
-  }
+object DefaultDeviceIdFilterSpec {
+  class Filters @Inject()(deviceId: DeviceIdFilter) extends DefaultHttpFilters(deviceId)
 }

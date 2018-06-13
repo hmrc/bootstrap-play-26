@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
-import play.api.http.HeaderNames
 import play.api.mvc._
+import play.api.mvc.request.{AssignedCell, RequestAttrKey}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
@@ -34,7 +34,7 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
   protected def appName: String
 
   override def apply(next: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
-    val requestCookies = rh.headers.getAll(HeaderNames.COOKIE).flatMap(Cookies.decodeCookieHeader)
+    val requestCookies = rh.attrs(RequestAttrKey.Cookies).value
 
     def allCookiesApartFromDeviceId = requestCookies.filterNot(_.name == DeviceId.MdtpDeviceId)
 
@@ -47,27 +47,30 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
             // Valid new format cookie.
             // Ensure the cookie is secure by setting it again with the secure flag
             val secureDeviceIdCookie = buildNewDeviceIdCookie().copy(value = deviceId.value)
-            CookieResult(allCookiesApartFromDeviceId :+ secureDeviceIdCookie, secureDeviceIdCookie)
+            CookieResult(allCookiesApartFromDeviceId.toSeq :+ secureDeviceIdCookie, secureDeviceIdCookie)
 
           case None =>
             // Invalid deviceId cookie. Replace invalid cookie from request with new deviceId cookie and return in response.
             val deviceIdCookie = buildNewDeviceIdCookie()
             sendDataEvent(rh, deviceCookeValueId.value, deviceIdCookie.value)
-            CookieResult(allCookiesApartFromDeviceId ++ Seq(deviceIdCookie), deviceIdCookie)
+            CookieResult(allCookiesApartFromDeviceId.toSeq :+ deviceIdCookie, deviceIdCookie)
         }
       }
       .getOrElse {
         // No deviceId cookie found or empty cookie value. Create new deviceId cookie, add to request and response.
         val newDeviceIdCookie = buildNewDeviceIdCookie()
-        CookieResult(allCookiesApartFromDeviceId ++ Seq(newDeviceIdCookie), newDeviceIdCookie)
+        CookieResult(allCookiesApartFromDeviceId.toSeq :+ newDeviceIdCookie, newDeviceIdCookie)
       }
 
-    val newCookie           = HeaderNames.COOKIE -> Cookies.encodeSetCookieHeader(cookieResult.cookies)
-    val updatedInputHeaders = rh.withHeaders(rh.headers.replace(newCookie))
+    val rhUpdatedWithDeviceIdCookie =
+      rh.addAttr(
+        key   = RequestAttrKey.Cookies,
+        value = new AssignedCell(Cookies(cookieResult.cookies))
+      )
 
-    next(updatedInputHeaders).map(theHttpResponse => {
-      theHttpResponse.withCookies(cookieResult.newDeviceIdCookie)
-    })
+    next(rhUpdatedWithDeviceIdCookie).map { result =>
+      result.withCookies(cookieResult.newDeviceIdCookie)
+    }
 
   }
 
