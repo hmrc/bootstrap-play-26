@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.http
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{Matchers, TestData, WordSpec}
-import org.scalatestplus.play.OneAppPerTest
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,7 +33,7 @@ class DefaultHttpClientSpec
     with ScalaFutures
     with IntegrationPatience
     with WiremockTestServer
-    with OneAppPerTest {
+    with GuiceOneAppPerTest {
 
   override def newAppForTest(testData: TestData): Application =
     new GuiceApplicationBuilder()

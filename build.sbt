@@ -5,6 +5,7 @@ lazy val library = Project(appName, file("."))
   .settings(
     scalaVersion        := "2.11.11",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
+    dependencyOverrides ++= AppDependencies.overrides,
     crossScalaVersions  := Seq("2.11.11"),
     fork in Test        := true,
     scalacOptions       ++= Seq("-deprecation"),
