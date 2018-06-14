@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import org.mockito.Mockito._

@@ -22,7 +22,7 @@ import uk.gov.hmrc.crypto.{ApplicationCrypto, ApplicationCryptoDI}
 import uk.gov.hmrc.play.bootstrap.config.CryptoValidation
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
-import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{CookieCryptoFilter, DefaultCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoProvider}
+import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{DefaultSessionCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoFilter, SessionCookieCryptoProvider}
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.{DefaultDeviceIdFilter, DeviceIdFilter}
 
 class FrontendModule extends BootstrapModule {
@@ -32,7 +32,7 @@ class FrontendModule extends BootstrapModule {
       bind[AuditFilter].to[FrontendAuditFilter],
       bind[SessionCookieCrypto].toProvider[SessionCookieCryptoProvider],
       bind[ApplicationCrypto].to[ApplicationCryptoDI],
-      bind[CookieCryptoFilter].to[DefaultCookieCryptoFilter],
+      bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter],
       bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter],
       bind[DeviceIdFilter].to[DefaultDeviceIdFilter],
       bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration)),

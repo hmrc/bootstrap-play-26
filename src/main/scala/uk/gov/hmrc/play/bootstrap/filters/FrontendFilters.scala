@@ -24,7 +24,7 @@ import play.api.http.HttpFilters
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend._
-import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.CookieCryptoFilter
+import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter
 
 @Singleton
@@ -37,7 +37,7 @@ class FrontendFilters @Inject()(
   metricsFilter: MetricsFilter,
   deviceIdFilter: DeviceIdFilter,
   csrfFilter: CSRFFilter,
-  cookieCryptoFilter: CookieCryptoFilter,
+  sessionCookieCryptoFilter: SessionCookieCryptoFilter,
   sessionTimeoutFilter: SessionTimeoutFilter,
   cacheControlFilter: CacheControlFilter
 ) extends HttpFilters {
@@ -45,7 +45,7 @@ class FrontendFilters @Inject()(
   val frontendFilters = Seq(
     metricsFilter,
     headersFilter,
-    cookieCryptoFilter,
+    sessionCookieCryptoFilter,
     deviceIdFilter,
     loggingFilter,
     frontendAuditFilter,
@@ -55,7 +55,7 @@ class FrontendFilters @Inject()(
   )
 
   lazy val enableSecurityHeaderFilter: Boolean =
-    configuration.getBoolean("security.headers.filter.enabled").getOrElse(true)
+    configuration.getOptional[Boolean]("security.headers.filter.enabled").getOrElse(true)
 
   override val filters =
     if (enableSecurityHeaderFilter) Seq(securityFilter) ++ frontendFilters else frontendFilters

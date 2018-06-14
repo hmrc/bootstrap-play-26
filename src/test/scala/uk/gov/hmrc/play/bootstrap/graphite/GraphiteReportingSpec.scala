@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import com.codahale.metrics.graphite.GraphiteReporter
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers

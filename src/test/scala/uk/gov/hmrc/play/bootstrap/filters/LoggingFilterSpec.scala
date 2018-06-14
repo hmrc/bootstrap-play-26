@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.filters
 
 import akka.stream.Materializer
 import org.scalatest.concurrent.Eventually
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
