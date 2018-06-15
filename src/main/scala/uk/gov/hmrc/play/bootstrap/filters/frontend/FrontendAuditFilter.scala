@@ -78,7 +78,7 @@ trait FrontendAuditFilter extends AuditFilter {
           case Success(result) =>
             val responseHeader = result.header
             val detail = Map(
-              ResponseMessage -> filterResponseBody(result, responseHeader, new String(responseBody)),
+              ResponseMessage -> filterResponseBody(result, responseHeader, responseBody),
               StatusCode      -> responseHeader.status.toString
             ) ++ buildRequestDetails(requestHeader, requestBody) ++ buildResponseDetails(responseHeader)
             auditConnector.sendEvent(dataEvent(requestReceived, requestHeader.uri, requestHeader, detail))
@@ -171,8 +171,7 @@ trait FrontendAuditFilter extends AuditFilter {
       }
       .getOrElse(responseBody)
 
-  private def buildRequestDetails(requestHeader: RequestHeader, request: String)(
-    implicit hc: HeaderCarrier): Map[String, String] = {
+  private def buildRequestDetails(requestHeader: RequestHeader, request: String): Map[String, String] = {
     val details = new collection.mutable.HashMap[String, String]
 
     details.put(RequestBody, stripPasswords(requestHeader.contentType, request, maskedFormFields))
@@ -184,7 +183,7 @@ trait FrontendAuditFilter extends AuditFilter {
     details.toMap
   }
 
-  private def buildResponseDetails(response: ResponseHeader)(implicit hc: HeaderCarrier): Map[String, String] = {
+  private def buildResponseDetails(response: ResponseHeader): Map[String, String] = {
     val details = new collection.mutable.HashMap[String, String]
     response.headers.get(HeaderNames.LOCATION).map { location =>
       details.put(HeaderNames.LOCATION, location)

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.config
+package uk.gov.hmrc.play.bootstrap.filters.frontend.crypto
 
-import javax.inject.Inject
+import javax.inject.{Inject, Provider}
+import play.api.Configuration
 import uk.gov.hmrc.crypto.ApplicationCrypto
 
-class CryptoValidation @Inject()(applicationCrypto: ApplicationCrypto) {
-  applicationCrypto.verifyConfiguration()
+class ApplicationCryptoProvider @Inject()(configuration: Configuration) extends Provider[ApplicationCrypto] {
+  def get(): ApplicationCrypto = new ApplicationCrypto(configuration.underlying)
 }

@@ -17,13 +17,14 @@
 package uk.gov.hmrc.play.bootstrap.filters.frontend.crypto
 
 import javax.inject.{Inject, Provider}
-
 import uk.gov.hmrc.crypto.{ApplicationCrypto, Decrypter, Encrypter}
 
 case class SessionCookieCrypto(crypto: Encrypter with Decrypter)
 
 class SessionCookieCryptoProvider @Inject()(applicationCrypto: ApplicationCrypto)
     extends Provider[SessionCookieCrypto] {
+
   override def get(): SessionCookieCrypto =
     SessionCookieCrypto(applicationCrypto.SessionCookieCrypto)
+
 }
