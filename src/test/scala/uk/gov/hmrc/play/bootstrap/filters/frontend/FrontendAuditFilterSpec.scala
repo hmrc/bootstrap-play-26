@@ -62,8 +62,7 @@ class FrontendAuditFilterSpec
   implicit val materializer = ActorMaterializer()
 
   def enumerateResponseBody(r: Result): Future[Done] =
-    r.body.dataStream.runForeach({ _ =>
-      })
+    r.body.dataStream.runForeach(_ => ())
 
   def nextAction(implicit ec: ExecutionContext): Action[AnyContent] = Action(NotFound("404 Not Found"))
 
@@ -86,6 +85,8 @@ class FrontendAuditFilterSpec
       .configure(config)
       .build()
   }
+
+  val fiveSecondsPatience = PatienceConfig(Span(5, Seconds), Span(200, Millis))
 
   "A password" should {
     "be obfuscated with the password at the beginning" in {
@@ -155,7 +156,7 @@ class FrontendAuditFilterSpec
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
           event.detail    should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
-        }
+        }(fiveSecondsPatience, implicitly)
     }
 
     "generate audit events with the device finger print when it is supplied in a request cookie" when {
@@ -287,12 +288,9 @@ class FrontendAuditFilterSpec
     }
 
     "generate audit events with the device ID when it is supplied in a request cookie" when {
-
-      // todo (konrad):     FakeRequest().withCookies doesn't change headers and HeaderCarrier fails to get
-      // todo (konrad):     deviceID from session
-
-      val deviceID = "A_DEVICE_ID"
-      val request  = FakeRequest("GET", "/foo").withCookies(Cookie(CookieNames.deviceID, deviceID))
+      val deviceID      = "A_DEVICE_ID"
+      val encodedCookie = Cookies.encodeCookieHeader(List(Cookie(CookieNames.deviceID, deviceID)))
+      val request       = FakeRequest("GET", "/foo").withHeaders(play.api.http.HeaderNames.COOKIE -> encodedCookie)
 
       "the request succeeds" in {
         val result = await(filter.apply(nextAction)(request).run)
