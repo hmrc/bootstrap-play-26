@@ -18,40 +18,41 @@ package uk.gov.hmrc.play.bootstrap.filters
 
 import java.util.Date
 
-import javax.inject.Inject
 import akka.stream.Materializer
+import javax.inject.Inject
 import org.apache.commons.lang3.time.FastDateFormat
 import org.joda.time.DateTimeUtils
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.routing.Router.Attrs
 import play.api.{Logger, LoggerLike}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.LoggingDetails
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 trait LoggingFilter extends Filter {
   private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
 
   def controllerNeedsLogging(controllerName: String): Boolean
 
+  val now: () => Long = DateTimeUtils.currentTimeMillis
+
   protected def logger: LoggerLike = Logger
 
-  def buildLoggedHeaders(request: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromHeadersAndSession(request.headers)
-
   def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
-    implicit val hc = buildLoggedHeaders(rh)
-    val startTime   = DateTimeUtils.currentTimeMillis()
+    implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+    val startTime   = now()
+    val result      = next(rh)
 
-    val result = next(rh)
-
-    if (needsLogging(rh)) logString(rh, result, startTime).map(logger.info(_))
-
-    result
+    if (needsLogging(rh)) {
+      log(rh, result, startTime)
+    } else {
+      result
+    }
   }
 
   private def needsLogging(request: RequestHeader): Boolean =
@@ -59,17 +60,23 @@ trait LoggingFilter extends Filter {
       controllerNeedsLogging(handlerDef.controller)
     }
 
-  private def logString(rh: RequestHeader, result: Future[Result], startTime: Long)(
-    implicit ld: LoggingDetails): Future[String] = {
-    val start       = dateFormat.format(new Date(startTime))
-    def elapsedTime = DateTimeUtils.currentTimeMillis() - startTime
+  private def log(rh: RequestHeader, resultF: Future[Result], startTime: Long)(
+    implicit ld: LoggingDetails): Future[Result] = {
 
-    result
-      .map { result =>
-        s"${ld.requestChain.value} $start ${rh.method} ${rh.uri} ${result.header.status} ${elapsedTime}ms"
-      }
-      .recover {
-        case t => s"${ld.requestChain.value} $start ${rh.method} ${rh.uri} $t ${elapsedTime}ms"
+    val start       = dateFormat.format(new Date(startTime))
+    def elapsedTime = now() - startTime
+
+    resultF
+      .andThen {
+        case Success(result) =>
+          logger.info(
+            s"${ld.requestChain.value} $start ${rh.method} ${rh.uri} ${result.header.status} ${elapsedTime}ms"
+          )
+
+        case Failure(NonFatal(t)) =>
+          logger.info(
+            s"${ld.requestChain.value} $start ${rh.method} ${rh.uri} $t ${elapsedTime}ms"
+          )
       }
   }
 }

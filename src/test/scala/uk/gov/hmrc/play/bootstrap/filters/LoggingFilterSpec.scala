@@ -16,15 +16,24 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
+import java.util.Locale
+
 import akka.stream.Materializer
+import org.apache.commons.lang3.time.FastDateFormat
+import org.joda.time.{DateTime, DateTimeUtils}
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
-import play.api.{LoggerLike, MarkerContext}
-import play.api.mvc.Results
+import play.api.mvc.{RequestHeader, Results}
+import play.api.routing.HandlerDef
+import play.api.routing.Router.Attrs
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.{LoggerLike, MarkerContext}
 
 import scala.concurrent.Future
 
@@ -37,46 +46,114 @@ class LoggingFilterSpec
     with DefaultAwaitTimeout
     with Eventually {
 
-  class LoggingFilterTest(loggerIn: LoggerLike, controllerNeedsLogging: Boolean)(implicit val mat: Materializer)
-      extends LoggingFilter {
-    override def logger                                                  = loggerIn
-    override def controllerNeedsLogging(controllerName: String): Boolean = controllerNeedsLogging
-  }
-
   "the LoggingFilter should" should {
 
-    def buildFakeLogger() = new LoggerLike {
-      var lastInfoMessage: Option[String] = None
-      override val logger: Logger         = NOPLogger.NOP_LOGGER
-      override def info(s: => String)(implicit mc: MarkerContext): Unit =
-        lastInfoMessage = Some(s)
+    "log when a request's path matches a controller which is configured to log" in new Setup {
+      val logger        = createLogger()
+      val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true)
+
+      val result = await(loggingFilter(testReqToResp)(requestWithHandlerInAttrs))
+      result.header.status shouldBe 204
+
+      assert(logger.loggingHappened)
     }
 
-    def requestWith(loggingFilter: LoggingFilter, someTags: Map[String, String] = Map()) =
-      loggingFilter.apply(rh => Future.successful(Results.NoContent))(FakeRequest().copyFakeRequest(tags = someTags))
+    "log when info about matched controller is not present" in new Setup {
+      val logger        = createLogger()
+      val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true)
 
-    "log when a requests' path matches a controller which is configured to log" in {
-      val fakeLogger = buildFakeLogger()
+      val reqWithoutHandlerDef = FakeRequest() // missing HandlerDef attr, can it happen in reality?
+      await(loggingFilter(testReqToResp)(reqWithoutHandlerDef))
 
-      implicit val mat: Materializer = mock[Materializer]
-      val loggingFilter              = new LoggingFilterTest(fakeLogger, true)
-
-      await(requestWith(loggingFilter))
-
-      eventually {
-        fakeLogger.lastInfoMessage.value.length should be > 0
-      }
+      assert(logger.loggingHappened)
     }
 
-    "not log when a requests' path does not match a controller which is not configured to log" in {
-      val fakeLogger = buildFakeLogger()
+    "not log when controller is not configured to log" in new Setup {
+      val logger        = createLogger()
+      val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = false)
 
-      implicit val mat: Materializer = mock[Materializer]
-      val loggingFilter              = new LoggingFilterTest(fakeLogger, false)
+      await(loggingFilter(testReqToResp)(requestWithHandlerInAttrs))
 
-      await(requestWith(loggingFilter, Map(play.routing.Router.Tags.ROUTE_CONTROLLER -> "exists")))
-
-      fakeLogger.lastInfoMessage shouldBe None
+      assert(!logger.loggingHappened)
     }
+
+    "log at info level with expected format and data" in new Setup {
+      val logger = createLogger()
+
+      val requestStartString         = "2018-06-21 11:18:56.842+01:00" // why such format :(
+      val dateFormat                 = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
+      val expectedRequestStartMillis = dateFormat.parse(requestStartString).getTime
+
+      val expectedRequestDurationInMillis = 5
+      val now                             = mock[() => Long]
+      when(now.apply())
+        .thenReturn(expectedRequestStartMillis)
+        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
+
+      val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
+
+      val result = await(loggingFilter(testReqToResp)(requestWithHandlerInAttrs))
+
+      logger.loggedMessage.get should fullyMatch regex
+        s"""[a-f0-9]{3,4} \\Q$requestStartString\\E GET \\/ ${result.header.status} ${expectedRequestDurationInMillis}ms"""
+    }
+
+    "log elapsed time and exception and return the failed future unchanged" in new Setup {
+      val logger = createLogger()
+
+      val requestStartString         = "2018-06-21 11:18:56.842+01:00" // why such format :(
+      val dateFormat                 = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
+      val expectedRequestStartMillis = dateFormat.parse(requestStartString).getTime
+
+      val expectedRequestDurationInMillis = 5
+      val now                             = mock[() => Long]
+      when(now.apply())
+        .thenReturn(expectedRequestStartMillis)
+        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
+
+      val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
+      val ex            = new Exception("test-exception")
+
+      intercept[Exception](await(loggingFilter(_ => Future.failed(ex))(requestWithHandlerInAttrs))) shouldBe ex
+
+      logger.loggedMessage.get should fullyMatch regex
+        s"""[a-f0-9]{3,4} \\Q$requestStartString\\E GET \\/ $ex ${expectedRequestDurationInMillis}ms"""
+    }
+
   }
+
+  private def createLogger() = new LoggerLike {
+    var loggedMessage: Option[String] = None
+    override val logger: Logger       = NOPLogger.NOP_LOGGER
+
+    override def info(s: => String)(implicit mc: MarkerContext): Unit =
+      loggedMessage = Some(s)
+
+    lazy val loggingHappened: Boolean = loggedMessage.isDefined
+  }
+
+  trait Setup {
+
+    val testReqToResp = (_: RequestHeader) => Future.successful(Results.NoContent)
+
+    val handlerDef = mock[HandlerDef]
+    when(handlerDef.controller).thenReturn("controller-name")
+
+    val requestWithHandlerInAttrs = FakeRequest().addAttr(Attrs.HandlerDef, handlerDef)
+
+  }
+
+  class TestLoggingFilter(
+    loggerIn: LoggerLike,
+    controllerNeedsLogging: Boolean,
+    currentTime: () => Long = DateTimeUtils.currentTimeMillis)
+      extends LoggingFilter {
+
+    override implicit val mat: Materializer = null
+    override def logger: LoggerLike         = loggerIn
+    override val now: () => Long            = currentTime
+    override def controllerNeedsLogging(controllerName: String): Boolean =
+      controllerNeedsLogging
+  }
+
 }
