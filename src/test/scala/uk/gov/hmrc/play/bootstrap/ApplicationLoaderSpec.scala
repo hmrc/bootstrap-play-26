@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap
 
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.Base64ConfigDecoderTests
 
 class ApplicationLoaderSpec extends Base64ConfigDecoderTests {
 
-  val loader = new ApplicationLoader(GuiceApplicationBuilder())
+  val loader = new ApplicationLoader()
 
   override def decode(config: (String, Any)*): Configuration = {
 
