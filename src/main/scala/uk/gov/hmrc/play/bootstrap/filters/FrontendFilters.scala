@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import javax.inject.{Inject, Singleton}
-
 import com.kenshoo.play.metrics.MetricsFilter
+import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.http.HttpFilters
 import play.filters.csrf.CSRFFilter
@@ -33,7 +32,7 @@ class FrontendFilters @Inject()(
   loggingFilter: LoggingFilter,
   headersFilter: HeadersFilter,
   securityFilter: SecurityHeadersFilter,
-  frontendAuditFilter: FrontendAuditFilter,
+  frontendAuditFilter: AuditFilter,
   metricsFilter: MetricsFilter,
   deviceIdFilter: DeviceIdFilter,
   csrfFilter: CSRFFilter,

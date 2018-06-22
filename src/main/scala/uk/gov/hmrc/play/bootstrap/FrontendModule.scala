@@ -29,11 +29,10 @@ class FrontendModule extends BootstrapModule {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
-      bind[AuditFilter].to[FrontendAuditFilter],
+      bind[AuditFilter].to[DefaultFrontendAuditFilter],
       bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider],
       bind[SessionCookieCrypto].toProvider[SessionCookieCryptoProvider],
       bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter],
-      bind[FrontendAuditFilter].to[DefaultFrontendAuditFilter],
       bind[DeviceIdFilter].to[DefaultDeviceIdFilter],
       bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration)),
       bind[CryptoValidation].toSelf.eagerly()
