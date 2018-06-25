@@ -1,7 +1,7 @@
 
-# bootstrap-play-25
+# bootstrap-play-26
 
-[![Build Status](https://travis-ci.org/hmrc/bootstrap-play-25.svg?branch=master)](https://travis-ci.org/hmrc/bootstrap-play-25) [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-25/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-25/_latestVersion)
+[![Build Status](https://travis-ci.org/hmrc/bootstrap-play-26.svg?branch=master)](https://travis-ci.org/hmrc/bootstrap-play-26) [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-26/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-26/_latestVersion)
 
 This library implements basic functionality required by the platform frontend/microservices.
 
@@ -13,7 +13,7 @@ In your SBT build add:
 ```scala
 resolvers += Resolver.bintrayRepo("hmrc", "releases")
 
-libraryDependencies += "uk.gov.hmrc" %% "bootstrap-play-25" % "x.x.x"
+libraryDependencies += "uk.gov.hmrc" %% "bootstrap-play-26" % "x.x.x"
 ```
 
 ## Configure as a frontend microservice
