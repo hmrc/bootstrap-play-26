@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.filters
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
-import java.util.Locale
+import java.util.{Date, Locale, TimeZone}
 
 import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
@@ -26,7 +26,7 @@ import org.joda.time.{DateTime, DateTimeUtils}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpecLike}
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
 import play.api.mvc.{RequestHeader, Results}
@@ -44,7 +44,13 @@ class LoggingFilterSpec
     with OptionValues
     with FutureAwaits
     with DefaultAwaitTimeout
-    with Eventually {
+    with Eventually
+    with BeforeAndAfterAll {
+
+  var defaultJvmTimezone = TimeZone.getDefault
+
+  override def beforeAll(): Unit =
+    super.beforeAll()
 
   "the LoggingFilter should" should {
 
@@ -80,9 +86,9 @@ class LoggingFilterSpec
     "log at info level with expected format and data" in new Setup {
       val logger = createLogger()
 
-      val requestStartString         = "2018-06-21 11:18:56.842+01:00" // why such format :(
-      val dateFormat                 = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
-      val expectedRequestStartMillis = dateFormat.parse(requestStartString).getTime
+      val timestamp                  = new Date()
+      val requestStartString         = dateFormat.format(timestamp)
+      val expectedRequestStartMillis = timestamp.getTime
 
       val expectedRequestDurationInMillis = 5
       val now                             = mock[() => Long]
@@ -101,9 +107,9 @@ class LoggingFilterSpec
     "log elapsed time and exception and return the failed future unchanged" in new Setup {
       val logger = createLogger()
 
-      val requestStartString         = "2018-06-21 11:18:56.842+01:00" // why such format :(
-      val dateFormat                 = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
-      val expectedRequestStartMillis = dateFormat.parse(requestStartString).getTime
+      val timestamp                  = new Date()
+      val requestStartString         = dateFormat.format(timestamp)
+      val expectedRequestStartMillis = timestamp.getTime
 
       val expectedRequestDurationInMillis = 5
       val now                             = mock[() => Long]
@@ -119,7 +125,6 @@ class LoggingFilterSpec
       logger.loggedMessage.get should fullyMatch regex
         s"""[a-f0-9]{3,4} \\Q$requestStartString\\E GET \\/ $ex ${expectedRequestDurationInMillis}ms"""
     }
-
   }
 
   private def createLogger() = new LoggerLike {
@@ -138,6 +143,8 @@ class LoggingFilterSpec
 
     val handlerDef = mock[HandlerDef]
     when(handlerDef.controller).thenReturn("controller-name")
+
+    val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
 
     val requestWithHandlerInAttrs = FakeRequest().addAttr(Attrs.HandlerDef, handlerDef)
 
