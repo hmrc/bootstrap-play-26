@@ -17,8 +17,8 @@ object AppDependencies {
     "com.typesafe.play"     %% "play"                % PlayVersion.current,
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
     "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
-    "ch.qos.logback"        % "logback-core"         % "1.1.7"
-//    "uk.gov.hmrc"           %% "play-health"         % "2.1.0" todo (konrad) needs updating to 2.6
+    "ch.qos.logback"        % "logback-core"         % "1.1.7",
+    "uk.gov.hmrc"           %% "play-health"         % "3.0.0"
   )
 
   val test = Seq(
