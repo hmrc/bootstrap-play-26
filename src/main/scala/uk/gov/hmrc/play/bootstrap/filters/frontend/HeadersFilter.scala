@@ -33,7 +33,7 @@ class HeadersFilter @Inject()(override val mat: Materializer) extends Filter {
       case Some(_) =>
         rh
       case None =>
-        rh.copy(headers = rh.headers.add(newHeaders: _*))
+        rh.withHeaders(rh.headers.add(newHeaders: _*))
     }
 
     next(request)

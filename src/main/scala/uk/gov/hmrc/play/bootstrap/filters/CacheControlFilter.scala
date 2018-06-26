@@ -33,7 +33,7 @@ object CacheControlConfig {
   def fromConfig(configuration: Configuration): CacheControlConfig = {
 
     val cacheableContentTypes: Seq[String] =
-      configuration.getStringSeq("caching.allowedContentTypes").getOrElse(Seq.empty)
+      configuration.getOptional[Seq[String]]("caching.allowedContentTypes").getOrElse(Seq.empty)
 
     CacheControlConfig(cacheableContentTypes)
   }

@@ -24,8 +24,8 @@ case class ControllerConfig(logging: Boolean = true, auditing: Boolean = true)
 object ControllerConfig {
 
   def fromConfig(configuration: Configuration): ControllerConfig = {
-    val logging  = configuration.getBoolean("needsLogging").getOrElse(true)
-    val auditing = configuration.getBoolean("needsAuditing").getOrElse(true)
+    val logging  = configuration.getOptional[Boolean]("needsLogging").getOrElse(true)
+    val auditing = configuration.getOptional[Boolean]("needsAuditing").getOrElse(true)
     ControllerConfig(logging, auditing)
   }
 }
@@ -44,7 +44,7 @@ object ControllerConfigs {
   def fromConfig(configuration: Configuration): ControllerConfigs = {
 
     val configMap = (
-      for (config             <- configuration.getConfig("controllers").toSeq;
+      for (config             <- configuration.getOptional[Configuration]("controllers").toSeq;
            controllerName     <- controllerNames(config);
            entryForController <- readCompositeValue(config, controllerName);
            parsedEntryForController = ControllerConfig.fromConfig(entryForController))

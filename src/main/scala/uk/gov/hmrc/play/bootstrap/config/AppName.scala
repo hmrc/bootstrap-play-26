@@ -20,5 +20,5 @@ import play.api.Configuration
 
 object AppName {
   def fromConfiguration(configuration: Configuration): String =
-    configuration.getOptional[String]("appName").getOrElse("APP NAME NOT SET")
+    configuration.get[String]("appName")
 }

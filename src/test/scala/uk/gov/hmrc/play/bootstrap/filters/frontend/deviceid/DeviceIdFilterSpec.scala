@@ -76,8 +76,7 @@ class DeviceIdFilterSpec
 
       lazy val auditConnector = mock[AuditConnector]
 
-      override protected implicit def ec: ExecutionContext =
-        play.api.libs.concurrent.Execution.defaultContext
+      override protected implicit def ec: ExecutionContext = ExecutionContext.global
     }
 
     lazy val newFormatGoodCookieDeviceId = filter.mdtpCookie

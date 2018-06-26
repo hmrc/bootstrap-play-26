@@ -35,12 +35,12 @@ object GraphiteReporterProviderConfig {
 
   def fromConfig(config: Configuration, graphiteConfiguration: Configuration): GraphiteReporterProviderConfig = {
 
-    val appName: Option[String]     = config.getString("appName")
-    val rates: Option[TimeUnit]     = graphiteConfiguration.getString("rates").map(TimeUnit.valueOf)
-    val durations: Option[TimeUnit] = graphiteConfiguration.getString("durations").map(TimeUnit.valueOf)
+    val appName: Option[String]     = config.getOptional[String]("appName")
+    val rates: Option[TimeUnit]     = graphiteConfiguration.getOptional[String]("rates").map(TimeUnit.valueOf)
+    val durations: Option[TimeUnit] = graphiteConfiguration.getOptional[String]("durations").map(TimeUnit.valueOf)
 
     val prefix: String = graphiteConfiguration
-      .getString("prefix")
+      .getOptional[String]("prefix")
       .orElse(appName.map(name => s"tax.$name"))
       .getOrElse(
         throw new ConfigException.Generic("`metrics.graphite.prefix` in config or `appName` as parameter required"))

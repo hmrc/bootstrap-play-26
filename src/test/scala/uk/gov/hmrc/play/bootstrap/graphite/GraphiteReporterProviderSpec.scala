@@ -33,7 +33,7 @@ class GraphiteReporterProviderSpec extends WordSpec with MustMatchers {
         "microservice.metrics.graphite.prefix" -> "test"
       )
 
-      val graphiteConfig = rootConfig.getConfig("microservice.metrics.graphite").get
+      val graphiteConfig = rootConfig.get[Configuration]("microservice.metrics.graphite")
 
       val config: GraphiteReporterProviderConfig =
         GraphiteReporterProviderConfig.fromConfig(rootConfig, graphiteConfig)
@@ -50,7 +50,7 @@ class GraphiteReporterProviderSpec extends WordSpec with MustMatchers {
         "microservice.metrics.graphite.durations" -> "SECONDS",
         "microservice.metrics.graphite.rates"     -> "SECONDS"
       )
-      val graphiteConfig = rootConfig.getConfig("microservice.metrics.graphite").get
+      val graphiteConfig = rootConfig.get[Configuration]("microservice.metrics.graphite")
 
       val config: GraphiteReporterProviderConfig =
         GraphiteReporterProviderConfig.fromConfig(rootConfig, graphiteConfig)

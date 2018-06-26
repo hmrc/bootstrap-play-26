@@ -17,9 +17,8 @@
 package uk.gov.hmrc.play.bootstrap
 
 import javax.inject.Inject
-
 import org.scalatest.{Matchers, TestData, WordSpecLike}
-import org.scalatestplus.play.OneServerPerTest
+import org.scalatestplus.play.guice.GuiceOneServerPerTest
 import play.api.Application
 import play.api.http.HttpFilters
 import play.api.inject.bind
@@ -38,7 +37,11 @@ class FiltersForTestWithSecurityFilterFirst @Inject()(securityHeaderFilter: Secu
   def filters = Seq(securityHeaderFilter)
 }
 
-class FilterChainExceptionSecurityFirstSpec extends WordSpecLike with Matchers with WsTestClient with OneServerPerTest {
+class FilterChainExceptionSecurityFirstSpec
+    extends WordSpecLike
+    with Matchers
+    with WsTestClient
+    with GuiceOneServerPerTest {
 
   val routerForTest: Router = Router.from {
     case GET(p"/ok") =>

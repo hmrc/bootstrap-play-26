@@ -24,34 +24,41 @@ class AuditingConfigProvider @Inject()(configuration: Configuration, runMode: Ru
     extends Provider[AuditingConfig] {
 
   def get(): AuditingConfig = {
-    configuration.getConfig(s"${runMode.env}.auditing").orElse(configuration.getConfig("auditing")).map { c =>
-      val enabled = c.getBoolean("enabled").getOrElse(true)
+    configuration
+      .getOptional[Configuration](s"${runMode.env}.auditing")
+      .orElse(configuration.getOptional[Configuration]("auditing"))
+      .map { c =>
+        val enabled = c.getOptional[Boolean]("enabled").getOrElse(true)
 
-      if (enabled) {
-        AuditingConfig(
-          enabled = enabled,
-          consumer = Some(c
-            .getConfig("consumer")
-            .map { con =>
-              Consumer(
-                baseUri = con
-                  .getConfig("baseUri")
-                  .map { uri =>
-                    BaseUri(
-                      host     = uri.getString("host").getOrElse(throw new Exception("Missing consumer host for auditing")),
-                      port     = uri.getInt("port").getOrElse(throw new Exception("Missing consumer port for auditing")),
-                      protocol = uri.getString("protocol").getOrElse("http")
-                    )
-                  }
-                  .getOrElse(throw new Exception("Missing consumer baseUri for auditing"))
-              )
-            }
-            .getOrElse(throw new Exception("Missing consumer configuration for auditing")))
-        )
-      } else {
-        AuditingConfig(consumer = None, enabled = false)
+        if (enabled) {
+          AuditingConfig(
+            enabled = enabled,
+            consumer = Some(
+              c.getOptional[Configuration]("consumer")
+                .map { con =>
+                  Consumer(
+                    baseUri = con
+                      .getOptional[Configuration]("baseUri")
+                      .map { uri =>
+                        BaseUri(
+                          host = uri
+                            .getOptional[String]("host")
+                            .getOrElse(throw new Exception("Missing consumer host for auditing")),
+                          port = uri
+                            .getOptional[Int]("port")
+                            .getOrElse(throw new Exception("Missing consumer port for auditing")),
+                          protocol = uri.getOptional[String]("protocol").getOrElse("http")
+                        )
+                      }
+                      .getOrElse(throw new Exception("Missing consumer baseUri for auditing"))
+                  )
+                }
+                .getOrElse(throw new Exception("Missing consumer configuration for auditing")))
+          )
+        } else {
+          AuditingConfig(consumer = None, enabled = false)
+        }
+
       }
-
-    }
   }.getOrElse(throw new Exception("Missing auditing configuration"))
 }

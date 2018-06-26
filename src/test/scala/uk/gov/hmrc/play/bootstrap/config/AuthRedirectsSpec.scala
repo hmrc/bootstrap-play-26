@@ -48,7 +48,7 @@ class AuthRedirectsSpec extends WordSpec with ScalaFutures with Matchers {
 
   trait Setup extends WithApplication with BaseUri {
 
-    def mode: Mode.Mode
+    def mode: Mode
 
     def extraConfig: Map[String, Any] = Map()
 

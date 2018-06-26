@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
-import javax.inject.Inject
-
 import akka.stream.Materializer
+import javax.inject.Inject
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Configuration
 import play.api.http.HttpVerbs.POST
@@ -33,7 +32,7 @@ class CSRFExceptionsFilter @Inject()(
 ) extends Filter {
 
   lazy val whitelist: Set[String] = configuration
-    .getStringSeq("csrfexceptions.whitelist")
+    .getOptional[Seq[String]]("csrfexceptions.whitelist")
     .getOrElse(Seq.empty)
     .toSet
 

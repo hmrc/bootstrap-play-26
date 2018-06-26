@@ -68,8 +68,8 @@ class GraphiteMetricsModule extends Module {
   private def extractGraphiteConfiguration(environment: Environment, configuration: Configuration): Configuration = {
     val env = new RunMode(configuration, environment.mode).env
     configuration
-      .getConfig(s"$env.microservice.metrics.graphite")
-      .orElse(configuration.getConfig("microservice.metrics.graphite"))
+      .getOptional[Configuration](s"$env.microservice.metrics.graphite")
+      .orElse(configuration.getOptional[Configuration]("microservice.metrics.graphite"))
       .getOrElse(Configuration())
   }
 }

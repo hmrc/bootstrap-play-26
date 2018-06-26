@@ -22,7 +22,7 @@ import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
-import org.scalatestplus.play.OneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.HttpVerbs._
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
@@ -33,7 +33,7 @@ class CSRFExceptionsFilterSpec
     with Matchers
     with ScalaFutures
     with MockitoSugar
-    with OneAppPerSuite {
+    with GuiceOneAppPerSuite {
 
   private val now          = () => DateTime.now().withZone(DateTimeZone.UTC)
   private val csrfTokenKey = "Csrf-Token"
@@ -47,7 +47,7 @@ class CSRFExceptionsFilterSpec
     "do nothing if POST request and not in whitelist" in {
       val rh     = FakeRequest(POST, "/something", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
-      when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(None)
+      when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(None)
 
       val filter = new CSRFExceptionsFilter(config, mat)
 
@@ -57,7 +57,7 @@ class CSRFExceptionsFilterSpec
     "do nothing for GET requests" in {
       val rh     = FakeRequest(GET, "/ida/login", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
-      when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
+      when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
       val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("token")
@@ -66,7 +66,7 @@ class CSRFExceptionsFilterSpec
     "add Csrf-Token header with value nocheck to bypass validation for white-listed POST request" in {
       val rh     = FakeRequest(POST, "/ida/login", FakeHeaders(), AnyContentAsEmpty)
       val config = mock[Configuration]
-      when(config.getStringSeq("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
+      when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
       val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("nocheck")

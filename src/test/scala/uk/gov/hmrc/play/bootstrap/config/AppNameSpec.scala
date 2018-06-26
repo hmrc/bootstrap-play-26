@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import com.typesafe.config.ConfigException
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
 
@@ -27,7 +28,7 @@ class AppNameSpec extends WordSpec with Matchers {
     }
 
     "return fallback name if application name not available" in {
-      AppName.fromConfiguration(Configuration.empty) shouldBe "APP NAME NOT SET"
+      intercept[ConfigException.Missing](AppName.fromConfiguration(Configuration.empty))
     }
   }
 

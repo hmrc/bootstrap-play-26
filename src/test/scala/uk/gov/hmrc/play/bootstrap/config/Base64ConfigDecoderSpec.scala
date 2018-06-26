@@ -36,12 +36,12 @@ trait Base64ConfigDecoderTests extends WordSpec with MustMatchers {
     )
 
     "not replace non-encoded values" in {
-      config.getString("foo") mustBe Some("bar")
-      config.getInt("womble") mustBe Some(7331)
+      config.getOptional[String]("foo") mustBe Some("bar")
+      config.getOptional[Int]("womble") mustBe Some(7331)
     }
 
     "decode encoded values" in {
-      config.getString("baz") mustBe Some("quux")
+      config.getOptional[String]("baz") mustBe Some("quux")
     }
 
     "throw an exception when trying to decode a non-string value" in {

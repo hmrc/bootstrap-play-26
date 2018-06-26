@@ -39,7 +39,7 @@ class EnabledGraphiteReporting @Inject()(
   lifecycle: ApplicationLifecycle
 ) extends GraphiteReporting {
 
-  protected def interval: Long = config.getLong("microservice.metrics.graphite.interval").getOrElse(10L)
+  protected def interval: Long = config.getOptional[Long]("microservice.metrics.graphite.interval").getOrElse(10L)
 
   Logger.info("Graphite metrics enabled, starting the reporter")
 

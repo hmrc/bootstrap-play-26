@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import java.util.{Date, TimeZone}
+import java.util.Date
 
 import akka.stream.Materializer
 import javax.inject.Inject

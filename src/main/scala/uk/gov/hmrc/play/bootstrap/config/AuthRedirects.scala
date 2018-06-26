@@ -30,7 +30,8 @@ trait AuthRedirects {
 
   def env: Environment
 
-  private lazy val envPrefix = if (env.mode.equals(Mode.Test)) "Test" else config.getString("run.mode").getOrElse("Dev")
+  private lazy val envPrefix =
+    if (env.mode.equals(Mode.Test)) "Test" else config.getOptional[String]("run.mode").getOrElse("Dev")
 
   private val hostDefaults: Map[String, String] = Map(
     "Dev.external-url.company-auth-frontend.host"          -> "http://localhost:9025",
@@ -41,7 +42,7 @@ trait AuthRedirects {
 
   private def host(service: String): String = {
     val key = s"$envPrefix.external-url.$service.host"
-    config.getString(key).orElse(hostDefaults.get(key)).getOrElse("")
+    config.getOptional[String](key).orElse(hostDefaults.get(key)).getOrElse("")
   }
 
   def ggLoginUrl: String = host("company-auth-frontend") + "/gg/sign-in"
@@ -54,8 +55,8 @@ trait AuthRedirects {
 
   final lazy val defaultOrigin: String = {
     config
-      .getString("sosOrigin")
-      .orElse(config.getString("appName"))
+      .getOptional[String]("sosOrigin")
+      .orElse(config.getOptional[String]("appName"))
       .getOrElse("undefined")
   }
 
