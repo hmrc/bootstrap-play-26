@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
-import com.ning.http.util.Base64
+
+import java.nio.charset.StandardCharsets
+
+import org.apache.commons.codec.binary.Base64
 import play.api.Logger
 import play.api.mvc.RequestHeader
 
@@ -32,7 +35,7 @@ object DeviceFingerprint {
       .map { cookie =>
         // TODO This can't throw an exception...
         val decodeAttempt = Try {
-          Base64.decode(cookie.value)
+          Base64.decodeBase64(cookie.value)
         }
         decodeAttempt.failed.foreach { e =>
           Logger.info(
