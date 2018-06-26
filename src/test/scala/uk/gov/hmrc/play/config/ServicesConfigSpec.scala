@@ -21,9 +21,6 @@ import play.api.{Configuration, Mode}
 
 import scala.concurrent.duration._
 
-/**
-  * Created by william on 02/02/17.
-  */
 class ServicesConfigSpec extends WordSpecLike with Matchers with BeforeAndAfterAll {
 
   val configProperties: Map[String, Any] = Map(
@@ -41,104 +38,101 @@ class ServicesConfigSpec extends WordSpecLike with Matchers with BeforeAndAfterA
     "anotherDur"                               -> "60seconds"
   )
 
-  trait Setup extends ServicesConfig {
-    override protected def mode: Mode = Mode.Test
-
-    override protected def runModeConfiguration: Configuration = Configuration.from(configProperties)
-  }
+  val servicesConfig = new ServicesConfig(Configuration.from(configProperties), Mode.Test)
+  import servicesConfig._
 
   "getConfString" should {
-    "return a string from config under rootServices" in new Setup {
+    "return a string from config under rootServices" in {
       getConfString("testString", "") shouldBe "hello world"
     }
 
-    "return a string from config under Dev services" in new Setup {
+    "return a string from config under Dev services" in {
       getConfString("devTestString", "") shouldBe "hello test"
     }
 
-    "return a default string if the config can't be found" in new Setup {
+    "return a default string if the config can't be found" in {
       getConfString("notInConf", "hello default") shouldBe "hello default"
     }
   }
 
   "getConfInt" should {
-    "return an int from config under rootServices" in new Setup {
+    "return an int from config under rootServices" in {
       getConfInt("testInt", 0) shouldBe 1
     }
 
-    "return an int from config under Dev services" in new Setup {
+    "return an int from config under Dev services" in {
       getConfInt("devTestInt", 0) shouldBe 1
     }
 
-    "return a default int if the config can't be found" in new Setup {
+    "return a default int if the config can't be found" in {
       getConfInt("notInConf", 1) shouldBe 1
     }
   }
 
   "getConfBool" should {
-    "return a boolean from config under rootServices" in new Setup {
+    "return a boolean from config under rootServices" in {
       getConfBool("testBool", defBool = false) shouldBe true
     }
 
-    "return a boolean from config under Dev services" in new Setup {
+    "return a boolean from config under Dev services" in {
       getConfBool("devTestBool", defBool = false) shouldBe true
     }
 
-    "return a default boolean if the config can't be found" in new Setup {
+    "return a default boolean if the config can't be found" in {
       getConfBool("notInConf", defBool = true) shouldBe true
     }
   }
 
   "getConfDuration" should {
-    "return a Duration from config under rootServices" in new Setup {
+    "return a Duration from config under rootServices" in {
       getConfDuration("testDur", 60.minutes) shouldBe 60.seconds
     }
 
-    "return a Duration from config under Dev services" in new Setup {
+    "return a Duration from config under Dev services" in {
       getConfDuration("devTestDur", 60.minutes) shouldBe 60.seconds
     }
 
-    "return a default Duration if the config can't be found" in new Setup {
+    "return a default Duration if the config can't be found" in {
       getConfDuration("notInConf", 60.seconds) shouldBe 60.seconds
     }
   }
 
   "getInt" should {
-    "return an int from config" in new Setup {
+    "return an int from config" in {
       getInt("anotherInt") shouldBe 1
     }
 
-    "throw an exception if the config can't be found" in new Setup {
+    "throw an exception if the config can't be found" in {
       intercept[RuntimeException](getInt("notInConf")).getMessage shouldBe "Could not find config key 'notInConf'"
     }
   }
 
   "getString" should {
-    "return a string from config" in new Setup {
+    "return a string from config" in {
       getString("anotherString") shouldBe "hello other test"
     }
 
-    "throw an exception if the config can't be found" in new Setup {
+    "throw an exception if the config can't be found" in {
       intercept[RuntimeException](getString("notInConf")).getMessage shouldBe "Could not find config key 'notInConf'"
     }
   }
 
   "getBool" should {
-    "return a boolean from config" in new Setup {
+    "return a boolean from config" in {
       getBoolean("anotherBool") shouldBe false
     }
 
-    "throw an exception if the config can't be found" in new Setup {
+    "throw an exception if the config can't be found" in {
       intercept[RuntimeException](getBoolean("notInConf")).getMessage shouldBe "Could not find config key 'notInConf'"
     }
   }
 
   "getDuration" should {
-    "return a Duration from config" in new Setup {
+    "return a Duration from config" in {
       getDuration("anotherDur") shouldBe 60.seconds
     }
 
-    "throw an exception if the config can't be found" in new Setup {
+    "throw an exception if the config can't be found" in {
       intercept[RuntimeException](getDuration("notInConf")).getMessage shouldBe "Could not find config key 'notInConf'"
     }
   }
