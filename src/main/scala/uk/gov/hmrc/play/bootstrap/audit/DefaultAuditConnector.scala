@@ -17,13 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.audit
 
 import javax.inject.Inject
-
-import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
 
-class DefaultAuditConnector @Inject()(config: Configuration, environment: Environment) extends AuditConnector {
-  override def auditingConfig: AuditingConfig =
-    LoadAuditingConfig(config, environment.mode, "auditing")
-}
+class DefaultAuditConnector @Inject()(val auditingConfig: AuditingConfig) extends AuditConnector

@@ -16,26 +16,18 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import play.api.{Configuration, Mode}
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
+import org.mockito.Mockito.when
 
-class LoadAuditingConfigSpec extends WordSpec with Matchers {
+class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSugar {
+
+  private val mockedRunMode = mock[RunMode]
+  when(mockedRunMode.env).thenReturn("Test")
 
   "LoadAuditingConfig" should {
-
-    "look for config first under auditing" in {
-      val config = Configuration(
-        "auditing.enabled"               -> "true",
-        "auditing.traceRequests"         -> "true",
-        "auditing.consumer.baseUri.host" -> "localhost",
-        "auditing.consumer.baseUri.port" -> "8100"
-      )
-
-      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(
-        Some(Consumer(BaseUri("localhost", 8100, "http"))),
-        enabled = true)
-    }
 
     "use env specific settings if these provided" in {
       val config = Configuration(
@@ -49,9 +41,20 @@ class LoadAuditingConfigSpec extends WordSpec with Matchers {
         "auditing.consumer.baseUri.port"      -> "1234"
       )
 
-      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(
-        Some(Consumer(BaseUri("localhost", 8100, "http"))),
-        enabled = true)
+      new AuditingConfigProvider(config, mockedRunMode)
+        .get() shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+    }
+
+    "fallback to non-env specific config" in {
+      val configuration = Configuration(
+        "auditing.enabled"               -> "true",
+        "auditing.traceRequests"         -> "true",
+        "auditing.consumer.baseUri.host" -> "localhost",
+        "auditing.consumer.baseUri.port" -> "8100"
+      )
+
+      new AuditingConfigProvider(configuration, mockedRunMode)
+        .get() shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
     }
 
     "allow audit to be disabled" in {
@@ -59,7 +62,7 @@ class LoadAuditingConfigSpec extends WordSpec with Matchers {
         "auditing.enabled" -> "false"
       )
 
-      LoadAuditingConfig(config, Mode.Test, "auditing") shouldBe AuditingConfig(None, enabled = false)
+      new AuditingConfigProvider(config, mockedRunMode).get() shouldBe AuditingConfig(None, enabled = false)
     }
   }
 }

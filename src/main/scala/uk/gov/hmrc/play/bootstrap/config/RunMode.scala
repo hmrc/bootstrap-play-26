@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.config
+package uk.gov.hmrc.play.bootstrap.config
 
-import play.api.Mode.Mode
+import javax.inject.Inject
 import play.api._
 
 import scala.annotation.tailrec
 
-trait RunMode {
+class RunMode @Inject()(configuration: Configuration, mode: Mode) {
 
-  protected def mode : Mode
-  protected def runModeConfiguration: Configuration
-
-  lazy val env = if (mode.equals(Mode.Test)) "Test" else runModeConfiguration.getString("run.mode").getOrElse("Dev")
-
+  lazy val env: String =
+    if (mode.equals(Mode.Test)) {
+      "Test"
+    } else {
+      configuration.getOptional[String]("run.mode").getOrElse("Dev")
+    }
 
   /**
     * Returns the appropriate `env` specific url given `prod` and other alternatives.
@@ -45,27 +46,17 @@ trait RunMode {
     * @param prod the production path
     * @return the `env` specific path
     */
-  def envPath(path: String = "")(other: => String = "", prod: => String = "") = {
+  def envPath(path: String = "")(other: => String = "", prod: => String = ""): String = {
 
     @tailrec
-    def sanitise(url: String, prefix: String = ""): String = {
-      if(url.startsWith("/")) sanitise(url.drop(1), prefix)
-      else if(url.endsWith("/")) sanitise(url.dropRight(1), prefix)
+    def sanitise(url: String, prefix: String = ""): String =
+      if (url.startsWith("/")) sanitise(url.drop(1), prefix)
+      else if (url.endsWith("/")) sanitise(url.dropRight(1), prefix)
       else if (url.isEmpty || prefix.isEmpty) url
       else prefix + url
-    }
 
     val url = if (env == "Prod") sanitise(prod, "/") else sanitise(other)
     url + sanitise(path, "/")
   }
 
-}
-
-object RunMode {
-  def apply(runMode : Mode, configuration: Configuration): RunMode =
-    new RunMode {
-      override protected def mode: Mode = runMode
-
-      override protected def runModeConfiguration: Configuration = configuration
-    }
 }

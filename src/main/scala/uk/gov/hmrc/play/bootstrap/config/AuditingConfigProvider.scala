@@ -16,18 +16,15 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import javax.inject.{Inject, Provider}
 import play.api.Configuration
-import play.api.Mode.Mode
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
-import uk.gov.hmrc.play.config.RunMode
 
-object LoadAuditingConfig {
+class AuditingConfigProvider @Inject()(configuration: Configuration, runMode: RunMode)
+    extends Provider[AuditingConfig] {
 
-  def apply(configuration: Configuration, mode: Mode, key: String): AuditingConfig = {
-
-    val env = RunMode(mode, configuration).env
-
-    configuration.getConfig(s"$env.$key").orElse(configuration.getConfig(key)).map { c =>
+  def get(): AuditingConfig = {
+    configuration.getConfig(s"${runMode.env}.auditing").orElse(configuration.getConfig("auditing")).map { c =>
       val enabled = c.getBoolean("enabled").getOrElse(true)
 
       if (enabled) {

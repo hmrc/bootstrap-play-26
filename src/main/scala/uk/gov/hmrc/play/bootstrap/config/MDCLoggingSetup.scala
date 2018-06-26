@@ -16,26 +16,24 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import javax.inject.Inject
-
+import javax.inject.{Inject, Named}
 import org.slf4j.MDC
-import play.api.{Configuration, Environment, Logger}
-
-class MDCInstance @Inject()() {
-  def put(k: String, v: String): Unit =
-    MDC.put(k, v)
-}
+import play.api.{Configuration, Logger, Mode}
 
 class MDCLoggingSetup @Inject()(
-  override val configuration: Configuration,
-  mdc: MDCInstance,
-  environment: Environment
-) extends AppName {
+  configuration: Configuration,
+  mode: Mode,
+  @Named("appName") appName: String,
+  mdcPut: (String, String) => Unit
+) {
 
-  val loggerDateFormat: Option[String] = configuration.getString("logger.json.dateformat")
+  @Inject() def this(configuration: Configuration, mode: Mode, @Named("appName") appName: String) =
+    this(configuration, mode, appName, MDC.put)
 
-  mdc.put("appName", appName)
-  loggerDateFormat.foreach(mdc.put("logger.json.dateformat", _))
+  val loggerDateFormat: Option[String] = configuration.getOptional[String]("logger.json.dateformat")
 
-  Logger.info(s"Starting frontend: $appName, in mode: ${environment.mode}")
+  mdcPut("appName", appName)
+  loggerDateFormat.foreach(mdcPut("logger.json.dateformat", _))
+
+  Logger.info(s"Starting frontend: $appName, in mode: $mode")
 }

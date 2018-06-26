@@ -16,24 +16,22 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
-import javax.inject.Inject
-
 import akka.stream.Materializer
+import javax.inject.{Inject, Named}
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.AppName
 
 import scala.concurrent.ExecutionContext
 
 class DefaultDeviceIdFilter @Inject()(
+  @Named("appName") val appName: String,
   val configuration: Configuration,
   val auditConnector: AuditConnector
 )(
   implicit
   override val mat: Materializer,
   override val ec: ExecutionContext)
-    extends DeviceIdFilter
-    with AppName {
+    extends DeviceIdFilter {
 
   private val currentSecretKey  = "cookie.deviceId.secret"
   private val previousSecretKey = "cookie.deviceId.previous.secret"

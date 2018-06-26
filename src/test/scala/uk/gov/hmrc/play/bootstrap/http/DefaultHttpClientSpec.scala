@@ -24,6 +24,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.http.utils._
 
@@ -38,6 +39,8 @@ class DefaultHttpClientSpec
   override def newAppForTest(testData: TestData): Application =
     new GuiceApplicationBuilder()
       .overrides(
+        bind[String].qualifiedWith("appName").toInstance("myApp"),
+        bind[HttpAuditing].to[DefaultHttpAuditing],
         bind[HttpClient].to[DefaultHttpClient],
         bind[AuditConnector].to[TestAuditConnector]
       )

@@ -21,7 +21,7 @@ import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
 import com.kenshoo.play.metrics._
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.config.RunMode
+import uk.gov.hmrc.play.bootstrap.config.RunMode
 
 class GraphiteMetricsModule extends Module {
 
@@ -31,8 +31,8 @@ class GraphiteMetricsModule extends Module {
       bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly
     )
 
-    val kenshoBindings: Seq[Binding[_]] =
-      if (kenshoMetricsEnabled(configuration)) {
+    val kenshooBindings: Seq[Binding[_]] =
+      if (kenshooMetricsEnabled(configuration)) {
         Seq(bind[MetricsFilter].to[MetricsFilterImpl].eagerly, bind[Metrics].to[MetricsImpl].eagerly)
       } else {
         Seq(bind[MetricsFilter].to[DisabledMetricsFilter].eagerly, bind[Metrics].to[DisabledMetrics].eagerly)
@@ -41,7 +41,7 @@ class GraphiteMetricsModule extends Module {
     val graphiteConfiguration = extractGraphiteConfiguration(environment, configuration)
 
     val graphiteBindings: Seq[Binding[_]] =
-      if (kenshoMetricsEnabled(configuration) && graphitePublisherEnabled(graphiteConfiguration)) {
+      if (kenshooMetricsEnabled(configuration) && graphitePublisherEnabled(graphiteConfiguration)) {
         Seq(
           bind[GraphiteProviderConfig].toInstance(GraphiteProviderConfig.fromConfig(graphiteConfiguration)),
           bind[GraphiteReporterProviderConfig].toInstance(
@@ -56,17 +56,17 @@ class GraphiteMetricsModule extends Module {
         )
       }
 
-    defaultBindings ++ graphiteBindings ++ kenshoBindings
+    defaultBindings ++ graphiteBindings ++ kenshooBindings
   }
 
-  private def kenshoMetricsEnabled(rootConfiguration: Configuration) =
+  private def kenshooMetricsEnabled(rootConfiguration: Configuration) =
     rootConfiguration.getOptional[Boolean]("metrics.enabled").getOrElse(false)
 
   private def graphitePublisherEnabled(graphiteConfiguration: Configuration) =
     graphiteConfiguration.getOptional[Boolean]("enabled").getOrElse(false)
 
   private def extractGraphiteConfiguration(environment: Environment, configuration: Configuration): Configuration = {
-    val env = RunMode(environment.mode, configuration).env
+    val env = new RunMode(configuration, environment.mode).env
     configuration
       .getConfig(s"$env.microservice.metrics.graphite")
       .orElse(configuration.getConfig("microservice.metrics.graphite"))

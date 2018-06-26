@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.config
+package uk.gov.hmrc.play.bootstrap.config
 
 import javax.inject.Inject
-import play.api.{Configuration, Mode}
+import play.api.Configuration
 
 import scala.concurrent.duration.Duration
 
-class ServicesConfig @Inject()(configuration: Configuration, mode: Mode) {
-
-  lazy val env: String =
-    if (mode.equals(Mode.Test)) {
-      "Test"
-    } else {
-      configuration.getOptional[String]("run.mode").getOrElse("Dev")
-    }
+class ServicesConfig @Inject()(configuration: Configuration, runMode: RunMode) {
 
   protected lazy val rootServices = "microservice.services"
-  protected lazy val services     = s"$env.microservice.services"
+  protected lazy val services     = s"${runMode.env}.microservice.services"
 
   protected lazy val defaultProtocol: String =
     configuration

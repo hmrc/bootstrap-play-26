@@ -16,29 +16,36 @@
 
 package uk.gov.hmrc.play.config
 
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import play.api.{Configuration, Mode}
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpecLike}
+import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 
 import scala.concurrent.duration._
 
-class ServicesConfigSpec extends WordSpecLike with Matchers with BeforeAndAfterAll {
+class ServicesConfigSpec extends WordSpecLike with Matchers with MockitoSugar {
 
-  val configProperties: Map[String, Any] = Map(
-    "microservice.services.testString"         -> "hello world",
-    "Test.microservice.services.devTestString" -> "hello test",
-    "microservice.services.testInt"            -> "1",
-    "Test.microservice.services.devTestInt"    -> "1",
-    "microservice.services.testBool"           -> "true",
-    "Test.microservice.services.devTestBool"   -> "true",
-    "microservice.services.testDur"            -> "60seconds",
-    "Test.microservice.services.devTestDur"    -> "60seconds",
-    "anotherInt"                               -> "1",
-    "anotherString"                            -> "hello other test",
-    "anotherBool"                              -> "false",
-    "anotherDur"                               -> "60seconds"
-  )
+  private val servicesConfig = {
+    val configuration = Configuration(
+      "microservice.services.testString"         -> "hello world",
+      "Test.microservice.services.devTestString" -> "hello test",
+      "microservice.services.testInt"            -> "1",
+      "Test.microservice.services.devTestInt"    -> "1",
+      "microservice.services.testBool"           -> "true",
+      "Test.microservice.services.devTestBool"   -> "true",
+      "microservice.services.testDur"            -> "60seconds",
+      "Test.microservice.services.devTestDur"    -> "60seconds",
+      "anotherInt"                               -> "1",
+      "anotherString"                            -> "hello other test",
+      "anotherBool"                              -> "false",
+      "anotherDur"                               -> "60seconds"
+    )
+    val mockedRunMode = mock[RunMode]
+    when(mockedRunMode.env).thenReturn("Test")
+    new ServicesConfig(configuration, mockedRunMode)
+  }
 
-  val servicesConfig = new ServicesConfig(Configuration.from(configProperties), Mode.Test)
   import servicesConfig._
 
   "getConfString" should {

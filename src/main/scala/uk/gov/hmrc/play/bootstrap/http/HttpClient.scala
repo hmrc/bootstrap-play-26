@@ -16,32 +16,28 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import javax.inject.{Inject, Singleton}
-
 import com.typesafe.config.Config
+import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.http.ws._
 
 trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with HttpPatch
 
 @Singleton
-class DefaultHttpClient @Inject()(
-  config: Configuration,
-  override val auditConnector: AuditConnector,
-  override val wsClient: WSClient)
+class DefaultHttpClient @Inject()(config: Configuration, val httpAuditing: HttpAuditing, val wsClient: WSClient)
     extends HttpClient
-    with WSHttp
-    with HttpAuditing {
+    with WSHttp {
+
   override lazy val configuration: Option[Config] = Option(config.underlying)
 
-  override val appName: String = new AppName {
-    override def configuration: Configuration = config
-  }.appName
-
-  override val hooks = Seq(AuditingHook)
+  override val hooks = Seq(httpAuditing.AuditingHook)
 }
+
+class DefaultHttpAuditing @Inject()(
+  val auditConnector: AuditConnector,
+  @Named("appName") val appName: String
+) extends HttpAuditing

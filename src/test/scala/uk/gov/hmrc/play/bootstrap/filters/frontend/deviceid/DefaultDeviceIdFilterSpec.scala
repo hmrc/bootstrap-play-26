@@ -107,6 +107,7 @@ class DefaultDeviceIdFilterSpec
 
       applicationBuilder
         .bindings(
+          bind[String].qualifiedWith("appName").toInstance("myApp"),
           bind[DeviceIdFilter].to[DefaultDeviceIdFilter],
           bind[AuditConnector].toInstance(mock[AuditConnector])
         )

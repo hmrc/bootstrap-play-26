@@ -22,18 +22,13 @@ import play.api.Configuration
 class AppNameSpec extends WordSpec with Matchers {
 
   "AppName" should {
-    "return the name of the application" in new TestSetup {
-      override def configuration: Configuration = Configuration("appName" -> "myApp")
-
-      appName shouldBe "myApp"
+    "return the name of the application" in {
+      AppName.fromConfiguration(Configuration("appName" -> "myApp")) shouldBe "myApp"
     }
 
-    "return fallback name if application name not available" in new TestSetup {
-      override def configuration: Configuration = Configuration()
-
-      appName shouldBe "APP NAME NOT SET"
+    "return fallback name if application name not available" in {
+      AppName.fromConfiguration(Configuration.empty) shouldBe "APP NAME NOT SET"
     }
   }
 
-  trait TestSetup extends AppName
 }

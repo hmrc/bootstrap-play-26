@@ -16,50 +16,36 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import play.api.inject.guice.GuiceApplicationBuilder
-import org.mockito.Mockito._
 import org.mockito.Matchers.{eq => eqTo, _}
+import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
+import play.api.{Configuration, Mode}
 
-class MDCLoggingSetupSpec extends WordSpec with MustMatchers with MockitoSugar with BeforeAndAfterEach {
+class MDCLoggingSetupSpec extends WordSpec with Matchers with MockitoSugar {
 
-  val mdc: MDCInstance = mock[MDCInstance]
-
-  val builder: GuiceApplicationBuilder = {
-
-    import play.api.inject._
-
-    new GuiceApplicationBuilder()
-      .bindings(
-        bind[MDCInstance].toInstance(mdc),
-        bind[MDCLoggingSetup].toSelf.eagerly
-      )
-      .configure(
-        "appName" -> "Test"
-      )
-  }
-
-  override def beforeEach(): Unit = {
-    reset(mdc)
-    super.beforeEach()
-  }
-
-  "new" must {
+  "New instance of MdcLoggingSetup" should {
 
     "add the appName to the MDC context" in {
-      builder.build()
-      verify(mdc).put("appName", "Test")
-    }
+      val mdcPut = mock[(String, String) => Unit]
+      new MDCLoggingSetup(Configuration.empty, Mode.Test, "myApp", mdcPut)
 
-    "not add the dateformat when it's not set" in {
-      builder.build()
-      verify(mdc, never).put(eqTo("json.logger.dateformat"), any())
+      verify(mdcPut).apply("appName", "myApp")
     }
 
     "add the dateformat when it's set" in {
-      builder.configure("logger.json.dateformat" -> "foobar").build()
-      verify(mdc).put("logger.json.dateformat", "foobar")
+      val mdcPut = mock[(String, String) => Unit]
+      new MDCLoggingSetup(Configuration("logger.json.dateformat" -> "foobar"), Mode.Test, "myApp", mdcPut)
+
+      verify(mdcPut).apply("logger.json.dateformat", "foobar")
     }
+
+    "not add the dateformat when it's not set" in {
+      val mdcPut = mock[(String, String) => Unit]
+      new MDCLoggingSetup(Configuration.empty, Mode.Test, "myApp", mdcPut)
+
+      verify(mdcPut, never).apply(eqTo("json.logger.dateformat"), any())
+    }
+
   }
 }

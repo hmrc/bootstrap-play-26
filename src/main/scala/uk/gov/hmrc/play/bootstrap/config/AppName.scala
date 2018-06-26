@@ -16,17 +16,9 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import javax.inject.Inject
 import play.api.Configuration
 
-trait AppName {
-
-  def configuration: Configuration
-
-  lazy val appName: String = configuration.getString("appName").getOrElse("APP NAME NOT SET")
-
-}
-
-class AppNameProvider @Inject()(configuration: Configuration) {
-  lazy val appName: String = configuration.get[Option[String]]("appName").getOrElse("APP NAME NOT SET")
+object AppName {
+  def fromConfiguration(configuration: Configuration): String =
+    configuration.getOptional[String]("appName").getOrElse("APP NAME NOT SET")
 }

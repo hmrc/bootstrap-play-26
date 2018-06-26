@@ -17,16 +17,16 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import com.google.inject.ImplementedBy
-import javax.inject.Inject
+import javax.inject.{Inject, Named}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.model.DataEvent
 
-class DefaultHttpAuditEvent @Inject()(appNameProvider: AppNameProvider) extends HttpAuditEvent {
-  override val appName: String = appNameProvider.appName
-}
+class DefaultHttpAuditEvent @Inject()(
+  @Named("appName") val appName: String
+) extends HttpAuditEvent
 
 @ImplementedBy(classOf[DefaultHttpAuditEvent])
 trait HttpAuditEvent {

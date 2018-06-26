@@ -19,8 +19,8 @@ package uk.gov.hmrc.play.bootstrap.auth
 import javax.inject.Inject
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.CorePost
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.config.ServicesConfig
 
 class DefaultAuthConnector @Inject()(
   httpClient: HttpClient,
