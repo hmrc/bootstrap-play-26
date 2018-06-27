@@ -20,6 +20,9 @@ import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
+@deprecated("Use BackendController instead")
+trait BaseController extends BackendController
+
 trait BackendController
     extends play.api.mvc.BaseController
     with Utf8MimeTypes
