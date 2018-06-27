@@ -3,10 +3,9 @@ val appName = "bootstrap-play-26"
 lazy val library = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
   .settings(
-    scalaVersion        := "2.11.11",
+    scalaVersion        := "2.11.12",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     dependencyOverrides ++= AppDependencies.overrides,
-    crossScalaVersions  := Seq("2.11.11"),
     fork in Test        := true,
     scalacOptions       ++= Seq("-deprecation"),
     resolvers           :=
