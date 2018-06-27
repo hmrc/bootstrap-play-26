@@ -24,6 +24,9 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.mvc.{Action, AnyContent, DefaultActionBuilder}
+import play.api.mvc.Results.NotFound
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,7 +34,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters.FilterFlowMock
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,8 +43,8 @@ class MicroserviceAuditFilterSpec
     with Matchers
     with Eventually
     with ScalaFutures
-    with FilterFlowMock
-    with MockitoSugar {
+    with MockitoSugar
+    with GuiceOneAppPerSuite {
 
   "AuditFilter" should {
     val applicationName = "app-name"
@@ -55,7 +57,7 @@ class MicroserviceAuditFilterSpec
 
     implicit val system       = ActorSystem()
     implicit val materializer = ActorMaterializer()
-    implicit val hc           = HeaderCarrier
+
     val request = FakeRequest().withHeaders(
       "X-Request-ID"      -> xRequestId,
       "X-Session-ID"      -> xSessionId,
@@ -124,4 +126,15 @@ class MicroserviceAuditFilterSpec
       }
     }
   }
+
+  private def Action: DefaultActionBuilder = app.injector.instanceOf[DefaultActionBuilder]
+
+  private val actionNotFoundMessage = "404 Not Found"
+
+  private def nextAction: Action[AnyContent] = Action(NotFound(actionNotFoundMessage))
+
+  private def exceptionThrowingAction = Action.async { _ =>
+    throw new RuntimeException("Something went wrong")
+  }
+
 }

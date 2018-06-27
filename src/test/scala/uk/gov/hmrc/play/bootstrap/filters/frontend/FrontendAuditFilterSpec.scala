@@ -32,21 +32,23 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.Application
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
 import play.api.mvc.Results.NotFound
-import play.api.mvc._
-import play.api.test.{FakeHeaders, FakeRequest}
+import play.api.mvc.{Action => _, _}
+import play.api.routing.Router
 import play.api.test.Helpers._
+import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
+import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class FrontendAuditFilterSpec
@@ -61,12 +63,14 @@ class FrontendAuditFilterSpec
   implicit val system       = ActorSystem("test")
   implicit val materializer = ActorMaterializer()
 
-  def enumerateResponseBody(r: Result): Future[Done] =
+  def Action: DefaultActionBuilder = app.injector.instanceOf[DefaultActionBuilder]
+
+  private def enumerateResponseBody(r: Result): Future[Done] =
     r.body.dataStream.runForeach(_ => ())
 
-  def nextAction(implicit ec: ExecutionContext): Action[AnyContent] = Action(NotFound("404 Not Found"))
+  private def nextAction = Action(NotFound("404 Not Found"))
 
-  def exceptionThrowingAction(implicit ec: ExecutionContext) = Action.async { request =>
+  private def exceptionThrowingAction = Action { _ =>
     throw new RuntimeException("Something went wrong")
   }
 
@@ -491,23 +495,28 @@ class FrontendAuditFilterServerSpec
 
   val assets: Assets = new GuiceApplicationBuilder().injector().instanceOf[Assets]
 
-  override def newAppForTest(testData: TestData): Application =
+  override def newAppForTest(testData: TestData): Application = {
+    import play.api.routing.sird._
     new GuiceApplicationBuilder()
-      .routes({
-        case ("GET", "/standardresponse") =>
-          filter.apply(Action {
-            Results.Ok(standardContent)
-          })
-        case ("GET", "/longresponse") =>
-          filter.apply(Action {
-            Results.Ok(largeContent)
-          })
-        case ("POST", "/longrequest") =>
-          filter.apply(Action {
-            Results.Ok
-          })
-      })
+      .overrides(
+        bind[Router].toProvider[RouterProvider],
+        bind[RoutesDefinition].toInstance(action => {
+          case GET(p"/standardresponse") =>
+            filter.apply(action {
+              Results.Ok(standardContent)
+            })
+          case GET(p"/longresponse") =>
+            filter.apply(action {
+              Results.Ok(largeContent)
+            })
+          case POST(p"/longrequest") =>
+            filter.apply(action {
+              Results.Ok
+            })
+        })
+      )
       .build()
+  }
 
   "Attempting to audit a large in-memory response" in {
 

@@ -22,66 +22,16 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.Module
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{Action, Results}
+import play.api.mvc.Results
 import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration, Environment}
-
-object CacheControlFilterSpec {
-
-  class Filters @Inject()(cacheControl: CacheControlFilter) extends DefaultHttpFilters(cacheControl)
-
-  class TestModule extends Module {
-
-    import play.api.inject._
-
-    override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
-      Seq(bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)))
-  }
-}
+import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 class CacheControlFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
 
   import CacheControlFilterSpec._
-
-  val router: Router = {
-
-    import play.api.routing.sird._
-
-    Router.from {
-
-      case GET(p"/not-modified") =>
-        Action(Results.NotModified)
-      case GET(p"/exists") =>
-        Action(Results.Ok.withHeaders(CACHE_CONTROL -> "foo"))
-      case GET(p"/cacheable") =>
-        Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo"))
-
-      case GET(p"/not-modified-and-cacheable") =>
-        Action(Results.NotModified.withHeaders(CONTENT_TYPE -> "image/foo"))
-      case GET(p"/not-modified-and-exists") =>
-        Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo"))
-      case GET(p"/exists-and-cacheable") =>
-        Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo", CACHE_CONTROL -> "foo"))
-
-      case GET(p"/all") =>
-        Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo", CONTENT_TYPE -> "image/foo"))
-    }
-  }
-
-  override lazy val app: Application = {
-
-    import play.api.inject._
-
-    new GuiceApplicationBuilder()
-      .router(router)
-      .overrides(
-        new TestModule,
-        bind[HttpFilters].to[Filters]
-      )
-      .build()
-  }
 
   ".apply" must {
 
@@ -124,5 +74,49 @@ class CacheControlFilterSpec extends WordSpec with MustMatchers with GuiceOneApp
       val Some(result) = route(app, FakeRequest(GET, "/all"))
       headers(result) must contain(CACHE_CONTROL -> "foo")
     }
+  }
+
+  override lazy val app: Application = {
+
+    import play.api.inject._
+    import play.api.routing.sird._
+
+    new GuiceApplicationBuilder()
+      .overrides(
+        new TestModule,
+        bind[HttpFilters].to[Filters],
+        bind[Router].toProvider[RouterProvider],
+        bind[RoutesDefinition].toInstance(Action => {
+          case GET(p"/not-modified") =>
+            Action(Results.NotModified)
+          case GET(p"/exists") =>
+            Action(Results.Ok.withHeaders(CACHE_CONTROL -> "foo"))
+          case GET(p"/cacheable") =>
+            Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo"))
+          case GET(p"/not-modified-and-cacheable") =>
+            Action(Results.NotModified.withHeaders(CONTENT_TYPE -> "image/foo"))
+          case GET(p"/not-modified-and-exists") =>
+            Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo"))
+          case GET(p"/exists-and-cacheable") =>
+            Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo", CACHE_CONTROL -> "foo"))
+          case GET(p"/all") =>
+            Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo", CONTENT_TYPE -> "image/foo"))
+        })
+      )
+      .build()
+  }
+
+}
+
+object CacheControlFilterSpec {
+
+  class Filters @Inject()(cacheControl: CacheControlFilter) extends DefaultHttpFilters(cacheControl)
+
+  class TestModule extends Module {
+
+    import play.api.inject._
+
+    override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+      Seq(bind[CacheControlConfig].toInstance(CacheControlConfig.fromConfig(configuration)))
   }
 }

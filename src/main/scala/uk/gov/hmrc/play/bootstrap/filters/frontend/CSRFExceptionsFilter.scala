@@ -43,7 +43,7 @@ class CSRFExceptionsFilter @Inject()(
     rh: RequestHeader,
     now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)) =
     if (rh.method == POST && whitelist.contains(rh.path))
-      rh.copy(headers = rh.headers.add("Csrf-Token" -> "nocheck"))
+      rh.withHeaders(rh.headers.add("Csrf-Token" -> "nocheck"))
     else rh
 
 }

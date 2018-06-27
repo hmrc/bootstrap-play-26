@@ -16,26 +16,29 @@
 
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
-import javax.inject.Inject
-
 import akka.stream.Materializer
+import javax.inject.Inject
 import org.joda.time.{DateTime, Duration}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, OptionValues, WordSpecLike}
-import play.api.{Application, Configuration}
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.mvc._
+import Results.Ok
+import play.api.inject.bind
 import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.{Application, Configuration}
 import uk.gov.hmrc.http.SessionKeys._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter._
+import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 import scala.concurrent.ExecutionContext
+import scala.language.implicitConversions
 
 object SessionTimeoutFilterSpec {
 
@@ -64,41 +67,33 @@ class SessionTimeoutFilterSpec
 
   import SessionTimeoutFilterSpec._
 
-  val router: Router = {
-    import play.api.routing.sird._
-    Router.from {
-      case GET(p"/test") =>
-        Action { request =>
-          Results.Ok(
-            Json.obj(
-              "session" -> request.session.data,
-              "cookies" -> request.cookies.toSeq
-                .map { cookie =>
-                  cookie.name -> cookie.value
-                }
-                .toMap[String, String]
-            ))
-        }
-    }
-  }
-
   val builder: GuiceApplicationBuilder = {
-
-    import play.api.inject._
-
+    import play.api.routing.sird._
     new GuiceApplicationBuilder()
-      .router(router)
       .overrides(
         bind[HttpFilters].to[Filters],
-        bind[SessionTimeoutFilter].to[StaticDateSessionTimeoutFilter]
+        bind[SessionTimeoutFilter].to[StaticDateSessionTimeoutFilter],
+        bind[RoutesDefinition].toInstance(Action => {
+          case GET(p"/test") =>
+            Action { request =>
+              Ok(
+                Json.obj(
+                  "session" -> request.session.data,
+                  "cookies" -> request.cookies.toSeq
+                    .map { cookie =>
+                      cookie.name -> cookie.value
+                    }
+                    .toMap[String, String]
+                ))
+            }
+        }),
+        bind[Router].toProvider[RouterProvider]
       )
   }
 
   "SessionTimeoutFilter" should {
 
     val timestamp = now.minusMinutes(5).getMillis.toString
-
-    def filter = mock[SessionTimeoutFilter]
 
     val config = SessionTimeoutFilterConfig(
       timeoutDuration       = Duration.standardMinutes(1),

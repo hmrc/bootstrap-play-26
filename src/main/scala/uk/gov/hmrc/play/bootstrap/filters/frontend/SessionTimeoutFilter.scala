@@ -128,7 +128,7 @@ class SessionTimeoutFilter @Inject()(
 
   private def wipeSession(requestHeader: RequestHeader): RequestHeader = {
     val sessionMap: Map[String, String] = preservedSessionData(requestHeader.session).toMap
-    requestWithUpdatedSession(requestHeader, Session.deserialize(sessionMap))
+    requestWithUpdatedSession(requestHeader, new Session(sessionMap))
   }
 
   private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader =

@@ -26,11 +26,13 @@ import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
-import play.api.mvc.{CookieHeaderEncoding, _}
+import play.api.mvc._
+import play.api.routing.Router
 import play.api.test.Helpers._
 import uk.gov.hmrc.crypto._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultSessionCookieCryptoFilterSpec.Filters
-import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.{ApplicationCryptoProvider, DefaultSessionCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoFilter, SessionCookieCryptoProvider}
+import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto._
+import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 import scala.reflect.ClassTag
 
@@ -75,25 +77,28 @@ class DefaultSessionCookieCryptoFilterSpec
     }
   }
 
-  override def fakeApplication(): Application =
+  override def fakeApplication(): Application = {
+    import play.api.routing.sird._
     new GuiceApplicationBuilder()
-      .routes {
-        case ("GET", "/") =>
-          Action { implicit request =>
-            request.session.data shouldBe existingSessionData
-            Results.Ok.addingToSession(newSessionData.toSeq: _*)
-          }
-      }
       .overrides(
         bind[HttpFilters].to[Filters],
         bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider],
         bind[SessionCookieCrypto].toProvider[SessionCookieCryptoProvider],
-        bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter]
+        bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter],
+        bind[Router].toProvider[RouterProvider],
+        bind[RoutesDefinition].toInstance(Action => {
+          case GET(p"/") =>
+            Action { implicit request =>
+              request.session.data shouldBe existingSessionData
+              Results.Ok.addingToSession(newSessionData.toSeq: _*)
+            }
+        })
       )
       .disable(classOf[CookiesModule])
       .bindings(new LegacyCookiesModule)
       .configure("cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==")
       .build()
+  }
 
   private def instanceOf[T](implicit ct: ClassTag[T]): T =
     app.injector.instanceOf(ct.runtimeClass.asInstanceOf[Class[T]])

@@ -23,14 +23,14 @@ import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsNull, Json}
-import play.api.mvc.{Action, Results}
+import play.api.mvc.Results
 import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderNames
+import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 object HeadersFilterSpec {
-
   class Filters @Inject()(headersFilter: HeadersFilter) extends DefaultHttpFilters(headersFilter)
 }
 
@@ -38,33 +38,28 @@ class HeadersFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSu
 
   import HeadersFilterSpec._
 
-  val router: Router = {
-
-    import play.api.routing.sird._
-
-    Router.from {
-      case GET(p"/test") =>
-        Action { request =>
-          val headers = request.headers.toMap
-            .filterKeys(Seq(HeaderNames.xRequestId, HeaderNames.xRequestTimestamp).contains)
-
-          Results.Ok(
-            Json.obj(
-              HeaderNames.xRequestId        -> headers.get(HeaderNames.xRequestId),
-              HeaderNames.xRequestTimestamp -> headers.get(HeaderNames.xRequestTimestamp)
-            ))
-        }
-    }
-  }
-
   override lazy val app: Application = {
 
     import play.api.inject._
+    import play.api.routing.sird._
 
     new GuiceApplicationBuilder()
-      .router(router)
       .overrides(
-        bind[HttpFilters].to[Filters]
+        bind[HttpFilters].to[Filters],
+        bind[Router].toProvider[RouterProvider],
+        bind[RoutesDefinition].toInstance(Action => {
+          case GET(p"/test") =>
+            Action { request =>
+              val headers = request.headers.toMap
+                .filterKeys(Seq(HeaderNames.xRequestId, HeaderNames.xRequestTimestamp).contains)
+
+              Results.Ok(
+                Json.obj(
+                  HeaderNames.xRequestId        -> headers.get(HeaderNames.xRequestId),
+                  HeaderNames.xRequestTimestamp -> headers.get(HeaderNames.xRequestTimestamp)
+                ))
+            }
+        })
       )
       .build()
   }
