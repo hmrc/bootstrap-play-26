@@ -20,10 +20,10 @@ import javax.inject.{Inject, Named}
 import org.slf4j.MDC
 import play.api.{Configuration, Logger, Mode}
 
-class MDCLoggingSetup @Inject()(
+class MDCLoggingSetup(
   configuration: Configuration,
   mode: Mode,
-  @Named("appName") appName: String,
+  appName: String,
   mdcPut: (String, String) => Unit
 ) {
 

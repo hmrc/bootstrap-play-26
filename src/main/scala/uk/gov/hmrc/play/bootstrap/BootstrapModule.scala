@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap
 
 import play.api.inject.{Binding, Module}
-import play.api.{Configuration, Environment}
+import play.api.{Configuration, Environment, Mode}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider, ControllerConfigs, MDCLoggingSetup}
@@ -33,7 +33,8 @@ abstract class BootstrapModule extends Module {
     bind[MDCLoggingSetup].toSelf.eagerly,
     bind[String].qualifiedWith("appName").toInstance(AppName.fromConfiguration(configuration)),
     bind[AuditingConfig].toProvider[AuditingConfigProvider],
-    bind[HttpAuditing].to[DefaultHttpAuditing]
+    bind[HttpAuditing].to[DefaultHttpAuditing],
+    bind[Mode].toInstance(environment.mode)
   )
 
 }
