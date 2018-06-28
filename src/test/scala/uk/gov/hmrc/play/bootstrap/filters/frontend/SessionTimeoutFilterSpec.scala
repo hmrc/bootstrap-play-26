@@ -35,7 +35,6 @@ import play.api.test.Helpers._
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.http.SessionKeys._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter._
-import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
@@ -67,13 +66,13 @@ class SessionTimeoutFilterSpec
 
   import SessionTimeoutFilterSpec._
 
+  private val Action = stubControllerComponents().actionBuilder
+
   val builder: GuiceApplicationBuilder = {
     import play.api.routing.sird._
     new GuiceApplicationBuilder()
-      .overrides(
-        bind[HttpFilters].to[Filters],
-        bind[SessionTimeoutFilter].to[StaticDateSessionTimeoutFilter],
-        bind[RoutesDefinition].toInstance(Action => {
+      .router(
+        Router.from {
           case GET(p"/test") =>
             Action { request =>
               Ok(
@@ -86,8 +85,11 @@ class SessionTimeoutFilterSpec
                     .toMap[String, String]
                 ))
             }
-        }),
-        bind[Router].toProvider[RouterProvider]
+        }
+      )
+      .overrides(
+        bind[SessionTimeoutFilter].to[StaticDateSessionTimeoutFilter],
+        bind[HttpFilters].to[Filters]
       )
   }
 

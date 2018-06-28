@@ -27,7 +27,6 @@ import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration, Environment}
-import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 class CacheControlFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
 
@@ -81,27 +80,28 @@ class CacheControlFilterSpec extends WordSpec with MustMatchers with GuiceOneApp
     import play.api.inject._
     import play.api.routing.sird._
 
+    val Action = stubControllerComponents().actionBuilder
+
     new GuiceApplicationBuilder()
+      .router(Router.from {
+        case GET(p"/not-modified") =>
+          Action(Results.NotModified)
+        case GET(p"/exists") =>
+          Action(Results.Ok.withHeaders(CACHE_CONTROL -> "foo"))
+        case GET(p"/cacheable") =>
+          Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo"))
+        case GET(p"/not-modified-and-cacheable") =>
+          Action(Results.NotModified.withHeaders(CONTENT_TYPE -> "image/foo"))
+        case GET(p"/not-modified-and-exists") =>
+          Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo"))
+        case GET(p"/exists-and-cacheable") =>
+          Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo", CACHE_CONTROL -> "foo"))
+        case GET(p"/all") =>
+          Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo", CONTENT_TYPE -> "image/foo"))
+      })
       .overrides(
         new TestModule,
-        bind[HttpFilters].to[Filters],
-        bind[Router].toProvider[RouterProvider],
-        bind[RoutesDefinition].toInstance(Action => {
-          case GET(p"/not-modified") =>
-            Action(Results.NotModified)
-          case GET(p"/exists") =>
-            Action(Results.Ok.withHeaders(CACHE_CONTROL -> "foo"))
-          case GET(p"/cacheable") =>
-            Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo"))
-          case GET(p"/not-modified-and-cacheable") =>
-            Action(Results.NotModified.withHeaders(CONTENT_TYPE -> "image/foo"))
-          case GET(p"/not-modified-and-exists") =>
-            Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo"))
-          case GET(p"/exists-and-cacheable") =>
-            Action(Results.Ok.withHeaders(CONTENT_TYPE -> "image/foo", CACHE_CONTROL -> "foo"))
-          case GET(p"/all") =>
-            Action(Results.NotModified.withHeaders(CACHE_CONTROL -> "foo", CONTENT_TYPE -> "image/foo"))
-        })
+        bind[HttpFilters].to[Filters]
       )
       .build()
   }

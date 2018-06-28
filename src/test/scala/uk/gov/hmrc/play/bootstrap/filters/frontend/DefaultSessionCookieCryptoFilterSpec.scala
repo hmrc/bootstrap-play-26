@@ -32,7 +32,6 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.crypto._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultSessionCookieCryptoFilterSpec.Filters
 import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto._
-import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 import scala.reflect.ClassTag
 
@@ -79,20 +78,21 @@ class DefaultSessionCookieCryptoFilterSpec
 
   override def fakeApplication(): Application = {
     import play.api.routing.sird._
+    val Action = stubControllerComponents().actionBuilder
+
     new GuiceApplicationBuilder()
+      .router(Router.from {
+        case GET(p"/") =>
+          Action { implicit request =>
+            request.session.data shouldBe existingSessionData
+            Results.Ok.addingToSession(newSessionData.toSeq: _*)
+          }
+      })
       .overrides(
         bind[HttpFilters].to[Filters],
         bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider],
         bind[SessionCookieCrypto].toProvider[SessionCookieCryptoProvider],
-        bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter],
-        bind[Router].toProvider[RouterProvider],
-        bind[RoutesDefinition].toInstance(Action => {
-          case GET(p"/") =>
-            Action { implicit request =>
-              request.session.data shouldBe existingSessionData
-              Results.Ok.addingToSession(newSessionData.toSeq: _*)
-            }
-        })
+        bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter]
       )
       .disable(classOf[CookiesModule])
       .bindings(new LegacyCookiesModule)

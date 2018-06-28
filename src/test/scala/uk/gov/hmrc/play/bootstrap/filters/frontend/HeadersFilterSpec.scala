@@ -28,7 +28,6 @@ import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderNames
-import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 object HeadersFilterSpec {
   class Filters @Inject()(headersFilter: HeadersFilter) extends DefaultHttpFilters(headersFilter)
@@ -43,11 +42,11 @@ class HeadersFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSu
     import play.api.inject._
     import play.api.routing.sird._
 
+    val Action = stubControllerComponents().actionBuilder
+
     new GuiceApplicationBuilder()
-      .overrides(
-        bind[HttpFilters].to[Filters],
-        bind[Router].toProvider[RouterProvider],
-        bind[RoutesDefinition].toInstance(Action => {
+      .router(
+        Router.from {
           case GET(p"/test") =>
             Action { request =>
               val headers = request.headers.toMap
@@ -59,7 +58,10 @@ class HeadersFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSu
                   HeaderNames.xRequestTimestamp -> headers.get(HeaderNames.xRequestTimestamp)
                 ))
             }
-        })
+        }
+      )
+      .overrides(
+        bind[HttpFilters].to[Filters]
       )
       .build()
   }

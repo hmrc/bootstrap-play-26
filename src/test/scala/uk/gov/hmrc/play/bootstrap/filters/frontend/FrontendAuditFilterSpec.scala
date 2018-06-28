@@ -47,7 +47,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
-import uk.gov.hmrc.play.{RouterProvider, RoutesDefinition}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -63,7 +62,7 @@ class FrontendAuditFilterSpec
   implicit val system       = ActorSystem("test")
   implicit val materializer = ActorMaterializer()
 
-  def Action: DefaultActionBuilder = app.injector.instanceOf[DefaultActionBuilder]
+  private val Action = stubControllerComponents().actionBuilder
 
   private def enumerateResponseBody(r: Result): Future[Done] =
     r.body.dataStream.runForeach(_ => ())
@@ -495,25 +494,27 @@ class FrontendAuditFilterServerSpec
 
   val assets: Assets = new GuiceApplicationBuilder().injector().instanceOf[Assets]
 
+  val Action = stubControllerComponents().actionBuilder
+
   override def newAppForTest(testData: TestData): Application = {
     import play.api.routing.sird._
     new GuiceApplicationBuilder()
-      .overrides(
-        bind[Router].toProvider[RouterProvider],
-        bind[RoutesDefinition].toInstance(action => {
+      .router(
+        Router.from {
           case GET(p"/standardresponse") =>
-            filter.apply(action {
+            filter.apply(Action {
               Results.Ok(standardContent)
             })
           case GET(p"/longresponse") =>
-            filter.apply(action {
+            filter.apply(Action {
               Results.Ok(largeContent)
             })
           case POST(p"/longrequest") =>
-            filter.apply(action {
+            filter.apply(Action {
               Results.Ok
             })
-        })
+
+        }
       )
       .build()
   }
