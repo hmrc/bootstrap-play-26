@@ -30,7 +30,7 @@ class ServicesConfig @Inject()(configuration: Configuration, runMode: RunMode) {
     configuration
       .getOptional[String](s"$rootServices.protocol")
       .orElse(configuration.getOptional[String](s"$services.protocol"))
-      .getOrElse("http")
+      .getOrElse("https")
 
   protected def config(serviceName: String) =
     configuration
@@ -39,10 +39,10 @@ class ServicesConfig @Inject()(configuration: Configuration, runMode: RunMode) {
       .getOrElse(throw new IllegalArgumentException(s"Configuration for service $serviceName not found"))
 
   def baseUrl(serviceName: String) = {
-    val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
     val host =
       getConfString(s"$serviceName.host", throw new RuntimeException(s"Could not find config $serviceName.host"))
-    val port = getConfInt(s"$serviceName.port", throw new RuntimeException(s"Could not find config $serviceName.port"))
+    val protocol = getConfString(s"$serviceName.protocol", if (host == "localhost") "http" else defaultProtocol)
+    val port     = getConfInt(s"$serviceName.port", throw new RuntimeException(s"Could not find config $serviceName.port"))
     s"$protocol://$host:$port"
   }
 
