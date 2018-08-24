@@ -39,11 +39,7 @@ class ServicesConfigSpec extends WordSpecLike with Matchers with MockitoSugar {
       "anotherInt"                               -> "1",
       "anotherString"                            -> "hello other test",
       "anotherBool"                              -> "false",
-      "anotherDur"                               -> "60seconds",
-      "microservice.services.s1.host"            -> "some-host",
-      "microservice.services.s1.port"            -> "1234",
-      "microservice.services.s2.host"            -> "localhost",
-      "microservice.services.s2.port"            -> "1234"
+      "anotherDur"                               -> "60seconds"
     )
     val mockedRunMode = mock[RunMode]
     when(mockedRunMode.env).thenReturn("Test")
@@ -145,16 +141,6 @@ class ServicesConfigSpec extends WordSpecLike with Matchers with MockitoSugar {
 
     "throw an exception if the config can't be found" in {
       intercept[RuntimeException](getDuration("notInConf")).getMessage shouldBe "Could not find config key 'notInConf'"
-    }
-  }
-
-  "baseUrl" should {
-    "use 'https' protocol when not provided explicitly and host != localhost" in {
-      baseUrl("s1") shouldBe "https://some-host:1234"
-    }
-
-    "use 'http' protocol when not provided explicitly and host == localhost" in {
-      baseUrl("s2") shouldBe "http://localhost:1234"
     }
   }
 
