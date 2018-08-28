@@ -10,7 +10,7 @@ object AppDependencies {
     filters,
     "uk.gov.hmrc"           %% "crypto"              % "5.0.0",
     "uk.gov.hmrc"           %% "http-verbs"          % "8.0.0",
-    "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.6.0",
+    "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.8.0",
     "uk.gov.hmrc"           %% "auditing"            % "0.4.0",
     "uk.gov.hmrc"           %% "time"                % "3.1.0",
     "uk.gov.hmrc"           %% "auth-client"         % "2.6.0",
