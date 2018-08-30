@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent._
 
-trait FrontendController
+abstract class FrontendController(mcc: MessagesControllerComponents)
     extends MessagesBaseController
     with Utf8MimeTypes
     with MdcExecutionContextProvider
