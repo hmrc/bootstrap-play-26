@@ -14,7 +14,7 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "auditing"            % "0.4.0",
     "uk.gov.hmrc"           %% "time"                % "3.1.0",
     "uk.gov.hmrc"           %% "auth-client"         % "2.6.0",
-    "uk.gov.hmrc"           %% "logback-json-logger" % "3.1.0",
+    "uk.gov.hmrc"           %% "logback-json-logger" % "4.0.0",
     "com.typesafe.play"     %% "play"                % PlayVersion.current,
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
     "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",

@@ -1,7 +1,11 @@
 val appName = "bootstrap-play-26"
 
 lazy val library = Project(appName, file("."))
-  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
+  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
+  .settings(
+    majorVersion := 0,
+    makePublicallyAvailableOnBintray := true
+  )
   .settings(
     scalaVersion        := "2.11.12",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
@@ -17,4 +21,3 @@ lazy val library = Project(appName, file("."))
         Resolver.jcenterRepo
       )
   )
-  .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
