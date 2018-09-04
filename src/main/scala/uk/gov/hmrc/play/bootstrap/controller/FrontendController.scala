@@ -48,12 +48,12 @@ trait UnauthorisedActions { self: MessagesBaseController with FrontendHeaderCarr
     * For .async actions the MdcLoggingExecutionContext takes care of it.
     */
   def ActionWithMdc: ActionBuilder[MessagesRequest, AnyContent] =
-    controllerComponents.messagesActionBuilder.andThen(actionWithMdc)
+    controllerComponents.messagesActionBuilder andThen actionWithMdc
 
   def UnauthorizedAction: ActionBuilder[MessagesRequest, AnyContent] =
     ActionWithMdc
 
-  private val actionWithMdc =
+  private lazy val actionWithMdc: ActionFunction[MessagesRequest, MessagesRequest] =
     new ActionFunction[MessagesRequest, MessagesRequest] {
 
       private def storeHeaders(request: RequestHeader) {
@@ -72,10 +72,6 @@ trait UnauthorisedActions { self: MessagesBaseController with FrontendHeaderCarr
         r
       }
 
-      val parser: BodyParser[AnyContent] = parse.defaultBodyParser
-
-      protected val executionContext: ExecutionContext = defaultExecutionContext
-
+      protected lazy val executionContext: ExecutionContext = defaultExecutionContext
     }
-
 }
