@@ -21,6 +21,7 @@ import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.ws._
@@ -34,7 +35,7 @@ class DefaultHttpClient @Inject()(config: Configuration, val httpAuditing: HttpA
 
   override lazy val configuration: Option[Config] = Option(config.underlying)
 
-  override val hooks = Seq(httpAuditing.AuditingHook)
+  override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
 }
 
 class DefaultHttpAuditing @Inject()(
