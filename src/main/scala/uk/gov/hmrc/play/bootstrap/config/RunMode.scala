@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api._
 
 import scala.annotation.tailrec
 
+@Singleton
 class RunMode @Inject()(configuration: Configuration, mode: Mode) {
 
   lazy val env: String =
