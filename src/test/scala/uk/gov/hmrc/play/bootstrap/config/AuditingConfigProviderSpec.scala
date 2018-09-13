@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import play.api.{Configuration, Mode}
+import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
-import org.mockito.Mockito.when
 
 class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSugar {
 
+  private val appName       = "app-name"
   private val mockedRunMode = mock[RunMode]
   when(mockedRunMode.env).thenReturn("Test")
 
@@ -36,13 +37,15 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
         "Test.auditing.consumer.baseUri.host" -> "localhost",
         "Test.auditing.consumer.baseUri.port" -> "8100",
         "auditing.enabled"                    -> "false",
-        "auditing.traceRequests"              -> "false",
         "auditing.consumer.baseUri.host"      -> "foo",
         "auditing.consumer.baseUri.port"      -> "1234"
       )
 
-      new AuditingConfigProvider(config, mockedRunMode)
-        .get() shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+      new AuditingConfigProvider(config, mockedRunMode, appName).get() shouldBe AuditingConfig(
+        consumer    = Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled     = true,
+        auditSource = appName
+      )
     }
 
     "fallback to non-env specific config" in {
@@ -53,8 +56,11 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
         "auditing.consumer.baseUri.port" -> "8100"
       )
 
-      new AuditingConfigProvider(configuration, mockedRunMode)
-        .get() shouldBe AuditingConfig(Some(Consumer(BaseUri("localhost", 8100, "http"))), enabled = true)
+      new AuditingConfigProvider(configuration, mockedRunMode, appName).get() shouldBe AuditingConfig(
+        consumer    = Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled     = true,
+        auditSource = appName
+      )
     }
 
     "allow audit to be disabled" in {
@@ -62,7 +68,11 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
         "auditing.enabled" -> "false"
       )
 
-      new AuditingConfigProvider(config, mockedRunMode).get() shouldBe AuditingConfig(None, enabled = false)
+      new AuditingConfigProvider(config, mockedRunMode, appName).get() shouldBe AuditingConfig(
+        consumer    = None,
+        enabled     = false,
+        auditSource = appName
+      )
     }
   }
 }

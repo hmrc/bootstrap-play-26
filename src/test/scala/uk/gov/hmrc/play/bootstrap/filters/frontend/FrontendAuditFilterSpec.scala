@@ -32,7 +32,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.Application
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
@@ -247,7 +246,8 @@ class FrontendAuditFilterSpec
         val request = FakeRequest("GET", "/foo").withSession(
           "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
-          "sessionId" -> "mySessionId")
+          "sessionId" -> "mySessionId"
+        )
 
         val result = await(filter.apply(nextAction)(request).run)
         await(enumerateResponseBody(result))
@@ -267,10 +267,10 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("Authorization" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=")
-        event.detail    should contain("token" -> "aToken")
-        event.tags      should contain("X-Session-ID" -> "mySessionId")
+        event.auditType                   shouldBe "RequestReceived"
+        event.detail.get("Authorization") shouldBe None
+        event.detail.get("token")         shouldBe None
+        event.tags("X-Session-ID")        shouldBe "mySessionId"
       }
     }
 
@@ -310,7 +310,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceID" -> deviceID)
+        event.tags      should contain("deviceID" -> deviceID)
       }
     }
 
@@ -332,7 +332,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceID" -> deviceID)
+        event.tags      should contain("deviceID" -> deviceID)
       }
     }
 

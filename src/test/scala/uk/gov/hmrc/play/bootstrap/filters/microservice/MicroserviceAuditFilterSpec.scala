@@ -89,7 +89,7 @@ class MicroserviceAuditFilterSpec extends WordSpec with Matchers with Eventually
         event.tags("X-Request-ID")      shouldBe xRequestId
         event.tags("X-Session-ID")      shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
-        event.detail("deviceID")        shouldBe deviceID
+        event.tags("deviceID")          shouldBe deviceID
         event.detail("responseMessage") shouldBe actionNotFoundMessage
       }
     }
@@ -115,7 +115,7 @@ class MicroserviceAuditFilterSpec extends WordSpec with Matchers with Eventually
         event.tags("X-Request-ID")      shouldBe xRequestId
         event.tags("X-Session-ID")      shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
-        event.detail("deviceID")        shouldBe deviceID
+        event.tags("deviceID")          shouldBe deviceID
       }
     }
   }

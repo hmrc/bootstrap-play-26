@@ -19,6 +19,10 @@ package uk.gov.hmrc.play.bootstrap.http.utils
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
-class TestAuditConnector extends AuditConnector {
-  override def auditingConfig: AuditingConfig = AuditingConfig(None, false)
+class TestAuditConnector(appName: String) extends AuditConnector {
+  override val auditingConfig: AuditingConfig = AuditingConfig(
+    consumer    = None,
+    enabled     = false,
+    auditSource = appName
+  )
 }

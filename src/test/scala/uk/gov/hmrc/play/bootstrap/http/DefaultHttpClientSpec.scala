@@ -36,13 +36,15 @@ class DefaultHttpClientSpec
     with WiremockTestServer
     with GuiceOneAppPerTest {
 
+  private val appName = "myApp"
+
   override def newAppForTest(testData: TestData): Application =
     new GuiceApplicationBuilder()
       .overrides(
-        bind[String].qualifiedWith("appName").toInstance("myApp"),
+        bind[String].qualifiedWith("appName").toInstance(appName),
         bind[HttpAuditing].to[DefaultHttpAuditing],
         bind[HttpClient].to[DefaultHttpClient],
-        bind[AuditConnector].to[TestAuditConnector]
+        bind[AuditConnector].toInstance(new TestAuditConnector(appName))
       )
       .build()
 

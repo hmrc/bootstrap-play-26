@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import javax.inject.{Inject, Provider}
+import javax.inject.{Inject, Named, Provider}
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
 
-class AuditingConfigProvider @Inject()(configuration: Configuration, runMode: RunMode)
+class AuditingConfigProvider @Inject()(
+  configuration: Configuration,
+  runMode: RunMode,
+  @Named("appName") appName: String)
     extends Provider[AuditingConfig] {
 
   def get(): AuditingConfig = {
@@ -53,10 +56,12 @@ class AuditingConfigProvider @Inject()(configuration: Configuration, runMode: Ru
                       .getOrElse(throw new Exception("Missing consumer baseUri for auditing"))
                   )
                 }
-                .getOrElse(throw new Exception("Missing consumer configuration for auditing")))
+                .getOrElse(throw new Exception("Missing consumer configuration for auditing"))
+            ),
+            auditSource = appName
           )
         } else {
-          AuditingConfig(consumer = None, enabled = false)
+          AuditingConfig(consumer = None, enabled = false, auditSource = appName)
         }
 
       }

@@ -1,4 +1,4 @@
-import play.sbt.PlayImport.{filters, guice}
+import play.sbt.PlayImport.{filters, guice, playCore}
 import sbt._
 
 object AppDependencies {
@@ -6,30 +6,30 @@ object AppDependencies {
   import play.core.PlayVersion
 
   val compile = Seq(
-    guice,
     filters,
+    guice,
+    playCore,
+    "ch.qos.logback"        % "logback-core"         % "1.1.7",
+    "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
+    "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
+    "uk.gov.hmrc"           %% "auth-client"         % "2.7.0-play-26",
     "uk.gov.hmrc"           %% "crypto"              % "5.0.0",
     "uk.gov.hmrc"           %% "http-verbs"          % "8.0.0",
     "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.8.0",
-    "uk.gov.hmrc"           %% "auditing"            % "0.4.0",
-    "uk.gov.hmrc"           %% "time"                % "3.1.0",
-    "uk.gov.hmrc"           %% "auth-client"         % "2.6.0",
     "uk.gov.hmrc"           %% "logback-json-logger" % "4.0.0",
-    "com.typesafe.play"     %% "play"                % PlayVersion.current,
-    "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
-    "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
-    "ch.qos.logback"        % "logback-core"         % "1.1.7",
-    "uk.gov.hmrc"           %% "play-health"         % "3.2.0"
+    "uk.gov.hmrc"           %% "play-auditing"       % "3.8.0-play-26",
+    "uk.gov.hmrc"           %% "play-health"         % "3.3.0-play-26",
+    "uk.gov.hmrc"           %% "time"                % "3.1.0"
   )
 
   val test = Seq(
+    "com.github.tomakehurst" % "wiremock"            % "2.18.0"            % Test,
+    "com.typesafe.play"      %% "play-iteratees"     % "2.6.1"             % Test,
     "com.typesafe.play"      %% "play-test"          % PlayVersion.current % Test,
-    "org.scalacheck"         %% "scalacheck"         % "1.14.0"            % Test,
     "org.mockito"            % "mockito-all"         % "1.9.5"             % Test,
     "org.pegdown"            % "pegdown"             % "1.5.0"             % Test,
-    "com.github.tomakehurst" % "wiremock"            % "2.18.0"            % Test,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"             % Test,
-    "com.typesafe.play"      %% "play-iteratees"     % "2.6.1"             % Test
+    "org.scalacheck"         %% "scalacheck"         % "1.14.0"            % Test,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"             % Test
   )
 
   // Fixes a transitive dependency clash between wiremock and scalatestplus-play
@@ -52,5 +52,4 @@ object AppDependencies {
       "org.eclipse.jetty.websocket" % "websocket-common"   % jettyFromWiremockVersion
     )
   }
-
 }
