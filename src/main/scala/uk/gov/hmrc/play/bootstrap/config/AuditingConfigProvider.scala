@@ -61,7 +61,7 @@ class AuditingConfigProvider @Inject()(
             auditSource = appName
           )
         } else {
-          AuditingConfig(consumer = None, enabled = false, auditSource = appName)
+          AuditingConfig(consumer = None, enabled = false, auditSource = "auditing disabled")
         }
 
       }

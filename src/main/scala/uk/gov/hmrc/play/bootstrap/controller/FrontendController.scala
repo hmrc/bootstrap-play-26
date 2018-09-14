@@ -25,16 +25,16 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import scala.concurrent._
 
 abstract class FrontendController(mcc: MessagesControllerComponents)
-  extends MessagesAbstractController(mcc)
-  with Utf8MimeTypes
-  with MdcExecutionContextProvider
-  with WithJsonBody
-  with FrontendHeaderCarrierProvider
-  with UnauthorisedActions
+    extends MessagesAbstractController(mcc)
+    with Utf8MimeTypes
+    with MdcExecutionContextProvider
+    with WithJsonBody
+    with FrontendHeaderCarrierProvider
+    with UnauthorisedActions
 
 trait FrontendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+    HeaderCarrierConverter.fromHeadersAndSessionAndRequest(request.headers, Some(request.session), Some(request))
 }
 
 trait UnauthorisedActions { self: MessagesBaseController with FrontendHeaderCarrierProvider =>

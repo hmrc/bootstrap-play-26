@@ -15,7 +15,7 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "auth-client"         % "2.7.0-play-26",
     "uk.gov.hmrc"           %% "crypto"              % "5.0.0",
     "uk.gov.hmrc"           %% "http-verbs"          % "8.0.0",
-    "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.8.0",
+    "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.9.0",
     "uk.gov.hmrc"           %% "logback-json-logger" % "4.0.0",
     "uk.gov.hmrc"           %% "play-auditing"       % "3.8.0-play-26",
     "uk.gov.hmrc"           %% "play-health"         % "3.3.0-play-26",

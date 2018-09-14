@@ -71,7 +71,7 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
       new AuditingConfigProvider(config, mockedRunMode, appName).get() shouldBe AuditingConfig(
         consumer    = None,
         enabled     = false,
-        auditSource = appName
+        auditSource = "auditing disabled"
       )
     }
   }

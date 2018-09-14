@@ -259,7 +259,8 @@ class FrontendAuditFilterSpec
         val request = FakeRequest("GET", "/foo").withSession(
           "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
-          "sessionId" -> "mySessionId")
+          "sessionId" -> "mySessionId"
+        )
 
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
         behave like expected
@@ -267,10 +268,10 @@ class FrontendAuditFilterSpec
 
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
-        event.auditType                   shouldBe "RequestReceived"
-        event.detail.get("Authorization") shouldBe None
-        event.detail.get("token")         shouldBe None
-        event.tags("X-Session-ID")        shouldBe "mySessionId"
+        event.auditType               shouldBe "RequestReceived"
+        event.detail("Authorization") shouldBe "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE="
+        event.detail("token")         shouldBe "aToken"
+        event.tags("X-Session-ID")    shouldBe "mySessionId"
       }
     }
 
@@ -310,7 +311,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.tags      should contain("deviceID" -> deviceID)
+        event.detail    should contain("deviceID" -> deviceID)
       }
     }
 
@@ -332,7 +333,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.tags      should contain("deviceID" -> deviceID)
+        event.detail    should contain("deviceID" -> deviceID)
       }
     }
 

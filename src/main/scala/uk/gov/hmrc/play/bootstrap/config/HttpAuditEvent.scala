@@ -56,11 +56,15 @@ trait HttpAuditEvent {
     import headers._
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
-    val requiredFields = hc.toAuditDetails(
-      Input           -> s"Request to ${request.path}",
-      Method          -> request.method.toUpperCase,
-      UserAgentString -> request.headers.get(UserAgent).getOrElse("-"),
-      Referrer        -> request.headers.get(Referer).getOrElse("-")
+    val requiredFields = Map(
+      "ipAddress"            -> hc.forwarded.map(_.value).getOrElse("-"),
+      hc.names.authorisation -> hc.authorization.map(_.value).getOrElse("-"),
+      hc.names.token         -> hc.token.map(_.value).getOrElse("-"),
+      hc.names.deviceID      -> hc.deviceID.getOrElse("-"),
+      Input                  -> s"Request to ${request.path}",
+      Method                 -> request.method.toUpperCase,
+      UserAgentString        -> request.headers.get(UserAgent).getOrElse("-"),
+      Referrer               -> request.headers.get(Referer).getOrElse("-")
     )
 
     val tags = hc.toAuditTags(transactionName, request.path)

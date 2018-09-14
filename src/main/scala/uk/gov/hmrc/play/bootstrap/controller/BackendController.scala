@@ -32,5 +32,5 @@ abstract class BackendController(cc: ControllerComponents)
 
 trait BackendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+    HeaderCarrierConverter.fromHeadersAndSessionAndRequest(request.headers, request = Some(request))
 }
