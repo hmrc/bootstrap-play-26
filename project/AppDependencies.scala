@@ -1,16 +1,15 @@
-import play.sbt.PlayImport.{filters, guice, playCore}
 import sbt._
 
 object AppDependencies {
 
-  import play.core.PlayVersion
+  private val playVersion = "2.6.15"
 
   val compile = Seq(
-    filters,
-    guice,
-    playCore,
     "ch.qos.logback"        % "logback-core"         % "1.1.7",
     "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
+    "com.typesafe.play"     %% "filters-helpers"     % playVersion,
+    "com.typesafe.play"     %% "play"                % playVersion,
+    "com.typesafe.play"     %% "play-guice"          % playVersion,
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
     "uk.gov.hmrc"           %% "auth-client"         % "2.9.0-play-26",
     "uk.gov.hmrc"           %% "crypto"              % "5.0.0",
@@ -23,13 +22,12 @@ object AppDependencies {
   )
 
   val test = Seq(
-    "com.github.tomakehurst" % "wiremock"            % "2.18.0"            % Test,
-    "com.typesafe.play"      %% "play-iteratees"     % "2.6.1"             % Test,
-    "com.typesafe.play"      %% "play-test"          % PlayVersion.current % Test,
-    "org.mockito"            % "mockito-all"         % "1.9.5"             % Test,
-    "org.pegdown"            % "pegdown"             % "1.5.0"             % Test,
-    "org.scalacheck"         %% "scalacheck"         % "1.14.0"            % Test,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"             % Test
+    "com.github.tomakehurst" % "wiremock"            % "2.18.0"    % Test,
+    "com.typesafe.play"      %% "play-test"          % playVersion % Test,
+    "org.mockito"            % "mockito-all"         % "1.9.5"     % Test,
+    "org.pegdown"            % "pegdown"             % "1.5.0"     % Test,
+    "org.scalacheck"         %% "scalacheck"         % "1.14.0"    % Test,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"     % Test
   )
 
   // Fixes a transitive dependency clash between wiremock and scalatestplus-play
