@@ -7,12 +7,12 @@ lazy val library = Project(appName, file("."))
     makePublicallyAvailableOnBintray := true
   )
   .settings(
-    scalaVersion        := "2.11.12",
+    scalaVersion := "2.11.12",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     dependencyOverrides ++= AppDependencies.overrides,
-    fork in Test        := true,
-    scalacOptions       ++= Seq("-deprecation"),
-    resolvers           := Seq(
+    fork in Test := true,
+    scalacOptions ++= Seq("-deprecation"),
+    resolvers := Seq(
       Resolver.bintrayRepo("hmrc", "releases"),
       Resolver.bintrayRepo("hmrc", "snapshots"),
       Resolver.bintrayRepo("hmrc", "release-candidates"),

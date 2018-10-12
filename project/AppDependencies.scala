@@ -5,20 +5,25 @@ object AppDependencies {
   private val playVersion = "2.6.15"
 
   val compile = Seq(
-    "ch.qos.logback"        % "logback-core"         % "1.1.7",
-    "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
-    "com.typesafe.play"     %% "filters-helpers"     % playVersion,
-    "com.typesafe.play"     %% "play"                % playVersion,
-    "com.typesafe.play"     %% "play-guice"          % playVersion,
-    "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
-    "uk.gov.hmrc"           %% "auth-client"         % "2.11.0-play-26",
-    "uk.gov.hmrc"           %% "crypto"              % "5.0.0",
-    "uk.gov.hmrc"           %% "http-verbs"          % "8.0.0",
-    "uk.gov.hmrc"           %% "http-verbs-play-26"  % "0.9.0",
-    "uk.gov.hmrc"           %% "logback-json-logger" % "4.0.0",
-    "uk.gov.hmrc"           %% "play-auditing"       % "3.11.0-play-26",
-    "uk.gov.hmrc"           %% "play-health"         % "3.7.0-play-26",
-    "uk.gov.hmrc"           %% "time"                % "3.1.0"
+    "ch.qos.logback"                 % "logback-core"            % "1.1.7",
+    "com.kenshoo"                    %% "metrics-play"           % "2.6.6_0.6.2",
+    "com.typesafe.play"              %% "filters-helpers"        % playVersion,
+    "com.typesafe.play"              %% "play"                   % playVersion,
+    "com.typesafe.play"              %% "play-guice"             % playVersion,
+    "io.dropwizard.metrics"          % "metrics-graphite"        % "3.2.5",
+    "uk.gov.hmrc"                    %% "auth-client"            % "2.11.0-play-26",
+    "uk.gov.hmrc"                    %% "crypto"                 % "5.0.0",
+    "uk.gov.hmrc"                    %% "http-verbs"             % "8.0.0",
+    "uk.gov.hmrc"                    %% "http-verbs-play-26"     % "0.9.0",
+    "uk.gov.hmrc"                    %% "logback-json-logger"    % "4.0.0",
+    "uk.gov.hmrc"                    %% "play-auditing"          % "3.11.0-play-26",
+    "uk.gov.hmrc"                    %% "play-health"            % "3.7.0-play-26",
+    "uk.gov.hmrc"                    %% "time"                   % "3.1.0",
+    "com.fasterxml.jackson.core"     % "jackson-core"            % "2.9.7" force (),
+    "com.fasterxml.jackson.core"     % "jackson-databind"        % "2.9.7" force (),
+    "com.fasterxml.jackson.core"     % "jackson-annotations"     % "2.9.7" force (),
+    "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8"   % "2.9.7" force (),
+    "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.9.7" force ()
   )
 
   val test = Seq(
