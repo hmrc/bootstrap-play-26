@@ -15,7 +15,7 @@ object AppDependencies {
     "uk.gov.hmrc"                    %% "crypto"                 % "5.0.0",
     "uk.gov.hmrc"                    %% "http-verbs"             % "8.5.0-play-26",
     "uk.gov.hmrc"                    %% "logback-json-logger"    % "4.0.0",
-    "uk.gov.hmrc"                    %% "play-auditing"          % "3.11.0-play-26",
+    "uk.gov.hmrc"                    %% "play-auditing"          % "3.12.0-play-26",
     "uk.gov.hmrc"                    %% "play-health"            % "3.7.0-play-26",
     "uk.gov.hmrc"                    %% "time"                   % "3.1.0",
     "com.fasterxml.jackson.core"     % "jackson-core"            % "2.9.7" force (),
