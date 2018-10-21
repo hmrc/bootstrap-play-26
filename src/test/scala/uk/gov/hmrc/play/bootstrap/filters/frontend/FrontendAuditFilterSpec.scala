@@ -563,11 +563,12 @@ class FrontendAuditFilterServerSpec
 trait FrontendAuditFilterInstance {
   import MockitoSugar._
 
-  private implicit val system            = ActorSystem("test")
-  private implicit val mat: Materializer = ActorMaterializer()
-  val auditConnector                     = mock[AuditConnector]
-  val controllerConfigs                  = mock[ControllerConfigs]
-  val httpAuditEvent                     = new HttpAuditEvent { override val appName = "app" }
+  private implicit val system               = ActorSystem("test")
+  private implicit val mat: Materializer    = ActorMaterializer()
+  private implicit val ec: ExecutionContext = system.dispatcher
+  val auditConnector                        = mock[AuditConnector]
+  val controllerConfigs                     = mock[ControllerConfigs]
+  val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
 
   when(controllerConfigs.controllerNeedsAuditing(anyString())).thenReturn(false)
 

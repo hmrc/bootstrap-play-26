@@ -27,7 +27,6 @@ abstract class BackendController(cc: ControllerComponents)
     extends AbstractController(cc)
     with Utf8MimeTypes
     with WithJsonBody
-    with MdcExecutionContextProvider
     with BackendHeaderCarrierProvider
 
 trait BackendHeaderCarrierProvider {
