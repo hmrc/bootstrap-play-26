@@ -16,62 +16,18 @@
 
 package uk.gov.hmrc.play.bootstrap.controller
 
-import org.slf4j.MDC
-import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-import scala.concurrent._
-
 abstract class FrontendController(mcc: MessagesControllerComponents)
     extends MessagesAbstractController(mcc)
     with Utf8MimeTypes
-    with MdcExecutionContextProvider
     with WithJsonBody
     with FrontendHeaderCarrierProvider
-    with UnauthorisedActions
 
 trait FrontendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
     HeaderCarrierConverter.fromHeadersAndSessionAndRequest(request.headers, Some(request.session), Some(request))
 }
 
-trait UnauthorisedActions { self: MessagesBaseController with FrontendHeaderCarrierProvider =>
-
-  // todo (konrad): should we deprecate one of the below as they do the same thing?
-
-  /**
-    * Use this Action with your endpoints, if they are synchronous and require
-    * the header carrier values to be logged.
-    *
-    * For .async actions the MdcLoggingExecutionContext takes care of it.
-    */
-  def ActionWithMdc: ActionBuilder[MessagesRequest, AnyContent] =
-    controllerComponents.messagesActionBuilder andThen actionWithMdc
-
-  def UnauthorizedAction: ActionBuilder[MessagesRequest, AnyContent] =
-    ActionWithMdc
-
-  private lazy val actionWithMdc: ActionFunction[MessagesRequest, MessagesRequest] =
-    new ActionFunction[MessagesRequest, MessagesRequest] {
-
-      private def storeHeaders(request: RequestHeader) {
-        hc(request).mdcData.foreach {
-          case (k, v) => MDC.put(k, v)
-        }
-        Logger.debug("Request details added to MDC")
-      }
-
-      def invokeBlock[A](request: MessagesRequest[A], block: MessagesRequest[A] => Future[Result]): Future[Result] = {
-        Logger.debug("Invoke block, setting up MDC due to Action creation")
-        storeHeaders(request)
-        val r = block(request)
-        Logger.debug("Clearing MDC")
-        MDC.clear()
-        r
-      }
-
-      protected lazy val executionContext: ExecutionContext = defaultExecutionContext
-    }
-}

@@ -35,13 +35,13 @@ import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, ResponseBodyCaptor}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 trait FrontendAuditFilter extends AuditFilter {
 
+  protected implicit def ec: ExecutionContext
   def auditConnector: AuditConnector
 
   def dataEvent(
@@ -243,7 +243,7 @@ class DefaultFrontendAuditFilter @Inject()(
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
   override val mat: Materializer
-) extends FrontendAuditFilter {
+)(implicit protected val ec: ExecutionContext) extends FrontendAuditFilter {
 
   override val maskedFormFields: Seq[String] = Seq.empty
 
