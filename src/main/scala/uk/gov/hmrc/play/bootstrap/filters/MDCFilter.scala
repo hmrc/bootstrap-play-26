@@ -33,7 +33,7 @@ class MDCFilter @Inject()(
                            @Named("appName") appName: String
                          ) extends Filter {
 
-  private val dateFormat: Option[String] = config.get[Option[String]]("logger.json.dateformat")
+  private val dateFormat: Option[String] = config.getOptional[String]("logger.json.dateformat")
 
   private val extras: Set[(String, String)] = Set(
     Some("appName"                          -> appName),
