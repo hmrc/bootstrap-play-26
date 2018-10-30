@@ -42,6 +42,25 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
 
     val config = Configuration(ConfigFactory.load(configFile))
 
+    lazy val router = {
+
+      import play.api.routing._
+      import play.api.routing.sird._
+
+      Router.from {
+        case GET(p"/") =>
+          Action {
+            Results.Ok {
+              Json.toJson {
+                Option(MDC.getCopyOfContextMap)
+                  .map(_.asScala)
+                  .getOrElse(Map.empty[String, String])
+              }
+            }
+          }
+      }
+    }
+
     "must pass MDC information between thread contexts" in {
 
       lazy val app = new GuiceApplicationBuilder()
@@ -65,26 +84,42 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
       }
     }
 
-    "must add request information to the MDC" in {
+    "must add all request information to the MDC" in {
 
-      lazy val router = {
+      lazy val app = new GuiceApplicationBuilder()
+        .configure(config)
+        .configure(
+          "logger.json.dateformat" -> "YYYY-mm-DD"
+        )
+        .router(router)
+        .build()
 
-        import play.api.routing._
-        import play.api.routing.sird._
+      running(app) {
 
-        Router.from {
-          case GET(p"/") =>
-            Action {
-              Results.Ok {
-                Json.toJson {
-                  Option(MDC.getCopyOfContextMap)
-                    .map(_.asScala)
-                    .getOrElse(Map.empty[String, String])
-                }
-              }
-            }
-        }
+        val request = FakeRequest(GET, "/")
+          .withHeaders(
+            HMRCHeaderNames.xSessionId    -> "some session id",
+            HMRCHeaderNames.xRequestId    -> "some request id",
+            HMRCHeaderNames.xForwardedFor -> "some forwarded for"
+          )
+
+        val result = route(app, request).value
+
+        status(result) mustBe OK
+
+        val mdc = contentAsJson(result).as[Map[String, String]]
+
+        mdc must contain only(
+          "appName"                     -> "test-application",
+          "logger.json.dateformat"      -> "YYYY-mm-DD",
+          HMRCHeaderNames.xSessionId    -> "some session id",
+          HMRCHeaderNames.xRequestId    -> "some request id",
+          HMRCHeaderNames.xForwardedFor -> "some forwarded for"
+        )
       }
+    }
+
+    "must not include logger.json.dateformat in MDC if it is undefined" in {
 
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
@@ -106,9 +141,8 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
 
         val mdc = contentAsJson(result).as[Map[String, String]]
 
-        mdc must contain allOf(
+        mdc must contain only(
           "appName"                     -> "test-application",
-          "logger.json.dateformat"      -> "YYYY-mm-DD",
           HMRCHeaderNames.xSessionId    -> "some session id",
           HMRCHeaderNames.xRequestId    -> "some request id",
           HMRCHeaderNames.xForwardedFor -> "some forwarded for"
