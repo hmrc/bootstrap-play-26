@@ -20,11 +20,14 @@ import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-abstract class FrontendController(mcc: MessagesControllerComponents)
-    extends MessagesAbstractController(mcc)
+trait FrontendBaseController
+  extends MessagesBaseController
     with Utf8MimeTypes
     with WithJsonBody
     with FrontendHeaderCarrierProvider
+
+abstract class FrontendController(override val controllerComponents: MessagesControllerComponents)
+    extends FrontendBaseController
 
 trait FrontendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
