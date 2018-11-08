@@ -20,14 +20,16 @@ import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-@deprecated("Use BackendController instead", "0.4.0")
-abstract class BaseController(cc: ControllerComponents) extends BackendController(cc)
-
-abstract class BackendController(cc: ControllerComponents)
-    extends AbstractController(cc)
+trait BackendBaseController
+  extends play.api.mvc.BaseController
     with Utf8MimeTypes
     with WithJsonBody
     with BackendHeaderCarrierProvider
+
+abstract class BackendController(override val controllerComponents: ControllerComponents) extends BackendBaseController
+
+@deprecated("Use BackendController instead", "0.4.0")
+abstract class BaseController(cc: ControllerComponents) extends BackendController(cc)
 
 trait BackendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
