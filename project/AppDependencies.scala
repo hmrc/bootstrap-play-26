@@ -18,7 +18,6 @@ object AppDependencies {
     "uk.gov.hmrc"                    %% "play-auditing"              % "3.12.0-play-26",
     "uk.gov.hmrc"                    %% "play-health"                % "3.7.0-play-26",
     "uk.gov.hmrc"                    %% "time"                       % "3.1.0",
-    "com.github.rishabh9"            %% "mdc-propagation-dispatcher" % "0.0.5",
     "com.fasterxml.jackson.core"     % "jackson-core"                % "2.9.7" force (),
     "com.fasterxml.jackson.core"     % "jackson-databind"            % "2.9.7" force (),
     "com.fasterxml.jackson.core"     % "jackson-annotations"         % "2.9.7" force (),
