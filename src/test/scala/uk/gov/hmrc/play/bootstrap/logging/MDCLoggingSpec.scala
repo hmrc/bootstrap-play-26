@@ -15,11 +15,12 @@
  */
 
 package uk.gov.hmrc.play.bootstrap.logging
+import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.slf4j.MDC
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Results}
@@ -28,7 +29,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with OptionValues with BeforeAndAfterEach {
 
@@ -50,6 +51,7 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
       Router.from {
         case GET(p"/") =>
           Action {
+            Logger.warn("bar")
             Results.Ok {
               Json.toJson {
                 Option(MDC.getCopyOfContextMap)
@@ -58,6 +60,34 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
               }
             }
           }
+      }
+    }
+
+    "injected dispatchers should be ready to use without calling prepare" in {
+
+      lazy val app = new GuiceApplicationBuilder()
+        .configure(config)
+        .build()
+
+      running(app) {
+
+        val dispatcher = app.injector.instanceOf[ActorSystem].dispatcher
+        val promise = Promise[Map[String, String]]()
+
+        MDC.put("foo", "bar")
+
+        dispatcher.execute(new Runnable() {
+
+          override def run(): Unit = {
+
+            val data = Option(MDC.getCopyOfContextMap)
+              .fold(Map.empty[String, String]) { _.asScala.toMap }
+
+            promise.success(data)
+          }
+        })
+
+        promise.future.futureValue must contain ("foo" -> "bar")
       }
     }
 

@@ -121,6 +121,30 @@ class MyController @Inject() (val authConnector: AuthConnector) extends BaseCont
  }
 ```
 
+## MDC Logging
+
+By default the logging MDC will be passed between threads by a custom `ExecutorService`.
+While this works in both test and production configurations it _does not work_ in `Dev`
+mode using the `AkkaHttpServer` in Play 2.6.
+
+If you would like the same functionality in `Dev` mode, you must use the older
+`NettyHttpServer`.
+
+* Enable the `PlayNettyServer` plugin in your `build.sbt`
+```scala
+  .enablePlugins(PlayNettyServer)
+```
+
+* Set the `NettyServerProvider` in the `devSettings` of your `build.sbt`
+```scala
+  PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
+```
+
+* Make sure you still use the `AkkaHttpServer` in `Prod` mode by specifying it in `application.conf`
+```hocon
+play.server.provider = play.core.server.AkkaHttpServerProvider
+```
+
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
