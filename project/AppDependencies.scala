@@ -18,7 +18,7 @@ object AppDependencies {
     "uk.gov.hmrc"                    %% "logback-json-logger"        % "4.0.0",
     "uk.gov.hmrc"                    %% "play-auditing"              % "3.13.0-play-26",
     "uk.gov.hmrc"                    %% "play-health"                % "3.8.0-play-26",
-    "uk.gov.hmrc"                    %% "time"                       % "3.1.0",
+    "uk.gov.hmrc"                    %% "time"                       % "3.2.0",
     "com.fasterxml.jackson.core"     % "jackson-core"                % "2.9.7" force (),
     "com.fasterxml.jackson.core"     % "jackson-databind"            % "2.9.7" force (),
     "com.fasterxml.jackson.core"     % "jackson-annotations"         % "2.9.7" force (),
