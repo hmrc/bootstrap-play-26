@@ -20,7 +20,7 @@ import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.slf4j.MDC
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Results}
@@ -51,6 +51,7 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
       Router.from {
         case GET(p"/") =>
           Action {
+            Logger.warn("bar")
             Results.Ok {
               Json.toJson {
                 Option(MDC.getCopyOfContextMap)
