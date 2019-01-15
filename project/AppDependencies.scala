@@ -16,7 +16,7 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "crypto"              % "5.1.0",
     "uk.gov.hmrc"           %% "http-verbs"          % "9.0.0-play-26",
     "uk.gov.hmrc"           %% "logback-json-logger" % "4.0.0",
-    "uk.gov.hmrc"           %% "play-auditing"       % "3.13.0-play-26",
+    "uk.gov.hmrc"           %% "play-auditing"       % "3.15.0-play-26",
     "uk.gov.hmrc"           %% "play-health"         % "3.8.0-play-26",
     "uk.gov.hmrc"           %% "time"                % "3.2.0",
     // force dependencies due to security flaws found in jackson-databind < 2.9.x using XRay
