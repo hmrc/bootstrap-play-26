@@ -12,13 +12,13 @@ object AppDependencies {
     "com.typesafe.play"     %% "play-guice"          % playVersion,
     "com.typesafe.play"     %% "play-ahc-ws"         % playVersion,
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
-    "uk.gov.hmrc"           %% "auth-client"         % "2.11.0-play-26",
-    "uk.gov.hmrc"           %% "crypto"              % "5.1.0",
-    "uk.gov.hmrc"           %% "http-verbs"          % "9.0.0-play-26",
-    "uk.gov.hmrc"           %% "logback-json-logger" % "4.0.0",
-    "uk.gov.hmrc"           %% "play-auditing"       % "3.15.0-play-26",
-    "uk.gov.hmrc"           %% "play-health"         % "3.10.0-play-26",
-    "uk.gov.hmrc"           %% "time"                % "3.2.0",
+    "uk.gov.hmrc"           %% "auth-client"         % "2.20.0-play-26",
+    "uk.gov.hmrc"           %% "crypto"              % "5.3.0",
+    "uk.gov.hmrc"           %% "http-verbs"          % "9.3.0-play-26",
+    "uk.gov.hmrc"           %% "logback-json-logger" % "4.4.0",
+    "uk.gov.hmrc"           %% "play-auditing"       % "4.0.0-play-26",
+    "uk.gov.hmrc"           %% "play-health"         % "3.12.0-play-26",
+    "uk.gov.hmrc"           %% "time"                % "3.3.0",
     // force dependencies due to security flaws found in jackson-databind < 2.9.x using XRay
     "com.fasterxml.jackson.core"     % "jackson-core"            % "2.9.7",
     "com.fasterxml.jackson.core"     % "jackson-databind"        % "2.9.7",
@@ -28,7 +28,7 @@ object AppDependencies {
   )
 
   val test = Seq(
-    "com.github.tomakehurst" % "wiremock"            % "2.18.0",
+    "com.github.tomakehurst" % "wiremock-jre8"       % "2.21.0",
     "com.typesafe.play"      %% "play-test"          % playVersion,
     "org.mockito"            % "mockito-all"         % "1.9.5",
     "org.pegdown"            % "pegdown"             % "1.5.0",
@@ -36,24 +36,4 @@ object AppDependencies {
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"
   ).map(_ % Test)
 
-  // Fixes a transitive dependency clash between wiremock and scalatestplus-play
-  val overrides: Set[ModuleID] = {
-    val jettyFromWiremockVersion = "9.2.24.v20180105"
-    Set(
-      "org.eclipse.jetty"           % "jetty-client"       % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-continuation" % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-http"         % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-io"           % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-security"     % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-server"       % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-servlet"      % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-servlets"     % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-util"         % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-webapp"       % jettyFromWiremockVersion,
-      "org.eclipse.jetty"           % "jetty-xml"          % jettyFromWiremockVersion,
-      "org.eclipse.jetty.websocket" % "websocket-api"      % jettyFromWiremockVersion,
-      "org.eclipse.jetty.websocket" % "websocket-client"   % jettyFromWiremockVersion,
-      "org.eclipse.jetty.websocket" % "websocket-common"   % jettyFromWiremockVersion
-    )
-  }
 }
