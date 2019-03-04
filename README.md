@@ -145,7 +145,17 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
-### License
+## Migrations
+
+### Version 0.37.0
+
+#### Play auditing
+play-auditing was bump in major version - changes in [`HttpAuditing#auditFromPlayFrontend`](https://github.com/hmrc/play-auditing/blob/be52847234b113eab713faaeb6b40d00bf4a3bcd/src/main/scala/uk/gov/hmrc/play/audit/http/HttpAuditing.scala#L52) signature  were made.
+Now method require implicit execution context in scope.
+
+Implicit execution context should be available in most usage places, but this change break API and may require developer attention.  
+
+## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
     
