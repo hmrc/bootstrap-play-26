@@ -8,8 +8,8 @@ lazy val library = Project(appName, file("."))
   )
   .settings(
     scalaVersion := "2.11.12",
+    crossScalaVersions := List("2.11.12", "2.12.8"),
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    dependencyOverrides ++= AppDependencies.overrides,
     fork in Test := true,
     scalacOptions ++= Seq("-deprecation"),
     resolvers := Seq(
