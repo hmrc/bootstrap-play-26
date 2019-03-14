@@ -27,14 +27,14 @@ import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
-import uk.gov.hmrc.play.bootstrap.controller.FrontendHeaderCarrierProvider
+import uk.gov.hmrc.play.bootstrap.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
 class JsonErrorHandler @Inject()(auditConnector: AuditConnector, httpAuditEvent: HttpAuditEvent)
     extends HttpErrorHandler
-    with FrontendHeaderCarrierProvider {
+    with BackendHeaderCarrierProvider {
 
   import httpAuditEvent.dataEvent
 
