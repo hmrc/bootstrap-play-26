@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap.controller
 
+import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
+
+import scala.concurrent.ExecutionContext
 
 trait FrontendBaseController
   extends MessagesBaseController
@@ -34,3 +37,7 @@ trait FrontendHeaderCarrierProvider {
     HeaderCarrierConverter.fromHeadersAndSessionAndRequest(request.headers, Some(request.session), Some(request))
 }
 
+trait FrontendControllerImplicits extends I18nSupport {
+  self: BaseControllerHelpers =>
+  implicit def ec: ExecutionContext = controllerComponents.executionContext
+}
