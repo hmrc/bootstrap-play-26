@@ -145,6 +145,20 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
+## Applicaiton name
+
+Application name is also bind to annotation 
+
+```scala
+case class Example @Inject()(@AppName appName: String)
+```
+
+or by name for backward compatibility
+
+```scala
+case class Example @Inject()(@Named("appName") appName: Stirng)
+```
+
 ## Migrations
 
 ### Version 0.37.0

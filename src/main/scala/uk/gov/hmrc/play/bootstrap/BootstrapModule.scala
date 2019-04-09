@@ -31,6 +31,7 @@ abstract class BootstrapModule extends Module {
     bind[ControllerConfigs].toInstance(ControllerConfigs.fromConfig(configuration)),
     bind[LoggingFilter].to[DefaultLoggingFilter],
     bind[String].qualifiedWith("appName").toInstance(AppName.fromConfiguration(configuration)),
+    bind[String].qualifiedWith[binding.AppName].toInstance(AppName.fromConfiguration(configuration)),
     bind[AuditingConfig].toProvider[AuditingConfigProvider],
     bind[HttpAuditing].to[DefaultHttpAuditing],
     bind[Mode].toInstance(environment.mode)
