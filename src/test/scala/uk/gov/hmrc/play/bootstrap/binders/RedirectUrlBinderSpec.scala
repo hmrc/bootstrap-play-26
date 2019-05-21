@@ -29,13 +29,13 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
 
     val policy = UnsafePermitAll
 
-    new RedirectUrl("http://www.google.com").get(policy) shouldBe SafeRedirectUrl("http://www.google.com")
+    new RedirectUrl("http://www.google.com").get(policy)       shouldBe SafeRedirectUrl("http://www.google.com")
     new RedirectUrl("http://www.google.com").getEither(policy) shouldBe Right(SafeRedirectUrl("http://www.google.com"))
-    new RedirectUrl("http://www.google.com").unsafeValue shouldBe "http://www.google.com"
+    new RedirectUrl("http://www.google.com").unsafeValue       shouldBe "http://www.google.com"
 
-    new RedirectUrl("/test").get(policy) shouldBe SafeRedirectUrl("/test")
+    new RedirectUrl("/test").get(policy)       shouldBe SafeRedirectUrl("/test")
     new RedirectUrl("/test").getEither(policy) shouldBe Right(SafeRedirectUrl("/test"))
-    new RedirectUrl("/test").unsafeValue shouldBe "/test"
+    new RedirectUrl("/test").unsafeValue       shouldBe "/test"
 
   }
 
@@ -44,7 +44,8 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
     val policy = OnlyRelative
 
     new RedirectUrl("/test").getEither(policy) shouldBe Right(SafeRedirectUrl("/test"))
-    new RedirectUrl("http://www.google.com").getEither(policy) shouldBe Left("Provided URL [http://www.google.com] doesn't comply with redirect policy")
+    new RedirectUrl("http://www.google.com").getEither(policy) shouldBe Left(
+      "Provided URL [http://www.google.com] doesn't comply with redirect policy")
 
   }
 
@@ -52,30 +53,37 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
 
     val policy = AbsoluteWithHostnameFromWhitelist("www.test1.com")
 
-    new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(SafeRedirectUrl("http://www.test1.com/foo/bar"))
+    new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(
+      SafeRedirectUrl("http://www.test1.com/foo/bar"))
     new RedirectUrl("http://www.test1.com").getEither(policy) shouldBe Right(SafeRedirectUrl("http://www.test1.com"))
-    new RedirectUrl("http://www.test2.com").getEither(policy) shouldBe Left("Provided URL [http://www.test2.com] doesn't comply with redirect policy")
+    new RedirectUrl("http://www.test2.com").getEither(policy) shouldBe Left(
+      "Provided URL [http://www.test2.com] doesn't comply with redirect policy")
     new RedirectUrl("/test").getEither(policy) shouldBe Left("Provided URL [/test] doesn't comply with redirect policy")
   }
 
   "It should be possible to combine multiple policies" in {
     val policy = OnlyRelative | AbsoluteWithHostnameFromWhitelist(Set("www.test1.com"))
 
-    new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(SafeRedirectUrl("http://www.test1.com/foo/bar"))
+    new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(
+      SafeRedirectUrl("http://www.test1.com/foo/bar"))
     new RedirectUrl("http://www.test1.com").getEither(policy) shouldBe Right(SafeRedirectUrl("http://www.test1.com"))
-    new RedirectUrl("http://www.test2.com").getEither(policy) shouldBe Left("Provided URL [http://www.test2.com] doesn't comply with redirect policy")
+    new RedirectUrl("http://www.test2.com").getEither(policy) shouldBe Left(
+      "Provided URL [http://www.test2.com] doesn't comply with redirect policy")
     new RedirectUrl("/test").getEither(policy) shouldBe Right(SafeRedirectUrl("/test"))
   }
 
   "It should be possible to use policies fetched from futures" in {
 
-    def receiveWhitelist() : Future[Set[String]] = Future.successful(Set("www.test1.com"))
+    def receiveWhitelist(): Future[Set[String]] = Future.successful(Set("www.test1.com"))
 
     val policy = OnlyRelative | AbsoluteWithHostnameFromWhitelist(receiveWhitelist())
 
-    new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy).futureValue shouldBe Right(SafeRedirectUrl("http://www.test1.com/foo/bar"))
-    new RedirectUrl("http://www.test1.com").getEither(policy).futureValue shouldBe Right(SafeRedirectUrl("http://www.test1.com"))
-    new RedirectUrl("http://www.test2.com").getEither(policy).futureValue shouldBe Left("Provided URL [http://www.test2.com] doesn't comply with redirect policy")
+    new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy).futureValue shouldBe Right(
+      SafeRedirectUrl("http://www.test1.com/foo/bar"))
+    new RedirectUrl("http://www.test1.com").getEither(policy).futureValue shouldBe Right(
+      SafeRedirectUrl("http://www.test1.com"))
+    new RedirectUrl("http://www.test2.com").getEither(policy).futureValue shouldBe Left(
+      "Provided URL [http://www.test2.com] doesn't comply with redirect policy")
     new RedirectUrl("/test").getEither(policy).futureValue shouldBe Right(SafeRedirectUrl("/test"))
   }
 
