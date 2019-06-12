@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.binders
 
 import java.net.{URL, URLEncoder}
 
+import play.api.{Environment, Mode}
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrlPolicy.Id
 
@@ -52,6 +53,10 @@ case object UnsafePermitAll extends RedirectUrlPolicy[Id] {
 
 case object OnlyRelative extends RedirectUrlPolicy[Id] {
   override def applies(url: String): Boolean = RedirectUrl.isRelativeUrl(url)
+}
+
+case class PermitAllOnDev(environment: Environment) extends RedirectUrlPolicy[Id] {
+  override def applies(url: String): Id[Boolean] = environment.mode == Mode.Dev
 }
 
 object AbsoluteWithHostnameFromWhitelist {
