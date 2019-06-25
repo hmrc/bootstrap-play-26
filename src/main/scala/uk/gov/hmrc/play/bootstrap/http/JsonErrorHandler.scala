@@ -61,7 +61,7 @@ class JsonErrorHandler @Inject()(auditConnector: AuditConnector, httpAuditEvent:
               detail          = Map.empty
             )
           )
-          BadRequest(toJson(ErrorResponse(BAD_REQUEST, "bad request")))
+          BadRequest(toJson(ErrorResponse(BAD_REQUEST, message)))
         case _ =>
           auditConnector.sendEvent(
             dataEvent(
