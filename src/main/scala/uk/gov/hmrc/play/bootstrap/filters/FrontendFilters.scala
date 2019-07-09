@@ -44,8 +44,8 @@ class FrontendFilters @Inject()(
 
   val frontendFilters = Seq(
     metricsFilter,
-    headersFilter,
     sessionCookieCryptoFilter,
+    headersFilter,
     deviceIdFilter,
     loggingFilter,
     frontendAuditFilter,
