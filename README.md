@@ -69,7 +69,7 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModu
 
 # Provides an implementation and configures all filters required by a Platform frontend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.MicroserviceModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters”
+play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters"
 
 ```
 
