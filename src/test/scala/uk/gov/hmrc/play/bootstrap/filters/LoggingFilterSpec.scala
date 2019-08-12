@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
-import java.util.{Date, Locale, TimeZone}
+import java.util.{Date, TimeZone}
 
 import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
-import org.joda.time.{DateTime, DateTimeUtils}
+import org.joda.time.DateTimeUtils
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
@@ -100,8 +98,8 @@ class LoggingFilterSpec
 
       val result = await(loggingFilter(testReqToResp)(requestWithHandlerInAttrs))
 
-      logger.loggedMessage.get should fullyMatch regex
-        s"""[a-f0-9]{3,4} \\Q$requestStartString\\E GET \\/ ${result.header.status} ${expectedRequestDurationInMillis}ms"""
+      logger.loggedMessage.get shouldEqual
+        s"""GET / ${result.header.status} ${expectedRequestDurationInMillis}ms"""
     }
 
     "log elapsed time and exception and return the failed future unchanged" in new Setup {
@@ -122,8 +120,8 @@ class LoggingFilterSpec
 
       intercept[Exception](await(loggingFilter(_ => Future.failed(ex))(requestWithHandlerInAttrs))) shouldBe ex
 
-      logger.loggedMessage.get should fullyMatch regex
-        s"""[a-f0-9]{3,4} \\Q$requestStartString\\E GET \\/ $ex ${expectedRequestDurationInMillis}ms"""
+      logger.loggedMessage.get shouldEqual
+        s"""GET / $ex ${expectedRequestDurationInMillis}ms"""
     }
   }
 
