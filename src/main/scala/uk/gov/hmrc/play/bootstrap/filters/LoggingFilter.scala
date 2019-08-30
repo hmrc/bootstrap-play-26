@@ -28,14 +28,15 @@ import play.api.{Logger, LoggerLike}
 import uk.gov.hmrc.http.logging.LoggingDetails
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 trait LoggingFilter extends Filter {
   private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
+
+  implicit val ec: ExecutionContext
 
   def controllerNeedsLogging(controllerName: String): Boolean
 
@@ -81,7 +82,7 @@ trait LoggingFilter extends Filter {
   }
 }
 
-class DefaultLoggingFilter @Inject()(config: ControllerConfigs)(implicit override val mat: Materializer)
+class DefaultLoggingFilter @Inject()(config: ControllerConfigs)(implicit override val mat: Materializer, val ec: ExecutionContext)
     extends LoggingFilter {
 
   override def controllerNeedsLogging(controllerName: String): Boolean =

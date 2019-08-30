@@ -38,6 +38,8 @@ import scala.util.Random
 
 class JsonErrorHandlerSpec extends WordSpec with ScalaFutures with MockitoSugar with LoneElement with Eventually {
 
+  import ExecutionContext.Implicits.global
+
   "onServerError" should {
 
     "convert a NotFoundException to NotFound response and audit the error" in new Setup {

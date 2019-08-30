@@ -28,6 +28,8 @@ import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.http.utils._
 
+import scala.concurrent.ExecutionContext
+
 class DefaultHttpClientSpec
     extends WordSpec
     with Matchers
@@ -37,6 +39,8 @@ class DefaultHttpClientSpec
     with GuiceOneAppPerTest {
 
   private val appName = "myApp"
+
+  import ExecutionContext.Implicits.global
 
   override def newAppForTest(testData: TestData): Application =
     new GuiceApplicationBuilder()
@@ -52,7 +56,6 @@ class DefaultHttpClientSpec
 
   "A GET" should {
 
-    import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
     implicit val hc    = HeaderCarrier()
     implicit val reads = BankHolidays.reads
 
@@ -146,7 +149,6 @@ class DefaultHttpClientSpec
 
   "A POST" should {
 
-    import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
     implicit val hc  = HeaderCarrier()
     implicit val uw  = User.writes
     implicit val uir = UserIdentifier.reads
