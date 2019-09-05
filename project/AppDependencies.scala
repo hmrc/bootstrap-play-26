@@ -14,7 +14,7 @@ object AppDependencies {
     "io.dropwizard.metrics" % "metrics-graphite"     % "3.2.5",
     "uk.gov.hmrc"           %% "auth-client"         % "2.27.0-play-26",
     "uk.gov.hmrc"           %% "crypto"              % "5.3.0",
-    "uk.gov.hmrc"           %% "http-verbs"          % "9.8.0-play-26",
+    "uk.gov.hmrc"           %% "http-verbs"          % "10.0.0-play-26",
     "uk.gov.hmrc"           %% "logback-json-logger" % "4.4.0",
     "uk.gov.hmrc"           %% "play-auditing"       % "4.0.0-play-26",
     "uk.gov.hmrc"           %% "play-health"         % "3.14.0-play-26",
