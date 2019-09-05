@@ -33,7 +33,7 @@ trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with
 class DefaultHttpClient @Inject()(
   config: Configuration,
   val httpAuditing: HttpAuditing,
-  val wsClient: WSClient,
+  override val wsClient: WSClient,
   override protected val actorSystem: ActorSystem)
     extends HttpClient
     with WSHttp {

@@ -32,8 +32,9 @@ import play.api.routing.HandlerDef
 import play.api.routing.Router.Attrs
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import play.api.{LoggerLike, MarkerContext}
+import uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorService
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class LoggingFilterSpec
     extends WordSpecLike
@@ -145,7 +146,6 @@ class LoggingFilterSpec
     val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
 
     val requestWithHandlerInAttrs = FakeRequest().addAttr(Attrs.HandlerDef, handlerDef)
-
   }
 
   class TestLoggingFilter(
@@ -155,10 +155,12 @@ class LoggingFilterSpec
       extends LoggingFilter {
 
     override implicit val mat: Materializer = null
+    override implicit val ec                = ExecutionContext.fromExecutorService(
+                                                new MDCPropagatingExecutorService(
+                                                  ExecutionContext.fromExecutorService(null)))
     override def logger: LoggerLike         = loggerIn
     override val now: () => Long            = currentTime
     override def controllerNeedsLogging(controllerName: String): Boolean =
       controllerNeedsLogging
   }
-
 }
