@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import org.mockito.Matchers.{any, eq => is}
 import org.mockito.Mockito._
 import org.scalatest.Matchers._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{LoneElement, WordSpec}
-import play.api.Configuration
+import play.api.{Configuration, Logger, LoggerLike}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -190,6 +193,54 @@ class JsonErrorHandlerSpec extends WordSpec with ScalaFutures with MockitoSugar 
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
+
+    "log a warning for upstream code in the warning list" when {
+      class WarningSetup(upstreamWarnStatuses: Seq[Int]) extends Setup {
+        override val configuration: Configuration = Configuration(
+          "appName" -> "myApp",
+          "bootstrap.errorHandler.warnOnly.statusCodes" -> upstreamWarnStatuses
+        )
+      }
+
+      def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit) {
+        import ch.qos.logback.classic.{Logger => LogbackLogger}
+        import scala.collection.JavaConverters._
+
+        val logger = loggerLike.logger.asInstanceOf[LogbackLogger]
+        val appender = new ListAppender[ILoggingEvent]()
+        appender.setContext(logger.getLoggerContext)
+        appender.start()
+        logger.addAppender(appender)
+        logger.setLevel(Level.ALL)
+        logger.setAdditive(true)
+        body(appender.list.asScala.toList)
+      }
+
+      "an UpstreamErrorResponse exception occurs" in new WarningSetup(Seq(500)) {
+        withCaptureOfLoggingFrom(Logger) { logEvents =>
+          jsonErrorHandler.onServerError(requestHeader, Upstream5xxResponse("any application exception", 500, 502)).futureValue
+
+          eventually {
+            val event = logEvents.loneElement
+            event.getLevel   shouldBe Level.WARN
+            event.getMessage shouldBe s"any application exception"
+          }
+        }
+      }
+
+      "a HttpException occurs" in new WarningSetup(Seq(400)) {
+        withCaptureOfLoggingFrom(Logger) { logEvents =>
+          jsonErrorHandler.onServerError(requestHeader, new BadRequestException("any application exception")).futureValue
+
+          eventually {
+            val event = logEvents.loneElement
+            event.getLevel   shouldBe Level.WARN
+            event.getMessage shouldBe s"any application exception"
+          }
+        }
+      }
+    }
+
   }
 
   "onClientError" should {
@@ -267,6 +318,6 @@ class JsonErrorHandlerSpec extends WordSpec with ScalaFutures with MockitoSugar 
     val httpAuditEvent = mock[HttpAuditEvent]
 
     val configuration    = Configuration("appName" -> "myApp")
-    val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent)
+    lazy val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent, configuration)
   }
 }
