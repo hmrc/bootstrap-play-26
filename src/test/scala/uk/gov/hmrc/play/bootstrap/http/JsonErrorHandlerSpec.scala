@@ -198,7 +198,7 @@ class JsonErrorHandlerSpec extends WordSpec with ScalaFutures with MockitoSugar 
       class WarningSetup(upstreamWarnStatuses: Seq[Int]) extends Setup {
         override val configuration: Configuration = Configuration(
           "appName" -> "myApp",
-          "upstreamWarnStatuses" -> upstreamWarnStatuses
+          "bootstrap.errorHandler.warnOnly.statusCodes" -> upstreamWarnStatuses
         )
       }
 

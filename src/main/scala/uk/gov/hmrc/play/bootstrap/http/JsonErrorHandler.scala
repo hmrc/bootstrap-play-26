@@ -48,12 +48,12 @@ class JsonErrorHandler @Inject()(
     * a list of integers representing response codes that should log at a
     * warning level rather an error level.
     *
-    * e.g. upstreamWarnStatuses=[400,404,502]
+    * e.g. bootstrap.errorHandler.warnOnly.statusCodes=[400,404,502]
     *
     * This is used to reduce the number of noise the number of duplicated alerts
     * for a microservice.
     */
-  protected val upstreamWarnStatuses: Seq[Int] = configuration.getOptional[Seq[Int]]("upstreamWarnStatuses").getOrElse(Nil)
+  protected val upstreamWarnStatuses: Seq[Int] = configuration.getOptional[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes").getOrElse(Nil)
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     Future.successful {
