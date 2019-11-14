@@ -2,9 +2,9 @@ import sbt._
 
 object AppDependencies {
 
-  private val playVersion = "2.6.20"
+  private val playVersion = "2.6.24"
 
-  val compile = Seq(
+  val compile: Seq[ModuleID] = Seq(
     "ch.qos.logback"        % "logback-core"         % "1.1.7",
     "com.kenshoo"           %% "metrics-play"        % "2.6.6_0.6.2",
     "com.typesafe.play"     %% "filters-helpers"     % playVersion,
@@ -27,7 +27,7 @@ object AppDependencies {
     "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.9.7"
   )
 
-  val test = Seq(
+  val test: Seq[ModuleID] = Seq(
     "com.github.tomakehurst" % "wiremock-jre8"       % "2.21.0",
     "com.typesafe.play"      %% "play-test"          % playVersion,
     "org.mockito"            % "mockito-all"         % "1.9.5",
