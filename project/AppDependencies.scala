@@ -23,6 +23,7 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "play-auditing"       % "4.2.0-play-26",
     "uk.gov.hmrc"           %% "play-health"         % "3.14.0-play-26",
     "uk.gov.hmrc"           %% "time"                % "3.6.0",
+    "uk.gov.hmrc"           %% "cookie-banner-play-26" % "0.6.0",
     // force dependencies due to security flaws found in jackson-databind < 2.9.x using XRay
     "com.fasterxml.jackson.core"     % "jackson-core"            % "2.9.7",
     "com.fasterxml.jackson.core"     % "jackson-databind"        % "2.9.7",
