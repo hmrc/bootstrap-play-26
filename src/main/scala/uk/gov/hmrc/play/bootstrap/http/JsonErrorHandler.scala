@@ -111,7 +111,7 @@ class JsonErrorHandler @Inject()(
         logException(e, e.responseCode)
         ErrorResponse(e.responseCode, e.getMessage)
       case e: Exception with UpstreamErrorResponse =>
-        logException(e, e.upstreamResponseCode)
+        logException(e, e.statusCode)
         ErrorResponse(e.reportAs, e.getMessage)
       case e: Throwable =>
         Logger.error(message, e)
