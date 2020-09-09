@@ -155,6 +155,12 @@ Now method require implicit execution context in scope.
 
 Implicit execution context should be available in most usage places, but this change break API and may require developer attention.  
 
+### Version 1.15.0
+
+#### Hmrc time library
+As of version 1.15.0, `bootstrap-play-26` stops pulling in [hmrc/time](https://github.com/hmrc/time) library transitively anymore. 
+If you require `hmrc/time`, you will have to add an explicit dependency yourself.
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
