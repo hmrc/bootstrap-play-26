@@ -159,10 +159,7 @@ Implicit execution context should be available in most usage places, but this ch
 
 #### Hmrc time library
 As of version 1.15.0, `bootstrap-play-26` stops pulling in [hmrc/time](https://github.com/hmrc/time) library transitively anymore. 
-
-If your code depends on `DateConverter` and `DateTimeUtils` utilities provided by `hmrc/time` then we recommend start using `java.time` and stop relying on `hmrc/time` library
-
-Only add `hmrc/time` as your project compile dependency if your code depends on `workingdays` feature provided by the `hmrc/time` library.
+If you require `hmrc/time`, you will have to add an explicit dependency yourself.
 
 ## License
 
