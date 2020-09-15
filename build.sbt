@@ -2,6 +2,7 @@ val appName = "bootstrap-play-26"
 
 lazy val library = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
+  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 1,
     makePublicallyAvailableOnBintray := true
@@ -11,14 +12,7 @@ lazy val library = Project(appName, file("."))
     crossScalaVersions := List("2.11.12", "2.12.8"),
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     fork in Test := true,
-    scalacOptions ++= Seq("-deprecation"),
-    resolvers := Seq(
-      Resolver.bintrayRepo("hmrc", "releases"),
-      Resolver.bintrayRepo("hmrc", "snapshots"),
-      Resolver.bintrayRepo("hmrc", "release-candidates"),
-      Resolver.typesafeRepo("releases"),
-      Resolver.jcenterRepo
-    )
+    scalacOptions ++= Seq("-deprecation")
   )
   .settings(
     publishArtifact in Test := true,
