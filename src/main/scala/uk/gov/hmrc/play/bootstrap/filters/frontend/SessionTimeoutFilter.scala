@@ -142,7 +142,7 @@ class SessionTimeoutFilter @Inject()(
 
   private def preservedSessionData(session: Session): Seq[(String, String)] =
     for {
-      key   <- (SessionTimeoutFilter.whitelistedSessionKeys ++ config.additionalSessionKeys).toSeq
+      key   <- (SessionTimeoutFilter.allowlistedSessionKeys ++ config.additionalSessionKeys).toSeq
       value <- session.get(key)
     } yield key -> value
 
@@ -150,7 +150,7 @@ class SessionTimeoutFilter @Inject()(
 
 object SessionTimeoutFilter {
 
-  val whitelistedSessionKeys: Set[String] = Set(
+  private[frontend] val allowlistedSessionKeys: Set[String] = Set(
     lastRequestTimestamp, // the timestamp that this filter manages
     redirect, // a redirect used by some authentication provider journeys
     loginOrigin, // the name of a service that initiated a login

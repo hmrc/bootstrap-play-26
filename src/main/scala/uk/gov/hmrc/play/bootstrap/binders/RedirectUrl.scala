@@ -59,7 +59,19 @@ case class PermitAllOnDev(environment: Environment) extends RedirectUrlPolicy[Id
   override def applies(url: String): Id[Boolean] = environment.mode == Mode.Dev
 }
 
+@deprecated("Use uk.gov.hmrc.play.bootstrap.binders.AbsoluteWithHostnameFromAllowlist instead", "2.0.0")
 object AbsoluteWithHostnameFromWhitelist {
+  def apply(allowedHosts: String*): RedirectUrlPolicy[Id] =
+    AbsoluteWithHostnameFromAllowlist.apply(allowedHosts.toSet)
+
+  def apply(allowedHosts: Set[String]): RedirectUrlPolicy[Id] =
+    AbsoluteWithHostnameFromAllowlist.apply(allowedHosts)
+
+  def apply(allowedHostsFn: => Future[Set[String]])(implicit ec: ExecutionContext): RedirectUrlPolicy[Future] =
+    AbsoluteWithHostnameFromAllowlist.apply(allowedHostsFn)
+}
+
+object AbsoluteWithHostnameFromAllowlist {
 
   def apply(allowedHosts: String*) = new RedirectUrlPolicy[Id] {
     override def applies(url: String): Id[Boolean] = Try(new URL(url)) match {

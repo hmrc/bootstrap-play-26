@@ -50,9 +50,9 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
 
   }
 
-  "Should allow to match absolute url's with hostnames from specified whitelist" in {
+  "Should allow to match absolute url's with hostnames from specified allowlist" in {
 
-    val policy = AbsoluteWithHostnameFromWhitelist("www.test1.com")
+    val policy = AbsoluteWithHostnameFromAllowlist("www.test1.com")
 
     new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(
       SafeRedirectUrl("http://www.test1.com/foo/bar"))
@@ -78,7 +78,7 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
   }
 
   "It should be possible to combine multiple policies" in {
-    val policy = OnlyRelative | AbsoluteWithHostnameFromWhitelist(Set("www.test1.com"))
+    val policy = OnlyRelative | AbsoluteWithHostnameFromAllowlist(Set("www.test1.com"))
 
     new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(
       SafeRedirectUrl("http://www.test1.com/foo/bar"))
@@ -90,9 +90,9 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
 
   "It should be possible to use policies fetched from futures" in {
 
-    def receiveWhitelist(): Future[Set[String]] = Future.successful(Set("www.test1.com"))
+    def receiveAllowlist(): Future[Set[String]] = Future.successful(Set("www.test1.com"))
 
-    val policy = OnlyRelative | AbsoluteWithHostnameFromWhitelist(receiveWhitelist())
+    val policy = OnlyRelative | AbsoluteWithHostnameFromAllowlist(receiveAllowlist())
 
     new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy).futureValue shouldBe Right(
       SafeRedirectUrl("http://www.test1.com/foo/bar"))

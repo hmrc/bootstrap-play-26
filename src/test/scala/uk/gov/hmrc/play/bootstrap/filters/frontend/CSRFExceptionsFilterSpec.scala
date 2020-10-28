@@ -44,7 +44,7 @@ class CSRFExceptionsFilterSpec
 
   "CSRF exceptions filter" should {
 
-    "do nothing if POST request and not in whitelist" in {
+    "do nothing if POST request and not in allowlist" in {
       val rh     = FakeRequest(POST, "/something", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
       when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(None)
