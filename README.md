@@ -148,7 +148,19 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 ## Migrations
 
 ### Version 2.0.0
+
+#### http-verbs
+
 Http-verbs has been bumped to major version 12.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
+
+#### configuration
+
+The following configuration has been renamed, the previous keys are invalid and will need to be updated.
+
+| Invalid config key       | Should now be                      |
+| --- | --- |
+| httpHeadersWhitelist     | bootstrap.http.headersAllowlist    |
+| csrfexceptions.whitelist | bootstrap.csrfexceptions.allowlist |
 
 ### Version 0.37.0
 

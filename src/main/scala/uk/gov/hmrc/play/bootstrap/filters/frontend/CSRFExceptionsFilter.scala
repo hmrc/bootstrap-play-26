@@ -36,7 +36,7 @@ class CSRFExceptionsFilter @Inject()(
     allowlist
 
   lazy val allowlist: Set[String] = configuration
-    .getOptional[Seq[String]]("csrfexceptions.whitelist")
+    .getOptional[Seq[String]]("bootstrap.csrfexceptions.allowlist")
     .getOrElse(Seq.empty)
     .toSet
 
