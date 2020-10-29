@@ -31,8 +31,12 @@ class CSRFExceptionsFilter @Inject()(
   override val mat: Materializer
 ) extends Filter {
 
-  lazy val whitelist: Set[String] = configuration
-    .getOptional[Seq[String]]("csrfexceptions.whitelist")
+  @deprecated("Use allowlist instead", "2.0.0")
+  def whitelist: Set[String] =
+    allowlist
+
+  lazy val allowlist: Set[String] = configuration
+    .getOptional[Seq[String]]("bootstrap.csrfexceptions.allowlist")
     .getOrElse(Seq.empty)
     .toSet
 
@@ -41,9 +45,9 @@ class CSRFExceptionsFilter @Inject()(
 
   private[filters] def filteredHeaders(
     rh: RequestHeader,
-    now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)) =
-    if (rh.method == POST && whitelist.contains(rh.path))
+    now: () => DateTime = () => DateTime.now.withZone(DateTimeZone.UTC)
+  ) =
+    if (rh.method == POST && allowlist.contains(rh.path))
       rh.withHeaders(rh.headers.add("Csrf-Token" -> "nocheck"))
     else rh
-
 }

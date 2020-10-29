@@ -85,7 +85,7 @@ class SessionTimeoutFilter @Inject()(
 
   def clock(): DateTime = DateTime.now(DateTimeZone.UTC)
 
-  val authRelatedKeys = Seq(authToken, token, userId)
+  val authRelatedKeys = Seq(authToken)
 
   private def wipeFromSession(session: Session, keys: Seq[String]): Session = keys.foldLeft(session)((s, k) => s - k)
 
@@ -142,7 +142,7 @@ class SessionTimeoutFilter @Inject()(
 
   private def preservedSessionData(session: Session): Seq[(String, String)] =
     for {
-      key   <- (SessionTimeoutFilter.whitelistedSessionKeys ++ config.additionalSessionKeys).toSeq
+      key   <- (SessionTimeoutFilter.allowlistedSessionKeys ++ config.additionalSessionKeys).toSeq
       value <- session.get(key)
     } yield key -> value
 
@@ -150,12 +150,11 @@ class SessionTimeoutFilter @Inject()(
 
 object SessionTimeoutFilter {
 
-  val whitelistedSessionKeys: Set[String] = Set(
+  private[frontend] val allowlistedSessionKeys: Set[String] = Set(
     lastRequestTimestamp, // the timestamp that this filter manages
     redirect, // a redirect used by some authentication provider journeys
     loginOrigin, // the name of a service that initiated a login
     "Csrf-Token", // the Play default name for a header that contains the CsrfToken value (here only in case it is being misused in tests)
-    "csrfToken", // the Play default name for the CsrfToken value within the Play Session)
-    authProvider // a deprecated value that indicates what authentication provider was used for the session - may be used to handle default redirects on failed logins
+    "csrfToken" // the Play default name for the CsrfToken value within the Play Session)
   )
 }

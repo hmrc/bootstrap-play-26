@@ -44,10 +44,10 @@ class CSRFExceptionsFilterSpec
 
   "CSRF exceptions filter" should {
 
-    "do nothing if POST request and not in whitelist" in {
+    "do nothing if POST request and not in allowlist" in {
       val rh     = FakeRequest(POST, "/something", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
-      when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(None)
+      when(config.getOptional[Seq[String]]("bootstrap.csrfexceptions.allowlist")).thenReturn(None)
 
       val filter = new CSRFExceptionsFilter(config, mat)
 
@@ -57,7 +57,7 @@ class CSRFExceptionsFilterSpec
     "do nothing for GET requests" in {
       val rh     = FakeRequest(GET, "/ida/login", FakeHeaders(), AnyContentAsEmpty).withHeaders(csrfTokenKey -> "token")
       val config = mock[Configuration]
-      when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
+      when(config.getOptional[Seq[String]]("bootstrap.csrfexceptions.allowlist")).thenReturn(Some(Seq("/ida/login")))
       val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("token")
@@ -66,7 +66,7 @@ class CSRFExceptionsFilterSpec
     "add Csrf-Token header with value nocheck to bypass validation for white-listed POST request" in {
       val rh     = FakeRequest(POST, "/ida/login", FakeHeaders(), AnyContentAsEmpty)
       val config = mock[Configuration]
-      when(config.getOptional[Seq[String]]("csrfexceptions.whitelist")).thenReturn(Some(Seq("/ida/login")))
+      when(config.getOptional[Seq[String]]("bootstrap.csrfexceptions.allowlist")).thenReturn(Some(Seq("/ida/login")))
       val filter = new CSRFExceptionsFilter(config, mat)
 
       csrfToken(filter.filteredHeaders(rh)) shouldBe Some("nocheck")

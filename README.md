@@ -76,7 +76,7 @@ play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters"
 ## Default HTTP client
 
 A default http client with pre-configured auditing hook can be injected into any connector. The http client uses http-verbs
-For more http-verbs examples see https://github.com/hmrc/http-verbs-example 
+For more http-verbs examples see https://github.com/hmrc/http-verbs-example
 
 
 Make sure you have the following modules in your application.conf file:
@@ -92,7 +92,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import javax.inject.Inject
 
 class SomeConnector @Inject() (client: HttpClient) {
-  
+
   client.GET[Option[MyCaseClass]]("http://localhost/my-api")
 }
 ```
@@ -112,11 +112,11 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuthModule"
 Your controller will look like this:
 ```scala
 class MyController @Inject() (val authConnector: AuthConnector) extends BaseController with AuthorisedFunctions {
-   
+
    def getSomething(): Action[AnyContent] = Action.async { implicit request ⇒
        authorised() {
          // your protected logic
-       } 
+       }
    }
  }
 ```
@@ -147,22 +147,35 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
+### Version 2.0.0
+
+#### http-verbs
+
+Http-verbs has been bumped to major version 12.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
+
+#### configuration
+
+The following configuration has been renamed, the previous keys are invalid and will need to be updated.
+
+| Invalid config key       | Should now be                      |
+| --- | --- |
+| httpHeadersWhitelist     | bootstrap.http.headersAllowlist    |
+| csrfexceptions.whitelist | bootstrap.csrfexceptions.allowlist |
+
 ### Version 0.37.0
 
 #### Play auditing
 play-auditing was bump in major version - changes in [`HttpAuditing#auditFromPlayFrontend`](https://github.com/hmrc/play-auditing/blob/be52847234b113eab713faaeb6b40d00bf4a3bcd/src/main/scala/uk/gov/hmrc/play/audit/http/HttpAuditing.scala#L52) signature  were made.
 Now method require implicit execution context in scope.
 
-Implicit execution context should be available in most usage places, but this change break API and may require developer attention.  
+Implicit execution context should be available in most usage places, but this change break API and may require developer attention.
 
 ### Version 1.15.0
 
 #### Hmrc time library
-As of version 1.15.0, `bootstrap-play-26` stops pulling in [hmrc/time](https://github.com/hmrc/time) library transitively anymore. 
+As of version 1.15.0, `bootstrap-play-26` stops pulling in [hmrc/time](https://github.com/hmrc/time) library transitively anymore.
 If you require `hmrc/time`, you will have to add an explicit dependency yourself.
 
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
-    
-    
