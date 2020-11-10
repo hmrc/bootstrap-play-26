@@ -9,14 +9,14 @@ object AppDependencies {
   private val akkaHttpVersion = "10.0.15"
 
   val compile: Seq[ModuleID] = Seq(
-    "ch.qos.logback"        % "logback-core"           % "1.1.7",
+    "ch.qos.logback"        %  "logback-core"          % "1.2.3",
     "com.kenshoo"           %% "metrics-play"          % "2.6.6_0.6.2",
     "com.typesafe.play"     %% "filters-helpers"       % playVersion,
     "com.typesafe.play"     %% "play"                  % playVersion,
     "com.typesafe.play"     %% "play-guice"            % playVersion,
     "com.typesafe.play"     %% "play-ahc-ws"           % playVersion,
-    "io.dropwizard.metrics" % "metrics-graphite"       % "3.2.5",
-    "uk.gov.hmrc"           %% "auth-client"           % "2.35.0-play-26",
+    "io.dropwizard.metrics" %  "metrics-graphite"      % "3.2.5",
+    "uk.gov.hmrc"           %% "auth-client"           % "3.2.0-play-26",
     "uk.gov.hmrc"           %% "crypto"                % "5.6.0",
     "uk.gov.hmrc"           %% "http-verbs-play-26"    % "12.1.0",
     "uk.gov.hmrc"           %% "play-auditing-play-26" % "6.0.0",
@@ -37,10 +37,10 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = Seq(
-    "com.github.tomakehurst" % "wiremock-jre8"       % "2.21.0",
+    "com.github.tomakehurst" %  "wiremock-jre8"      % "2.21.0",
     "com.typesafe.play"      %% "play-test"          % playVersion,
-    "org.mockito"            % "mockito-all"         % "1.9.5",
-    "org.pegdown"            % "pegdown"             % "1.5.0",
+    "org.mockito"            %  "mockito-all"        % "1.9.5",
+    "org.pegdown"            %  "pegdown"            % "1.5.0",
     "org.scalacheck"         %% "scalacheck"         % "1.14.0",
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"
   ).map(_ % Test)
