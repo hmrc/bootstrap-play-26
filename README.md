@@ -1,7 +1,7 @@
 
 # bootstrap-play-26
 
-[![Build Status](https://travis-ci.org/hmrc/bootstrap-play-26.svg?branch=master)](https://travis-ci.org/hmrc/bootstrap-play-26) [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-26/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-26/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-26/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-26/_latestVersion)
 
 This library implements basic functionality required by the platform frontend/microservices.
 
