@@ -147,6 +147,12 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
+### Version 3.0.0
+
+#### http-verbs
+
+Http-verbs has been bumped to major version 13.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
+
 ### Version 2.0.0
 
 #### http-verbs

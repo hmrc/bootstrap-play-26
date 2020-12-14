@@ -38,10 +38,9 @@ class DefaultHttpClient @Inject()(
     extends HttpClient
     with WSHttp {
 
-  override lazy val configuration: Option[Config] = Option(config.underlying)
+  override lazy val configuration: Config = config.underlying
 
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
-
 }
 
 class DefaultHttpAuditing @Inject()(
