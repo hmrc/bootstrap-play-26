@@ -1,6 +1,8 @@
 
 # bootstrap-play-26
 
+## This library is deprecated now. Please use [bootstrap-play](https://github.com/hmrc/bootstrap-play)
+
 [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-26/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-26/_latestVersion)
 
 This library implements basic functionality required by the platform frontend/microservices.
