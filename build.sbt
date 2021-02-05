@@ -1,6 +1,6 @@
 val appName = "bootstrap-play-26"
 
-val silencerVersion = "1.4.4"
+val silencerVersion = "1.7.2"
 
 lazy val library = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
@@ -10,8 +10,7 @@ lazy val library = Project(appName, file("."))
     makePublicallyAvailableOnBintray := true
   )
   .settings(
-    scalaVersion := "2.11.12",
-    crossScalaVersions := List("2.11.12", "2.12.8"),
+    scalaVersion := "2.12.13",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     fork in Test := true,
     scalacOptions ++= Seq("-deprecation"),
