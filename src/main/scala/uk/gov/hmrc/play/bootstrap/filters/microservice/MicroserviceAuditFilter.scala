@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc.{Result, _}
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -49,8 +49,9 @@ trait MicroserviceAuditFilter extends AuditFilter {
     eventType: String,
     transactionName: String,
     request: RequestHeader,
-    detail: Map[String, String] = Map())(
-    implicit hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+    detail: Map[String, String] = Map()
+  )(implicit
+    hc: HeaderCarrier
   ): DataEvent
 
   implicit def mat: Materializer
@@ -62,23 +63,30 @@ trait MicroserviceAuditFilter extends AuditFilter {
   def apply(nextFilter: EssentialAction) = new EssentialAction {
     def apply(requestHeader: RequestHeader) = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
-      implicit val hc                           = HeaderCarrierConverter.fromHeadersAndSession(requestHeader.headers, Some(requestHeader.session))
+
+      implicit val hc = HeaderCarrierConverter.fromRequest(requestHeader)
 
       val loggingContext = s"${requestHeader.method} ${requestHeader.uri}"
 
-      def performAudit(requestBody: String, maybeResult: Try[Result])(responseBody: String): Unit =
-        maybeResult match {
+      def performAudit(requestBody: String, tryResult: Try[Result])(responseBody: String): Unit = {
+        val detail = tryResult match {
           case Success(result) =>
-            auditConnector.sendEvent(
-              dataEvent(
-                requestReceived,
-                requestHeader.uri,
-                requestHeader,
-                Map(ResponseMessage -> responseBody, StatusCode -> result.header.status.toString)))
+            Map(
+              ResponseMessage -> responseBody,
+              StatusCode -> result.header.status.toString
+            )
           case Failure(f) =>
-            auditConnector.sendEvent(
-              dataEvent(requestReceived, requestHeader.uri, requestHeader, Map(FailedRequestMessage -> f.getMessage)))
+            Map(FailedRequestMessage -> f.getMessage)
         }
+        auditConnector.sendEvent(
+          dataEvent(
+            eventType       = requestReceived,
+            transactionName = requestHeader.uri,
+            request         = requestHeader,
+            detail          = detail
+          )
+        )
+      }
 
       if (needsAuditing(requestHeader)) {
         onCompleteWithInput(loggingContext, next, performAudit)

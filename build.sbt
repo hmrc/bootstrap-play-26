@@ -1,18 +1,23 @@
 val appName = "bootstrap-play-26"
 
+val silencerVersion = "1.7.2"
+
 lazy val library = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
-    majorVersion := 2,
+    majorVersion := 3,
     makePublicallyAvailableOnBintray := true
   )
   .settings(
-    scalaVersion := "2.11.12",
-    crossScalaVersions := List("2.11.12", "2.12.8"),
+    scalaVersion := "2.12.13",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     fork in Test := true,
-    scalacOptions ++= Seq("-deprecation")
+    scalacOptions ++= Seq("-deprecation"),
+    libraryDependencies ++= Seq(
+      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
+      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+    )
   )
   .settings(
     publishArtifact in Test := true,

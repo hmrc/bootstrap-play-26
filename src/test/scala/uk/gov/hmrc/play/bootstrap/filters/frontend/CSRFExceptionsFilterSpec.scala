@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
 import akka.stream.Materializer
+import com.github.ghik.silencer.silent
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
@@ -28,6 +29,7 @@ import play.api.http.HttpVerbs._
 import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.{FakeHeaders, FakeRequest}
 
+@silent("deprecated")
 class CSRFExceptionsFilterSpec
     extends WordSpecLike
     with Matchers
