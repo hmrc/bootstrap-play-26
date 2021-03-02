@@ -42,4 +42,7 @@ class DefaultDeviceIdFilter @Inject()(
   override lazy val previousSecrets: Seq[String] =
     configuration.getOptional[Seq[String]](previousSecretKey).getOrElse(Seq.empty)
 
+  override lazy val secure: Boolean =
+    configuration.get[Boolean]("cookie.deviceId.secure")
+
 }
