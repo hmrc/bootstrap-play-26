@@ -24,9 +24,10 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 class TestAuditConnector(appName: String) extends AuditConnector {
   override val auditingConfig: AuditingConfig = AuditingConfig(
-    consumer    = None,
-    enabled     = false,
-    auditSource = appName
+    consumer         = None,
+    enabled          = false,
+    auditSource      = appName,
+    auditSentHeaders = false
   )
 
   override def materializer: Materializer = ActorMaterializer()(ActorSystem())

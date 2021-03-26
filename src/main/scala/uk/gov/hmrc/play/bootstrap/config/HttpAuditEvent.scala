@@ -22,7 +22,6 @@ import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 class DefaultHttpAuditEvent @Inject()(
   @Named("appName") val appName: String

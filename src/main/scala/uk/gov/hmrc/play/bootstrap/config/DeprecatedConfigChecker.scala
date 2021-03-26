@@ -27,8 +27,9 @@ class DeprecatedConfigChecker @Inject()(
   private val logger = Logger(getClass)
 
   val deprecatedKeys = List(
-    "httpHeadersWhitelist"     -> "bootstrap.http.headersAllowlist",
-    "csrfexceptions.allowlist" -> "bootstrap.csrfexceptions.allowlist"
+    "httpHeadersWhitelist"       -> "bootstrap.http.headersAllowlist",
+    "csrfexceptions.allowlist"   -> "bootstrap.csrfexceptions.allowlist",
+    "auditing.auditExtraHeaders" -> "auditing.auditSentHeaders"
   )
 
   val errs = deprecatedKeys.filter { case (d, _) => configuration.has(d) }

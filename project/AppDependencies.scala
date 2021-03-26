@@ -18,8 +18,8 @@ object AppDependencies {
     "io.dropwizard.metrics" %  "metrics-graphite"      % "3.2.5",
     "uk.gov.hmrc"           %% "auth-client"           % "4.0.0-play-26",
     "uk.gov.hmrc"           %% "crypto"                % "6.0.0",
-    "uk.gov.hmrc"           %% "http-verbs-play-26"    % "13.0.0",
-    "uk.gov.hmrc"           %% "play-auditing-play-26" % "7.0.0",
+    "uk.gov.hmrc"           %% "http-verbs-play-26"    % "13.3.0",
+    "uk.gov.hmrc"           %% "play-auditing-play-26" % "7.1.0",
     "uk.gov.hmrc"           %% "logback-json-logger"   % "5.1.0",
     "uk.gov.hmrc"           %% "play-health"           % "3.16.0-play-26",
     // force dependencies due to security flaws found in jackson-databind < 2.9.x using XRay
