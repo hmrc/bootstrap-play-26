@@ -42,9 +42,10 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
       )
 
       new AuditingConfigProvider(config, mockedRunMode, appName).get() shouldBe AuditingConfig(
-        consumer    = Some(Consumer(BaseUri("localhost", 8100, "http"))),
-        enabled     = true,
-        auditSource = appName
+        consumer         = Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled          = true,
+        auditSource      = appName,
+        auditSentHeaders = false
       )
     }
 
@@ -57,9 +58,10 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
       )
 
       new AuditingConfigProvider(configuration, mockedRunMode, appName).get() shouldBe AuditingConfig(
-        consumer    = Some(Consumer(BaseUri("localhost", 8100, "http"))),
-        enabled     = true,
-        auditSource = appName
+        consumer         = Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled          = true,
+        auditSource      = appName,
+        auditSentHeaders = false
       )
     }
 
@@ -69,9 +71,10 @@ class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSuga
       )
 
       new AuditingConfigProvider(config, mockedRunMode, appName).get() shouldBe AuditingConfig(
-        consumer    = None,
-        enabled     = false,
-        auditSource = "auditing disabled"
+        consumer         = None,
+        enabled          = false,
+        auditSource      = "auditing disabled",
+        auditSentHeaders = false
       )
     }
   }
