@@ -16,7 +16,7 @@ object AppDependencies {
     "com.typesafe.play"     %% "play-guice"            % playVersion,
     "com.typesafe.play"     %% "play-ahc-ws"           % playVersion,
     "io.dropwizard.metrics" %  "metrics-graphite"      % "3.2.5",
-    "uk.gov.hmrc"           %% "auth-client"           % "4.0.0-play-26",
+    "uk.gov.hmrc"           %% "auth-client"           % "5.6.0-play-26",
     "uk.gov.hmrc"           %% "crypto"                % "6.0.0",
     "uk.gov.hmrc"           %% "http-verbs-play-26"    % "13.3.0",
     "uk.gov.hmrc"           %% "play-auditing-play-26" % "7.1.0",
