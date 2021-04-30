@@ -6,7 +6,7 @@ lazy val library = Project(appName, file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
-    majorVersion := 3,
+    majorVersion := 4,
     makePublicallyAvailableOnBintray := true
   )
   .settings(
