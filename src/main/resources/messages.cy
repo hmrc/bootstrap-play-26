@@ -1,0 +1,9 @@
+global.error.badRequest400.title=Cais annilys – 400
+global.error.badRequest400.heading=Cais annilys
+global.error.badRequest400.message=Gwiriwch eich bod wedi nodi’r cyfeiriad gwe cywir.
+global.error.pageNotFound404.title=Heb ddod o hyd i’r dudalen – 404
+global.error.pageNotFound404.heading=Ni ellir dod o hyd i’r dudalen hon
+global.error.pageNotFound404.message=Gwiriwch eich bod wedi nodi’r cyfeiriad gwe cywir.
+global.error.InternalServerError500.title=Mae’n ddrwg gennym, rydym yn profi anawsterau technegol – 500
+global.error.InternalServerError500.heading=Mae’n ddrwg gennym, rydym yn profi anawsterau technegol
+global.error.InternalServerError500.message=Rhowch gynnig arall arni mewn ychydig o funudau.
