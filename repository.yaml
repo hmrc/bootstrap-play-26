@@ -1,4 +1,8 @@
 leakDetectionExemptions:
+ - ruleId: 'play_http_secret_key'
+   filePaths:
+     - '/src/main/resources/frontend.conf'
+     - '/src/main/resources/backend.conf'
  - ruleId: 'play_crypto_secret'
    filePaths:
       - '/src/main/resources/backend.conf'
