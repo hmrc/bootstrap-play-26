@@ -3,15 +3,12 @@ leakDetectionExemptions:
    filePaths:
      - '/src/main/resources/frontend.conf'
      - '/src/main/resources/backend.conf'
- - ruleId: 'play_crypto_secret'
-   filePaths:
-      - '/src/main/resources/backend.conf'
-      - '/src/main/resources/frontend.conf'
+   text: 'yNhI04vHs9<_HWbC`]20u`37=NGLGYY5:0Tg5?y`W<NoJnXWqmjcgZBec@rOxb^G'
  - ruleId: 'sso_encryption_key'
-   filePaths:
-      - '/src/main/resources/frontend.conf'
+   filePath: '/src/main/resources/frontend.conf'
+   text: 'P5xsJ9Nt+quxGZzB4DeLfw=='
  - ruleId: 'cookie_deviceId_secret'
-   filePaths:
-      - '/src/main/resources/frontend.conf'
+   filePath: '/src/main/resources/frontend.conf'
+   text: 'some_secret'
 
 repoVisibility: public_0C3F0CE3E6E6448FAD341E7BFA50FCD333E06A20CFF05FCACE61154DDBBADF71
